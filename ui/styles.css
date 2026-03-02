@@ -1583,10 +1583,6 @@ body[class*="theme-aurora"] .audit-tape-container {
         text-align: center;
     }
 
-    .about-qr {
-        margin: 0 auto;
-    }
-
     /* Default Open Bug fix moved to 1024px media query */
 }
 
@@ -1878,13 +1874,6 @@ body.dark-theme .about-badge {
     margin-top: 1.25rem;
     padding-top: 1.25rem;
     border-top: 1px solid var(--border-color);
-}
-
-.about-qr {
-    width: 72px;
-    height: 72px;
-    object-fit: contain;
-    flex-shrink: 0;
 }
 
 .about-dev-info h4 {
