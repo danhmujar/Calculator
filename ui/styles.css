@@ -474,6 +474,11 @@ body[class*="theme-aurora"] .calc-btn {
     height: 100%;
 }
 
+/* Prevent transitions during manual resizing to fix the "rubbery" drag lag */
+body.is-resizing * {
+    transition: none !important;
+}
+
 .left-panel {
     flex: 1;
     padding: 2rem;
@@ -483,20 +488,30 @@ body[class*="theme-aurora"] .calc-btn {
     gap: 1.5rem;
     max-width: 1200px;
     margin: 0 auto;
-    transition: opacity 0.4s var(--spring), transform 0.4s var(--spring);
+    /* Staggered timing: fade out fast (0.3s), slide layout slow (0.7s) */
+    transition: 
+        opacity 0.3s var(--ease), 
+        visibility 0.3s var(--ease),
+        transform 0.7s var(--ease), 
+        width 0.7s var(--ease), 
+        padding 0.7s var(--ease), 
+        margin 0.7s var(--ease),
+        flex 0.7s var(--ease);
     opacity: 1;
     transform: translateX(0);
+    visibility: visible;
 }
 
 .panel-resizer {
     width: 8px;
+    height: 100%;
     cursor: col-resize;
-    position: relative;
+    position: absolute;
+    left: -4px;
+    top: 0;
     z-index: 100;
     background-color: transparent;
     transition: background-color 0.2s ease;
-    margin-left: -4px;
-    margin-right: -4px;
 }
 
 .panel-resizer:hover,
@@ -514,9 +529,29 @@ body[class*="theme-aurora"] .calc-btn {
     flex-direction: column;
     box-shadow: var(--panel-shadow);
     z-index: 10;
-    transition: width 0.5s var(--spring), transform 0.4s var(--spring), box-shadow 0.4s var(--ease);
+    transition: 
+        width 0.7s var(--ease), 
+        transform 0.7s var(--ease), 
+        box-shadow 0.4s var(--ease),
+        max-width 0.7s var(--ease),
+        border-left-color 0.4s var(--ease),
+        flex 0.7s var(--ease);
     position: relative;
     overflow: hidden;
+}
+
+/* Desktop sidebar: hidden by default, slides in on .open */
+@media (min-width: 1025px) {
+    .right-panel:not(.open) {
+        transform: translateX(100%);
+        box-shadow: none;
+        width: 0;
+        min-width: 0;
+        border-left-color: transparent;
+    }
+    .right-panel.open {
+        transform: translateX(0);
+    }
 }
 
 /* Header Layout */
@@ -1001,28 +1036,30 @@ body.scientific-mode .calc-keypad {
     display: none;
 }
 
-/* Go full screen for scientific */
+/* Go full screen for scientific — uses transitionable properties, no !important */
 body.scientific-mode .left-panel {
-    opacity: 0 !important;
-    width: 0 !important;
-    min-width: 0 !important;
-    max-width: 0 !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    overflow: hidden !important;
-    pointer-events: none !important;
-    transform: translateX(-50px) !important;
+    opacity: 0;
+    flex: 0 0 0px;
+    min-width: 0;
+    max-width: 0;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+    pointer-events: none;
+    transform: translateX(-50px);
+    visibility: hidden;
 }
 
 body.scientific-mode .panel-resizer {
-    display: none !important;
+    opacity: 0;
+    pointer-events: none;
 }
 
 body.scientific-mode aside.right-panel {
-    width: 100vw !important;
-    max-width: 100vw !important;
-    border-left: none !important;
-    flex: 1 !important;
+    width: 100vw;
+    max-width: 100vw;
+    border-left: none;
+    flex: 1;
 }
 
 .math-row {
@@ -1125,8 +1162,8 @@ math-field:focus-within {
 }
 
 .toggle-btn.active {
-    background: var(--panel-bg);
-    color: var(--primary-blue);
+    background: var(--primary-blue);
+    color: #ffffff;
     box-shadow: var(--shadow-sm);
 }
 

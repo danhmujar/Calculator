@@ -390,6 +390,23 @@
         if (rightPanel) {
             rightPanel.classList.add('anim-slide-right');
             rightPanel.style.animationDelay = '0.1s';
+
+            // Remove entrance animation class after it plays to prevent
+            // flicker when subsequently toggling the sidebar open/close.
+            rightPanel.addEventListener('animationend', function handler() {
+                rightPanel.classList.remove('anim-slide-right');
+                rightPanel.removeEventListener('animationend', handler);
+            }, { once: true });
+
+            // Desktop: sidebar starts open after entrance animation
+            if (window.innerWidth > 1024) {
+                // Delay adding .open until after the entrance anim finishes
+                // so the slide-in animation plays first, then .open locks it visible.
+                rightPanel.addEventListener('animationend', function openHandler() {
+                    rightPanel.classList.add('open');
+                    rightPanel.removeEventListener('animationend', openHandler);
+                }, { once: true });
+            }
         }
 
         document.querySelectorAll('button[title]:not([aria-label])').forEach(btn => {

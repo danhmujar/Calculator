@@ -115,6 +115,7 @@
     resizer.addEventListener('pointerdown', function(e) {
         isResizing = true;
         resizer.classList.add('active');
+        document.body.classList.add('is-resizing'); // Disable CSS transitions during drag
         document.body.style.cursor = 'col-resize';
         e.preventDefault(); // Prevent text selection
         resizer.setPointerCapture(e.pointerId);
@@ -131,6 +132,7 @@
         if (!isResizing) return;
         isResizing = false;
         resizer.classList.remove('active');
+        document.body.classList.remove('is-resizing'); // Re-enable CSS transitions
         document.body.style.cursor = '';
         resizer.releasePointerCapture(e.pointerId);
         
