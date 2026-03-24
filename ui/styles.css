@@ -1003,16 +1003,26 @@ body.scientific-mode .calc-keypad {
 
 /* Go full screen for scientific */
 body.scientific-mode .left-panel {
-    opacity: 0;
-    transform: translateX(50px);
-    pointer-events: none;
-    position: absolute;
+    opacity: 0 !important;
+    width: 0 !important;
+    min-width: 0 !important;
+    max-width: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    pointer-events: none !important;
+    transform: translateX(-50px) !important;
 }
 
-body.scientific-mode .right-panel {
-    width: 100vw;
-    border-left: none;
-    /* Remove transform translation: increasing the width to 100vw and pushing the left-panel out of flow is sufficient to fill the screen */
+body.scientific-mode .panel-resizer {
+    display: none !important;
+}
+
+body.scientific-mode aside.right-panel {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    border-left: none !important;
+    flex: 1 !important;
 }
 
 .math-row {

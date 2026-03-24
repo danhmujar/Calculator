@@ -211,6 +211,7 @@
 
     /* --- State Persistence (localStorage) --- */
     let auditEntries = [];
+    let pendingSciRows = null; // Deferred sci rows to restore after lazy-load
 
     function saveState() {
         const state = {
@@ -252,7 +253,14 @@
             restoreThemeAndMode(state);
             restoreAuditTape(state);
             restorePercentageCards(state);
-            restoreScientificRows(state);
+            // If scientific mode is being restored, defer sci rows until after lazy-load.
+            // Otherwise (libs already loaded from a previous session), restore directly.
+            if (state.mode === 'scientific' && (typeof math === 'undefined' || typeof MathfieldElement === 'undefined')) {
+                // Store rows for activateScientificMode to pick up after lazy-load
+                pendingSciRows = state.sciRows || null;
+            } else {
+                restoreScientificRows(state);
+            }
             return true;
         } catch (e) {
             console.error("Failed to load calc state", e);
@@ -1021,6 +1029,8 @@
 
     /* --- Scientific Calculator Mode (MathLive + Math.js) --- */
 
+    let isSciLibsLoading = false;
+
     function setCalcMode(mode) {
         const sidebar = document.getElementById('sidebar');
         const btnStd = document.getElementById('btn-mode-std');
@@ -1028,27 +1038,55 @@
         const sciContainer = document.getElementById('sci-container');
 
         if (mode === 'scientific') {
-            if (!navigator.onLine || typeof math === 'undefined') {
-                showToast("Scientific Mode requires an internet connection.");
+            if (!navigator.onLine) {
+                showToast("Scientific Mode requires an internet connection to load libraries.");
                 return;
             }
 
-            document.body.classList.add('scientific-mode');
-            if (sidebar) sidebar.classList.add('scientific-active');
-            if (btnStd) {
-                btnStd.classList.remove('active');
-                btnStd.setAttribute('aria-checked', 'false');
+            // Lazy Load Libraries
+            if (typeof math === 'undefined' || typeof MathfieldElement === 'undefined') {
+                if (isSciLibsLoading) return;
+                isSciLibsLoading = true;
+                
+                const originalText = btnSci.textContent;
+                btnSci.textContent = '...';
+                
+                Promise.all([
+                    new Promise((resolve, reject) => {
+                        if (typeof MathfieldElement !== 'undefined') return resolve();
+                        const script = document.createElement('script');
+                        script.src = "https://unpkg.com/mathlive@0.108.3";
+                        script.crossOrigin = "anonymous";
+                        script.integrity = "sha384-JjPSUCAu+59S/H2IC4UecZ4gllGbNCS++kBwHbsk0TKHCp2b6OqkZqsRC9Kch45U";
+                        script.onload = resolve;
+                        script.onerror = reject;
+                        document.head.appendChild(script);
+                    }),
+                    new Promise((resolve, reject) => {
+                        if (typeof math !== 'undefined') return resolve();
+                        const script = document.createElement('script');
+                        script.src = "https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js";
+                        script.crossOrigin = "anonymous";
+                        script.integrity = "sha384-2NnkIgIitZUPvVF20yEtYm3encP/kCjZ8nxchj4j7cbqmRi9jaVLYz/Pwn/ZgWQ6";
+                        script.onload = resolve;
+                        script.onerror = reject;
+                        document.head.appendChild(script);
+                    })
+                ]).then(() => {
+                    isSciLibsLoading = false;
+                    btnSci.textContent = originalText;
+                    activateScientificMode(sidebar, btnStd, btnSci, sciContainer);
+                }).catch((err) => {
+                    isSciLibsLoading = false;
+                    btnSci.textContent = originalText;
+                    showToast("Failed to load scientific libraries.");
+                    console.error("Failed to load MathLive/MathJS", err);
+                });
+                return;
             }
-            if (btnSci) {
-                btnSci.classList.add('active');
-                btnSci.setAttribute('aria-checked', 'true');
-            }
-            if (sciContainer) sciContainer.classList.add('active');
 
-            const sciRowsWrapper = document.getElementById('sci-rows-wrapper');
-            if (sciRowsWrapper && sciRowsWrapper.children.length === 0) {
-                addScientificRow();
-            }
+            activateScientificMode(sidebar, btnStd, btnSci, sciContainer);
+
         } else {
             document.body.classList.remove('scientific-mode');
             if (sidebar) sidebar.classList.remove('scientific-active');
@@ -1061,6 +1099,40 @@
                 btnStd.setAttribute('aria-checked', 'true');
             }
             if (sciContainer) sciContainer.classList.remove('active');
+        }
+    }
+
+    function activateScientificMode(sidebar, btnStd, btnSci, sciContainer) {
+        document.body.classList.add('scientific-mode');
+        if (sidebar) sidebar.classList.add('scientific-active');
+        if (btnStd) {
+            btnStd.classList.remove('active');
+            btnStd.setAttribute('aria-checked', 'false');
+        }
+        if (btnSci) {
+            btnSci.classList.add('active');
+            btnSci.setAttribute('aria-checked', 'true');
+        }
+        if (sciContainer) sciContainer.classList.add('active');
+
+        const sciRowsWrapper = document.getElementById('sci-rows-wrapper');
+
+        // Check for deferred scientific rows from state restoration
+        if (pendingSciRows && pendingSciRows.length > 0) {
+            if (sciRowsWrapper) sciRowsWrapper.replaceChildren();
+            pendingSciRows.forEach((val, index) => {
+                addScientificRow();
+                setTimeout(() => {
+                    const mfs = document.querySelectorAll('math-field');
+                    if (mfs[index]) {
+                        mfs[index].value = val;
+                        mfs[index].dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                }, SCI_RESTORE_DELAY_BASE_MS * (index + 1));
+            });
+            pendingSciRows = null;
+        } else if (sciRowsWrapper && sciRowsWrapper.children.length === 0) {
+            addScientificRow();
         }
     }
 

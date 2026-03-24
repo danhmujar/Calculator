@@ -1,8 +1,8 @@
 // Service Worker — Percentage & Math Calculator PWA
-const CACHE_NAME = 'calc-v10';
+const CACHE_NAME = 'calc-v11';
 const MAX_CACHE_ITEMS = 50;
 
-// App shell + critical CDN dependencies to pre-cache on install
+// App shell to pre-cache on install (CDN libs are cached on-demand via fetch handler)
 const PRECACHE_URLS = [
     './',
     './index.html',
@@ -15,9 +15,6 @@ const PRECACHE_URLS = [
     './services/app.js',
     './ui/ui.js',
     './ui/styles.css',
-    // CDN dependencies (pinned for offline)
-    'https://unpkg.com/mathlive@0.108.3',
-    'https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js',
     // Google Fonts CSS
     'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap'
 ];
