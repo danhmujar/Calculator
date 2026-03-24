@@ -870,6 +870,95 @@
 
         const addMathBtn = document.getElementById('add-math-btn');
         if (addMathBtn) addMathBtn.addEventListener('click', addScientificRow);
+
+        // Paste Support for Calculator
+        document.addEventListener('paste', function (e) {
+            // Ignore if pasting into an input or math-field explicitly
+            const tag = e.target.tagName.toLowerCase();
+            if (tag === 'input' || tag === 'math-field' || tag === 'textarea') return;
+            
+            const pasteData = (e.clipboardData || window.clipboardData).getData('text');
+            if (!pasteData) return;
+
+            // Filter out commas and extract the first logical numeric value (e.g. "$1,200.50 text" -> "1200.50")
+            const cleaned = pasteData.replace(/,/g, '');
+            const match = cleaned.match(/-?\d+(?:\.\d+)?/);
+            
+            if (match) {
+                calcState.currentValue = match[0];
+                calcState.resetNext = true; 
+                // Don't wipe previous value if we have a pending operator
+                if (calcState.operator === null) {
+                    calcState.previousValue = null;
+                }
+                updateDisplay();
+                
+                // Visual feedback
+                const display = document.getElementById('main-calc-display');
+                if (display) {
+                    display.style.color = 'var(--primary-blue)';
+                    setTimeout(() => { display.style.color = ''; }, 300);
+                }
+                
+                // Trigger save
+                if (typeof triggerSave === 'function') triggerSave();
+                showToast("Pasted Value");
+            }
+        });
+
+        // Paste Support for Calculator (Right Click Context Menu)
+        const contextMenu = document.getElementById('calc-context-menu');
+        const pasteBtn = document.getElementById('calc-context-paste');
+        const calcDisplay = document.getElementById('main-calc-display');
+
+        if (calcDisplay && contextMenu && pasteBtn) {
+            calcDisplay.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                
+                // Position the menu
+                const x = e.clientX;
+                const y = e.clientY;
+                
+                contextMenu.style.left = `${x}px`;
+                contextMenu.style.top = `${y}px`;
+                contextMenu.hidden = false;
+            });
+
+            pasteBtn.addEventListener('click', async () => {
+                contextMenu.hidden = true;
+                try {
+                    const text = await navigator.clipboard.readText();
+                    if (!text) return;
+                    
+                    const cleaned = text.replace(/,/g, '');
+                    const match = cleaned.match(/-?\d+(?:\.\d+)?/);
+                    
+                    if (match) {
+                        calcState.currentValue = match[0];
+                        calcState.resetNext = true;
+                        if (calcState.operator === null) {
+                            calcState.previousValue = null;
+                        }
+                        updateDisplay();
+                        
+                        calcDisplay.style.color = 'var(--primary-blue)';
+                        setTimeout(() => { calcDisplay.style.color = ''; }, 300);
+                        
+                        if (typeof triggerSave === 'function') triggerSave();
+                        showToast("Pasted Value");
+                    }
+                } catch (err) {
+                    console.error("Failed to read clipboard", err);
+                    showToast("Paste permission denied");
+                }
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!contextMenu.hidden && !contextMenu.contains(e.target)) {
+                    contextMenu.hidden = true;
+                }
+            });
+        }
     })();
 
     document.addEventListener('click', (event) => {

@@ -488,8 +488,26 @@ body[class*="theme-aurora"] .calc-btn {
     transform: translateX(0);
 }
 
+.panel-resizer {
+    width: 8px;
+    cursor: col-resize;
+    position: relative;
+    z-index: 100;
+    background-color: transparent;
+    transition: background-color 0.2s ease;
+    margin-left: -4px;
+    margin-right: -4px;
+}
+
+.panel-resizer:hover,
+.panel-resizer.active {
+    background-color: var(--primary-blue);
+}
+
 .right-panel {
-    width: 400px;
+    width: var(--sidebar-width, 400px);
+    min-width: 320px;
+    max-width: 50vw;
     background-color: var(--panel-bg);
     border-left: 1px solid var(--border-color);
     display: flex;
@@ -1938,4 +1956,51 @@ body.dark-theme .about-badge {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+}
+
+/* Custom Context Menu */
+.calc-context-menu {
+    position: fixed;
+    z-index: 9999;
+    background: var(--panel-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: var(--shadow-md);
+    padding: 0.5rem;
+    min-width: 120px;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    transform-origin: top left;
+    animation: contextMenuFadeIn 0.15s ease-out;
+}
+
+.calc-context-menu[hidden] {
+    display: none;
+}
+
+.context-menu-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    cursor: pointer;
+    text-align: left;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.context-menu-btn:hover {
+    background-color: var(--primary-alpha-10);
+    color: var(--primary-blue);
+}
+
+@keyframes contextMenuFadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
 }

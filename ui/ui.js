@@ -97,3 +97,45 @@
         }
     });
 })();
+
+// Draggable Resizer Logic
+(function () {
+    const resizer = document.getElementById('panel-resizer');
+    const rightPanel = document.getElementById('sidebar');
+    if (!resizer || !rightPanel) return;
+
+    let isResizing = false;
+
+    // Load saved width from preferences
+    const savedWidth = localStorage.getItem('calcSidebarWidth');
+    if (savedWidth) {
+        document.documentElement.style.setProperty('--sidebar-width', savedWidth + 'px');
+    }
+
+    resizer.addEventListener('pointerdown', function(e) {
+        isResizing = true;
+        resizer.classList.add('active');
+        document.body.style.cursor = 'col-resize';
+        e.preventDefault(); // Prevent text selection
+        resizer.setPointerCapture(e.pointerId);
+    });
+
+    resizer.addEventListener('pointermove', function(e) {
+        if (!isResizing) return;
+        // rightPanel is on the right, so new width is window width - mouse X
+        const newWidth = window.innerWidth - e.clientX;
+        document.documentElement.style.setProperty('--sidebar-width', newWidth + 'px');
+    });
+
+    resizer.addEventListener('pointerup', function(e) {
+        if (!isResizing) return;
+        isResizing = false;
+        resizer.classList.remove('active');
+        document.body.style.cursor = '';
+        resizer.releasePointerCapture(e.pointerId);
+        
+        // Save final computed width
+        const finalWidth = rightPanel.getBoundingClientRect().width;
+        localStorage.setItem('calcSidebarWidth', finalWidth);
+    });
+})();
