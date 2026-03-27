@@ -29,13 +29,15 @@ crossbrowser_report.md
 qr_position_report.md
 FINAL_WALKTHROUGH.md
 
+# Build output
+dist/
+node_modules/
+lighthouse-report.json
+
 # Audit and testing scripts
 audit.mjs
 leak_audit.mjs
 SECURITY_AND_PERFORMANCE_AUDIT.md
-node_modules/
-package.json
-package-lock.json
 playwright-report/
 test-results/
 

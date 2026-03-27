@@ -1,0 +1,34 @@
+{
+  "devDependencies": {
+    "@axe-core/playwright": "^4.11.1",
+    "@playwright/test": "^1.58.2",
+    "playwright": "^1.58.2",
+    "vite": "^8.0.3"
+  },
+  "name": "calculator",
+  "version": "1.0.0",
+  "description": "",
+  "main": "sw.js",
+  "dependencies": {
+    "axe-core": "^4.11.1",
+    "playwright-core": "^1.58.2"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "postbuild": "node scripts/postbuild.js",
+    "preview": "vite preview"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/danhmujar/Calculator.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/danhmujar/Calculator/issues"
+  },
+  "homepage": "https://github.com/danhmujar/Calculator#readme"
+}
