@@ -789,7 +789,13 @@
 
     function toggleDrawer() {
         const sidebar = document.getElementById('sidebar');
-        if (sidebar) sidebar.classList.toggle('open');
+        if (sidebar) {
+            // Force browser to capture current state before toggle.
+            void sidebar.offsetWidth;
+            requestAnimationFrame(() => {
+                sidebar.classList.toggle('open');
+            });
+        }
     }
 
     function toggleHistory() {
@@ -1105,32 +1111,73 @@
             activateScientificMode(sidebar, btnStd, btnSci, sciContainer);
 
         } else {
-            document.body.classList.remove('scientific-mode');
-            if (sidebar) sidebar.classList.remove('scientific-active');
-            if (btnSci) {
-                btnSci.classList.remove('active');
-                btnSci.setAttribute('aria-checked', 'false');
-            }
-            if (btnStd) {
-                btnStd.classList.add('active');
-                btnStd.setAttribute('aria-checked', 'true');
-            }
-            if (sciContainer) sciContainer.classList.remove('active');
+            // --- SCI → STD reverse transition ---
+            const leftPanel = document.querySelector('.left-panel');
+
+            // Freeze the left-panel content so it doesn't reflow during expand.
+            if (leftPanel) leftPanel.style.overflow = 'hidden';
+
+            // Force the browser to capture the current (collapsed) state.
+            if (leftPanel) void leftPanel.offsetWidth;
+
+            // Batch all class changes in a single animation frame so the
+            // browser transitions everything together from the collapsed state.
+            requestAnimationFrame(() => {
+                document.body.classList.remove('scientific-mode');
+                if (sciContainer) sciContainer.classList.remove('active');
+                
+                if (sidebar) sidebar.classList.remove('scientific-active');
+                if (btnSci) {
+                    btnSci.classList.remove('active');
+                    btnSci.setAttribute('aria-checked', 'false');
+                }
+                if (btnStd) {
+                    btnStd.classList.add('active');
+                    btnStd.setAttribute('aria-checked', 'true');
+                }
+
+                // Defer resetting overflow until expansion finishes.
+                if (leftPanel) {
+                    const cleanup = (e) => {
+                        if (e && e.propertyName !== 'opacity' && e.propertyName !== 'width' && e.propertyName !== 'flex-basis') return;
+                        
+                        leftPanel.style.overflow = '';
+                        leftPanel.removeEventListener('transitionend', cleanup);
+                        clearTimeout(safetyTimeout);
+                    };
+
+                    const safetyTimeout = setTimeout(() => {
+                        cleanup();
+                    }, 600);
+
+                    leftPanel.addEventListener('transitionend', cleanup);
+                }
+            });
         }
     }
 
     function activateScientificMode(sidebar, btnStd, btnSci, sciContainer) {
-        document.body.classList.add('scientific-mode');
-        if (sidebar) sidebar.classList.add('scientific-active');
-        if (btnStd) {
-            btnStd.classList.remove('active');
-            btnStd.setAttribute('aria-checked', 'false');
-        }
-        if (btnSci) {
-            btnSci.classList.add('active');
-            btnSci.setAttribute('aria-checked', 'true');
-        }
-        if (sciContainer) sciContainer.classList.add('active');
+        const leftPanel = document.querySelector('.left-panel');
+
+        // Freeze left panel content before shrink to prevent reflow jumps.
+        if (leftPanel) leftPanel.style.overflow = 'hidden';
+
+        // Force a layout recalculation so the browser captures the current
+        // (expanded) state before we apply the collapsed class.
+        if (leftPanel) void leftPanel.offsetWidth;
+        requestAnimationFrame(() => {
+            document.body.classList.add('scientific-mode');
+            if (sidebar) sidebar.classList.add('scientific-active');
+            if (btnStd) {
+                btnStd.classList.remove('active');
+                btnStd.setAttribute('aria-checked', 'false');
+            }
+            if (btnSci) {
+                btnSci.classList.add('active');
+                btnSci.setAttribute('aria-checked', 'true');
+            }
+            if (sciContainer) sciContainer.classList.add('active');
+        });
 
         const sciRowsWrapper = document.getElementById('sci-rows-wrapper');
 

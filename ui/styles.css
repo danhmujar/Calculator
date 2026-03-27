@@ -488,15 +488,17 @@ body.is-resizing * {
     gap: 1.5rem;
     max-width: 1200px;
     margin: 0 auto;
-    /* Staggered timing: fade out fast (0.3s), slide layout slow (0.7s) */
+    /* Synchronized: all properties finish together for a cohesive slide-fade */
     transition: 
-        opacity 0.3s var(--ease), 
-        visibility 0.3s var(--ease),
-        transform 0.7s var(--ease), 
-        width 0.7s var(--ease), 
-        padding 0.7s var(--ease), 
-        margin 0.7s var(--ease),
-        flex 0.7s var(--ease);
+        opacity 0.5s var(--ease), 
+        visibility 0.5s var(--ease),
+        transform 0.5s var(--ease), 
+        width 0.5s var(--ease), 
+        max-width 0.5s var(--ease),
+        min-width 0.5s var(--ease),
+        padding 0.5s var(--ease), 
+        margin 0.5s var(--ease),
+        flex 0.5s var(--ease);
     opacity: 1;
     transform: translateX(0);
     visibility: visible;
@@ -530,19 +532,20 @@ body.is-resizing * {
     box-shadow: var(--panel-shadow);
     z-index: 10;
     transition: 
-        width 0.7s var(--ease), 
-        transform 0.7s var(--ease), 
+        width 0.5s var(--ease), 
+        transform 0.5s var(--ease), 
+        opacity 0.5s var(--ease),
         box-shadow 0.4s var(--ease),
-        max-width 0.7s var(--ease),
+        max-width 0.5s var(--ease),
         border-left-color 0.4s var(--ease),
-        flex 0.7s var(--ease);
+        flex 0.5s var(--ease);
     position: relative;
     overflow: hidden;
 }
 
 /* Desktop sidebar: hidden by default, slides in on .open */
 @media (min-width: 1025px) {
-    .right-panel:not(.open) {
+    .right-panel:not(.open):not(.anim-slide-right) {
         transform: translateX(100%);
         box-shadow: none;
         width: 0;
@@ -1016,7 +1019,6 @@ input:checked+.slider .slider-bg {
     flex: 1;
 }
 
-/* Scientific Mode Container */
 .scientific-container {
     display: none;
     flex-direction: column;
@@ -1024,10 +1026,13 @@ input:checked+.slider .slider-bg {
     background-color: var(--panel-bg);
     border-bottom: 1px solid var(--border-color);
     overflow-y: auto;
+    opacity: 0;
+    transition: opacity 0.4s var(--ease);
 }
 
 .scientific-container.active {
     display: flex;
+    opacity: 1;
 }
 
 /* Hide standard calc when scientific is active */
@@ -1046,7 +1051,7 @@ body.scientific-mode .left-panel {
     margin: 0;
     overflow: hidden;
     pointer-events: none;
-    transform: translateX(-50px);
+    transform: translateX(-120px) scale(0.95);
     visibility: hidden;
 }
 
@@ -1060,6 +1065,24 @@ body.scientific-mode aside.right-panel {
     max-width: 100vw;
     border-left: none;
     flex: 1;
+    /* Boost opacity in Scientific mode to prevent seeing standard UI through the Aurora glass during transition */
+    background-color: var(--panel-bg);
+}
+
+body[class*="theme-aurora"].scientific-mode .right-panel {
+    background-color: #140f1e;
+}
+
+body[class*="theme-aurora-ocean"].scientific-mode .right-panel {
+    background-color: #0a1928;
+}
+
+body[class*="theme-aurora-cyber"].scientific-mode .right-panel {
+    background-color: #0a1914;
+}
+
+body[class*="theme-aurora-sunset"].scientific-mode .right-panel {
+    background-color: #280f0f;
 }
 
 .math-row {
