@@ -38,3 +38,21 @@ package.json
 package-lock.json
 playwright-report/
 test-results/
+
+# Memory and Local State
+.memcord
+memory_slots/
+shared_memories/
+archives/
+.nojekyll
+
+# Task Tracking
+*_TODO.md
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Logs and Recordings
+*.log
+*.webp

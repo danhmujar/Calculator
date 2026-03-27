@@ -2096,3 +2096,140 @@ body.dark-theme .about-badge {
     from { opacity: 0; transform: scale(0.95); }
     to { opacity: 1; transform: scale(1); }
 }
+
+/* --- PWA: Offline Badge --- */
+.offline-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.2rem 0.6rem 0.2rem 0.45rem;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--warning, #f59e0b);
+    background: color-mix(in srgb, var(--warning, #f59e0b) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--warning, #f59e0b) 25%, transparent);
+    animation: badgePulse 2s ease-in-out infinite;
+}
+
+.offline-badge[hidden] {
+    display: none;
+}
+
+.offline-badge svg {
+    flex-shrink: 0;
+}
+
+@keyframes badgePulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.65; }
+}
+
+/* --- PWA: Update Toast Banner --- */
+.update-toast {
+    position: fixed;
+    bottom: 5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1600;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1rem 0.75rem 1.25rem;
+    border-radius: 12px;
+    background: var(--panel-bg);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-lg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    animation: slideUpToast 0.4s var(--spring) forwards;
+    white-space: nowrap;
+}
+
+.update-toast[hidden] {
+    display: none;
+}
+
+@keyframes slideUpToast {
+    from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+.update-toast-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.update-toast-btn {
+    border: none;
+    border-radius: 6px;
+    padding: 0.35rem 0.75rem;
+    font-family: var(--font-sans);
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, transform 0.15s;
+}
+
+.update-toast-btn:hover {
+    transform: scale(1.03);
+}
+
+.update-toast-btn.refresh {
+    background: var(--primary-blue);
+    color: #fff;
+}
+
+.update-toast-btn.refresh:hover {
+    background: var(--primary-hover);
+}
+
+.update-toast-btn.dismiss {
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    padding: 0.35rem 0.5rem;
+    line-height: 1;
+}
+
+.update-toast-btn.dismiss:hover {
+    color: var(--text-primary);
+}
+
+/* --- PWA: Install App Button --- */
+.about-install-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.6rem;
+    padding: 0.45rem 1rem;
+    border: 1px solid var(--primary-alpha-15);
+    border-radius: 8px;
+    background: var(--primary-alpha-05);
+    color: var(--primary-blue);
+    font-family: var(--font-sans);
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+}
+
+.about-install-btn:hover {
+    background: var(--primary-alpha-10);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+.about-install-btn[hidden] {
+    display: none;
+}
+
+.about-install-btn svg {
+    flex-shrink: 0;
+}

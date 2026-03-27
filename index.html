@@ -299,6 +299,18 @@
                     <button class="toggle-btn" id="btn-mode-sci" data-mode="scientific" role="radio"
                         aria-checked="false" aria-label="Switch to scientific mode">SCI</button>
                 </div>
+                <span class="offline-badge" id="offline-badge" hidden aria-live="polite">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <line x1="1" y1="1" x2="23" y2="23"></line>
+                        <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"></path>
+                        <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"></path>
+                        <path d="M10.71 5.05A16 16 0 0 1 22.56 9"></path>
+                        <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path>
+                        <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+                        <line x1="12" y1="20" x2="12.01" y2="20"></line>
+                    </svg>
+                    Offline
+                </span>
 
                 <div class="sidebar-controls">
                     <button class="icon-btn" id="history-toggle-btn" title="History"
@@ -423,6 +435,15 @@
 
     <div class="toast" id="toast" role="status" aria-live="polite">Copied to clipboard!</div>
 
+    <!-- PWA Update Notification Banner -->
+    <div class="update-toast" id="update-toast" role="alert" aria-live="assertive" hidden>
+        <span>A new version is available!</span>
+        <div class="update-toast-actions">
+            <button class="update-toast-btn refresh" id="update-refresh-btn">Refresh</button>
+            <button class="update-toast-btn dismiss" id="update-dismiss-btn" aria-label="Dismiss update notification">✕</button>
+        </div>
+    </div>
+
     <!-- About FAB Button -->
     <button class="glass-fab about-fab" id="about-fab-btn" title="About this app" aria-label="About this app">?</button>
 
@@ -530,7 +551,7 @@
                         </div>
                         <ul class="about-list about-list--warn">
                             <li>No server, DB, or cloud sync</li>
-                            <li>Scientific mode needs internet</li>
+                            <li>Scientific mode needs first-time internet</li>
                             <li>IEEE 754 float precision</li>
                             <li>No graphing or unit conversion</li>
                         </ul>
@@ -546,6 +567,14 @@
                             should be transparent. Powered by curiosity, caffeine, and Generative AI.</p>
                         <a class="about-linkedin" href="https://www.linkedin.com/in/danhmujar"
                             target="_blank" rel="noopener noreferrer">Connect on LinkedIn <span>&rarr;</span></a>
+                        <button class="about-install-btn" id="pwa-install-btn" hidden>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            Install App
+                        </button>
                     </div>
                 </div>
             </div>

@@ -5,8 +5,8 @@
   "entries": [
     {
       "type": "manual_save",
-      "content": "### Partially Completed Enhancements\n- **Accessibility Audit (Option C):** \n    - High-priority ARIA and landmark issues for the resizer fixed.\n    - Button contrast improved to WCAG AA.\n    - **Pending:** Minor color-contrast warnings for absolute WCAG AAA on #btn-mode-sci.\n\n### Roadmap & Pending Tasks\n- **Option B: PWA & Offline Optimization:** Background-fetch the math libraries (mathlive, math.js) once the page is idle.\n- **Option A: Build Step / Peak Optimization:** Minify the 2,000+ line styles.css and services/app.js using a zero-config tool like Vite to hit 100/100 Lighthouse scores.\n- **Mobile UX:** Investigate if the draggable resizer should have a touch-friendly version for the mobile drawer.",
-      "timestamp": "2026-03-27T21:23:52.402343",
+      "content": "### Completed Enhancements\n- **Accessibility Audit (Option C) [COMPLETE]:** \n    - High-priority ARIA and landmark issues for the resizer fixed.\n    - Button contrast improved to WCAG AAA (7:1) for all themes.\n    - Dynamic ARIA `aria-valuenow` sync for the draggable resizer implemented.\n    - Added `aria-label` to all dynamic inputs (`math-field` and card inputs).\n    - Added `aria-live=\"polite\"` to result regions for screen reader feedback.\n\n### Roadmap & Pending Tasks\n- **Option B: PWA & Offline Optimization:** Background-fetch the math libraries (mathlive, math.js) once the page is idle.\n- **Option A: Build Step / Peak Optimization:** Minify the 2,000+ line styles.css and services/app.js using a zero-config tool like Vite to hit 100/100 Lighthouse scores.\n- **Mobile UX:** Investigate if the draggable resizer should have a touch-friendly version for the mobile drawer.",
+      "timestamp": "2026-03-27T22:18:21.448213",
       "original_length": null,
       "summary_length": null,
       "metadata": {},

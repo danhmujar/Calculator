@@ -18,6 +18,20 @@
     const EYE_FOLLOW_SPEED = 0.04;
     const MATH_EXPR_LIMIT = 1000; // DoS prevention (APP-L8)
 
+    /* --- PWA Configuration --- */
+    const SCI_LIB_URLS = {
+        mathlive: {
+            src: 'https://unpkg.com/mathlive@0.108.3',
+            integrity: 'sha384-JjPSUCAu+59S/H2IC4UecZ4gllGbNCS++kBwHbsk0TKHCp2b6OqkZqsRC9Kch45U'
+        },
+        mathjs: {
+            src: 'https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js',
+            integrity: 'sha384-2NnkIgIitZUPvVF20yEtYm3encP/kCjZ8nxchj4j7cbqmRi9jaVLYz/Pwn/ZgWQ6'
+        }
+    };
+    let sciLibsPreloaded = false;
+    let deferredInstallPrompt = null;
+
     /* --- Security Allowlists --- */
     const VALID_THEMES = [
         'theme-teal', 'theme-terracotta', 'theme-forest', 'theme-slate',
@@ -1096,6 +1110,57 @@
 
     let isSciLibsLoading = false;
 
+    /**
+     * Load a single CDN script by URL config.
+     * Returns a Promise that resolves when the script has loaded.
+     */
+    function loadScript(config) {
+        return new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = config.src;
+            script.crossOrigin = 'anonymous';
+            script.integrity = config.integrity;
+            script.onload = resolve;
+            script.onerror = reject;
+            document.head.appendChild(script);
+        });
+    }
+
+    /**
+     * Loads MathLive + Math.js if not already present.
+     * Returns a Promise that resolves once both are available.
+     */
+    function ensureSciLibs() {
+        const tasks = [];
+        if (typeof MathfieldElement === 'undefined') tasks.push(loadScript(SCI_LIB_URLS.mathlive));
+        if (typeof math === 'undefined') tasks.push(loadScript(SCI_LIB_URLS.mathjs));
+        if (tasks.length === 0) return Promise.resolve();
+        return Promise.all(tasks);
+    }
+
+    /**
+     * Pre-fetch scientific libraries in the background once the main
+     * thread is idle. This ensures instant SCI-mode activation and
+     * allows the Service Worker to cache them for offline use.
+     */
+    function initIdleBackgroundFetch() {
+        const idleCb = window.requestIdleCallback || ((cb) => setTimeout(cb, 2000));
+        idleCb(() => {
+            if (typeof MathfieldElement !== 'undefined' && typeof math !== 'undefined') {
+                sciLibsPreloaded = true;
+                return;
+            }
+            ensureSciLibs()
+                .then(() => {
+                    sciLibsPreloaded = true;
+                    console.info('[PWA] Scientific libraries pre-loaded in background.');
+                })
+                .catch((err) => {
+                    console.warn('[PWA] Background pre-fetch failed (will retry on SCI click).', err);
+                });
+        }, { timeout: 5000 });
+    }
+
     function setCalcMode(mode) {
         const sidebar = document.getElementById('sidebar');
         const btnStd = document.getElementById('btn-mode-std');
@@ -1103,50 +1168,34 @@
         const sciContainer = document.getElementById('sci-container');
 
         if (mode === 'scientific') {
-            if (!navigator.onLine) {
-                showToast("Scientific Mode requires an internet connection to load libraries.");
+            // Allow offline if libs were pre-loaded (cached by SW or idle fetch)
+            const libsAvailable = typeof math !== 'undefined' && typeof MathfieldElement !== 'undefined';
+            if (!libsAvailable && !navigator.onLine) {
+                showToast('Scientific Mode requires an internet connection to load libraries.');
                 return;
             }
 
-            // Lazy Load Libraries
-            if (typeof math === 'undefined' || typeof MathfieldElement === 'undefined') {
+            // Lazy Load Libraries (skipped if pre-loaded)
+            if (!libsAvailable) {
                 if (isSciLibsLoading) return;
                 isSciLibsLoading = true;
-                
+
                 const originalText = btnSci.textContent;
                 btnSci.textContent = '...';
-                
-                Promise.all([
-                    new Promise((resolve, reject) => {
-                        if (typeof MathfieldElement !== 'undefined') return resolve();
-                        const script = document.createElement('script');
-                        script.src = "https://unpkg.com/mathlive@0.108.3";
-                        script.crossOrigin = "anonymous";
-                        script.integrity = "sha384-JjPSUCAu+59S/H2IC4UecZ4gllGbNCS++kBwHbsk0TKHCp2b6OqkZqsRC9Kch45U";
-                        script.onload = resolve;
-                        script.onerror = reject;
-                        document.head.appendChild(script);
-                    }),
-                    new Promise((resolve, reject) => {
-                        if (typeof math !== 'undefined') return resolve();
-                        const script = document.createElement('script');
-                        script.src = "https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js";
-                        script.crossOrigin = "anonymous";
-                        script.integrity = "sha384-2NnkIgIitZUPvVF20yEtYm3encP/kCjZ8nxchj4j7cbqmRi9jaVLYz/Pwn/ZgWQ6";
-                        script.onload = resolve;
-                        script.onerror = reject;
-                        document.head.appendChild(script);
+
+                ensureSciLibs()
+                    .then(() => {
+                        isSciLibsLoading = false;
+                        sciLibsPreloaded = true;
+                        btnSci.textContent = originalText;
+                        activateScientificMode(sidebar, btnStd, btnSci, sciContainer);
                     })
-                ]).then(() => {
-                    isSciLibsLoading = false;
-                    btnSci.textContent = originalText;
-                    activateScientificMode(sidebar, btnStd, btnSci, sciContainer);
-                }).catch((err) => {
-                    isSciLibsLoading = false;
-                    btnSci.textContent = originalText;
-                    showToast("Failed to load scientific libraries.");
-                    console.error("Failed to load MathLive/MathJS", err);
-                });
+                    .catch((err) => {
+                        isSciLibsLoading = false;
+                        btnSci.textContent = originalText;
+                        showToast('Failed to load scientific libraries.');
+                        console.error('Failed to load MathLive/MathJS', err);
+                    });
                 return;
             }
 
@@ -1419,7 +1468,51 @@
         });
     });
 
-    /* --- PWA Service Worker auto-update --- */
+    /* --- PWA: Online/Offline State --- */
+    function updateOfflineBadge() {
+        const badge = document.getElementById('offline-badge');
+        if (!badge) return;
+        if (navigator.onLine) {
+            badge.hidden = true;
+        } else {
+            badge.hidden = false;
+        }
+    }
+
+    window.addEventListener('online', () => {
+        updateOfflineBadge();
+        showToast('Back online');
+    });
+    window.addEventListener('offline', () => {
+        updateOfflineBadge();
+        showToast('Working offline');
+    });
+
+    /* --- PWA: Install Promotion --- */
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredInstallPrompt = e;
+        const installBtn = document.getElementById('pwa-install-btn');
+        if (installBtn) installBtn.hidden = false;
+    });
+
+    function handleInstallClick() {
+        if (!deferredInstallPrompt) {
+            showToast('App is already installed or not available.');
+            return;
+        }
+        deferredInstallPrompt.prompt();
+        deferredInstallPrompt.userChoice.then((choiceResult) => {
+            if (choiceResult.outcome === 'accepted') {
+                showToast('App installed!');
+            }
+            deferredInstallPrompt = null;
+            const installBtn = document.getElementById('pwa-install-btn');
+            if (installBtn) installBtn.hidden = true;
+        });
+    }
+
+    /* --- PWA Service Worker Registration & Update Notification --- */
     if (window.location.protocol !== 'file:') {
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
@@ -1431,15 +1524,46 @@
                             if (newWorker) {
                                 newWorker.addEventListener('statechange', () => {
                                     if (newWorker.state === 'activated' && navigator.serviceWorker.controller) {
-                                        saveState();
-                                        window.location.reload();
+                                        // Show update toast instead of auto-reloading
+                                        const updateToast = document.getElementById('update-toast');
+                                        if (updateToast) {
+                                            updateToast.hidden = false;
+                                            const refreshBtn = document.getElementById('update-refresh-btn');
+                                            if (refreshBtn) {
+                                                refreshBtn.addEventListener('click', () => {
+                                                    saveState();
+                                                    window.location.reload();
+                                                }, { once: true });
+                                            }
+                                            const dismissBtn = document.getElementById('update-dismiss-btn');
+                                            if (dismissBtn) {
+                                                dismissBtn.addEventListener('click', () => {
+                                                    updateToast.hidden = true;
+                                                }, { once: true });
+                                            }
+                                        }
                                     }
                                 });
                             }
                         });
                     })
                     .catch((err) => console.warn('SW registration failed:', err));
+
+                // Trigger background pre-fetch after SW registration
+                initIdleBackgroundFetch();
             });
+        } else {
+            // No SW support, still try idle pre-fetch
+            initIdleBackgroundFetch();
         }
     }
+
+    /* --- PWA: Bind Install Button --- */
+    window.addEventListener('DOMContentLoaded', () => {
+        const installBtn = document.getElementById('pwa-install-btn');
+        if (installBtn) {
+            installBtn.addEventListener('click', handleInstallClick);
+        }
+        updateOfflineBadge();
+    });
 })();
