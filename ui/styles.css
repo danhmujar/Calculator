@@ -663,6 +663,8 @@ h2 {
     padding-bottom: 1rem;
     border-bottom: 1px dashed var(--border-color);
     position: relative;
+    overflow: hidden;
+    transition: max-height 0.35s var(--ease), opacity 0.3s var(--ease), padding 0.35s var(--ease), margin 0.35s var(--ease);
 }
 
 .calc-row-instance:last-child {
@@ -1091,7 +1093,27 @@ body[class*="theme-aurora-sunset"].scientific-mode .right-panel {
     padding: 1rem 1.5rem;
     border-bottom: 1px dashed var(--border-color);
     gap: 1rem;
-    transition: background-color 0.2s;
+    overflow: hidden;
+    transition: max-height 0.35s var(--ease), opacity 0.3s var(--ease), padding 0.35s var(--ease), margin 0.35s var(--ease), background-color 0.2s;
+}
+
+/* --- Row Enter/Exit Animation States --- */
+.row-enter {
+    max-height: 0 !important;
+    opacity: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+.row-exit {
+    max-height: 0 !important;
+    opacity: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
 }
 
 .math-row:hover {

@@ -201,12 +201,53 @@
     function addRow(btnEl, type) {
         const container = btnEl.closest('.calc-card').querySelector('.calc-rows-container');
         const newRow = createRow(type);
+
+        // Start collapsed
+        newRow.classList.add('row-enter');
         container.appendChild(newRow);
+
+        // Force layout flush, then remove the collapsed class to trigger the expand transition
+        void newRow.offsetWidth;
+        requestAnimationFrame(() => {
+            newRow.style.maxHeight = newRow.scrollHeight + 'px';
+            newRow.classList.remove('row-enter');
+
+            // Clean up inline max-height after transition completes
+            newRow.addEventListener('transitionend', function handler(e) {
+                if (e.propertyName === 'max-height') {
+                    newRow.style.maxHeight = '';
+                    newRow.removeEventListener('transitionend', handler);
+                }
+            }, { once: true });
+        });
     }
 
     function deleteRow(btnEl) {
         const rowInstance = btnEl.closest('.calc-row-instance');
-        if (rowInstance) rowInstance.remove();
+        if (!rowInstance) return;
+
+        // Set explicit max-height from current height so the transition has a start value
+        rowInstance.style.maxHeight = rowInstance.scrollHeight + 'px';
+        void rowInstance.offsetWidth;
+
+        // Trigger collapse animation
+        requestAnimationFrame(() => {
+            rowInstance.classList.add('row-exit');
+
+            const cleanup = () => {
+                rowInstance.remove();
+            };
+
+            rowInstance.addEventListener('transitionend', function handler(e) {
+                if (e.propertyName === 'max-height') {
+                    cleanup();
+                    rowInstance.removeEventListener('transitionend', handler);
+                }
+            }, { once: true });
+
+            // Safety fallback
+            setTimeout(cleanup, 400);
+        });
     }
 
     /* --- State Persistence (localStorage) --- */
@@ -1213,7 +1254,24 @@
 
         row.appendChild(mf);
         row.appendChild(actionsDiv);
+
+        // Start collapsed
+        row.classList.add('row-enter');
         wrapper.appendChild(row);
+
+        // Force layout flush, then expand
+        void row.offsetWidth;
+        requestAnimationFrame(() => {
+            row.style.maxHeight = row.scrollHeight + 'px';
+            row.classList.remove('row-enter');
+
+            row.addEventListener('transitionend', function handler(e) {
+                if (e.propertyName === 'max-height') {
+                    row.style.maxHeight = '';
+                    row.removeEventListener('transitionend', handler);
+                }
+            }, { once: true });
+        });
 
         const resEl = document.getElementById(uniqueId);
         if (resEl) setupMathFieldListeners(mf, resEl);
@@ -1263,7 +1321,29 @@
         l2.setAttribute('x1', '6'); l2.setAttribute('y1', '6'); l2.setAttribute('x2', '18'); l2.setAttribute('y2', '18');
         delSvg.appendChild(l1); delSvg.appendChild(l2);
         delBtn.appendChild(delSvg);
-        delBtn.addEventListener('click', () => rowEl.remove());
+        delBtn.addEventListener('click', () => {
+            // Animate the row collapse before removing from DOM
+            rowEl.style.maxHeight = rowEl.scrollHeight + 'px';
+            void rowEl.offsetWidth;
+
+            requestAnimationFrame(() => {
+                rowEl.classList.add('row-exit');
+
+                const cleanup = () => {
+                    rowEl.remove();
+                };
+
+                rowEl.addEventListener('transitionend', function handler(e) {
+                    if (e.propertyName === 'max-height') {
+                        cleanup();
+                        rowEl.removeEventListener('transitionend', handler);
+                    }
+                }, { once: true });
+
+                // Safety fallback
+                setTimeout(cleanup, 400);
+            });
+        });
 
         actionsDiv.appendChild(resEl);
         actionsDiv.appendChild(copyBtn);
