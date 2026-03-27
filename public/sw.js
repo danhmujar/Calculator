@@ -1,5 +1,5 @@
 // Service Worker — Percentage & Math Calculator PWA
-const CACHE_NAME = 'calc-v12';
+const CACHE_NAME = 'calc-v13';
 const MAX_CACHE_ITEMS = 50;
 
 // App shell to pre-cache on install (CDN libs are cached on-demand via fetch handler)
@@ -15,8 +15,16 @@ const PRECACHE_URLS = [
     './services/app.js',
     './ui/ui.js',
     './ui/styles.css',
-    // Google Fonts CSS
-    'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap',
+    // Local Fonts
+    './ui/fonts.css',
+    './ui/fonts/font-0.woff2', './ui/fonts/font-1.woff2', './ui/fonts/font-10.woff2', './ui/fonts/font-11.woff2',
+    './ui/fonts/font-12.woff2', './ui/fonts/font-13.woff2', './ui/fonts/font-14.woff2', './ui/fonts/font-15.woff2',
+    './ui/fonts/font-16.woff2', './ui/fonts/font-17.woff2', './ui/fonts/font-18.woff2', './ui/fonts/font-19.woff2',
+    './ui/fonts/font-2.woff2', './ui/fonts/font-20.woff2', './ui/fonts/font-21.woff2', './ui/fonts/font-22.woff2',
+    './ui/fonts/font-23.woff2', './ui/fonts/font-24.woff2', './ui/fonts/font-25.woff2', './ui/fonts/font-26.woff2',
+    './ui/fonts/font-27.woff2', './ui/fonts/font-28.woff2', './ui/fonts/font-29.woff2', './ui/fonts/font-3.woff2',
+    './ui/fonts/font-30.woff2', './ui/fonts/font-31.woff2', './ui/fonts/font-4.woff2', './ui/fonts/font-5.woff2',
+    './ui/fonts/font-6.woff2', './ui/fonts/font-7.woff2', './ui/fonts/font-8.woff2', './ui/fonts/font-9.woff2',
     // Scientific mode CDN libraries (version-pinned for offline SCI mode)
     'https://unpkg.com/mathlive@0.108.3',
     'https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js'
@@ -63,6 +71,24 @@ self.addEventListener('fetch', (event) => {
 
     // SW-L2 FIX: HTTPS enforcement (except for local dev)
     if (!url.startsWith('https://') && !url.startsWith('http://localhost') && !url.startsWith('http://127.0.0.1')) {
+        return;
+    }
+
+    const isFont = url.includes('/ui/fonts/');
+
+    if (isFont) {
+        event.respondWith(
+            caches.match(event.request).then((cached) => {
+                const fetched = fetch(event.request).then((networkResponse) => {
+                    caches.open(CACHE_NAME).then((cache) => {
+                        cache.put(event.request, networkResponse.clone());
+                        limitCacheSize(CACHE_NAME, MAX_CACHE_ITEMS);
+                    }).catch(err => console.warn('SW: Cache write failed', err));
+                    return networkResponse.clone();
+                });
+                return cached || fetched;
+            })
+        );
         return;
     }
 

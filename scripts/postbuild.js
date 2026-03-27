@@ -27,12 +27,35 @@ if (fs.existsSync(swPath)) {
         assetUrls
     );
 
+    // --- Font path rewriting ---
+    // Vite inlines fonts.css into index.css, so remove the standalone entry
+    swContent = swContent.replace(/\s*'\.\/ui\/fonts\.css',/, '');
+
+    // Get actual font files in dist/assets
+    const distFonts = fs.readdirSync(assetsDir).filter(f => f.endsWith('.woff2'));
+
+    // Replace the entire block of ./ui/fonts/* entries with ./assets/* entries
+    swContent = swContent.replace(
+        /\/\/ Local Fonts[\s\S]*?'\.\/ui\/fonts\/font-\d+\.woff2',/g,
+        '// Local Fonts (Vite-resolved)\n    ' + distFonts.map(f => `'./assets/${f}',`).join(' ')
+    );
+
+    // Remove any remaining ./ui/fonts references that didn't match the block
+    swContent = swContent.replace(/ *'\.\/ui\/fonts\/font-\d+\.woff2',?\n?/g, '');
+
+    // Rewrite isFont handler to match Vite's asset path instead of ./ui/fonts/
+    swContent = swContent.replace(
+        "url.includes('/ui/fonts/')",
+        "url.endsWith('.woff2')"
+    );
+
     // Inject cache-busting timestamp to CACHE_NAME to ensure SW updates when built
     const timestamp = new Date().getTime();
-    swContent = swContent.replace(/const CACHE_NAME = 'calc-[^']+';/, `const CACHE_NAME = 'calc-v12-build-${timestamp}';`);
+    swContent = swContent.replace(/const CACHE_NAME = 'calc-[^']+';/, `const CACHE_NAME = 'calc-v13-build-${timestamp}';`);
 
     fs.writeFileSync(swPath, swContent, 'utf8');
     console.log(`Transformed dist/sw.js for production assets: ${assetFiles.join(', ')}`);
+    console.log(`Included ${distFonts.length} font files in precache.`);
 } else {
     console.error('dist/sw.js not found! Ensure sw.js is in public/.');
     process.exit(1);

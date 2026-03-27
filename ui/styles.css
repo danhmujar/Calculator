@@ -1,3 +1,5 @@
+@import url('fonts.css');
+
 /*
  * Z-INDEX SCALE
  * --------------------
@@ -456,9 +458,21 @@ body[class*="theme-aurora"] .left-panel header {
     contain: layout style;
 }
 
+/* Rendering Optimizations */
+.calc-keypad,
+.calc-display {
+    contain: layout style;
+}
+
+.pupil {
+    will-change: transform;
+}
+
 /* Prevent iOS double-tap-to-zoom on calculator buttons */
 .calc-btn {
     touch-action: manipulation;
+    min-height: 44px;
+    min-width: 44px;
 }
 
 /* Buttons use opaque background instead of costly backdrop-filter */
@@ -733,6 +747,8 @@ input[type=number]::-webkit-outer-spin-button {
     align-items: center;
     justify-content: center;
     transition: background-color 0.2s, color 0.2s;
+    min-height: 44px;
+    min-width: 44px;
 }
 
 .icon-btn:hover {
