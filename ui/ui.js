@@ -126,6 +126,8 @@
         // rightPanel is on the right, so new width is window width - mouse X
         const newWidth = window.innerWidth - e.clientX;
         document.documentElement.style.setProperty('--sidebar-width', newWidth + 'px');
+        // Accessibility: keep aria-valuenow in sync with actual width
+        resizer.setAttribute('aria-valuenow', Math.round(newWidth));
     });
 
     resizer.addEventListener('pointerup', function(e) {

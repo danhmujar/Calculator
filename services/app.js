@@ -53,32 +53,32 @@
     const ROW_TEMPLATES = {
         'type1': `
                 <div class="input-group">
-                    <input type="number" name="val-x" class="val-x" placeholder="X" step="any" autocomplete="off">
+                    <input type="number" name="val-x" class="val-x" placeholder="X" step="any" autocomplete="off" aria-label="First value">
                     <span>is what % of</span>
-                    <input type="number" name="val-y" class="val-y" placeholder="Y" step="any" autocomplete="off">
+                    <input type="number" name="val-y" class="val-y" placeholder="Y" step="any" autocomplete="off" aria-label="Second value">
                 </div>
             `,
         'type2': `
                 <div class="input-group">
                     <span>What is</span>
-                    <input type="number" name="val-x" class="val-x" placeholder="X %" step="any" autocomplete="off">
+                    <input type="number" name="val-x" class="val-x" placeholder="X %" step="any" autocomplete="off" aria-label="Percentage">
                     <span>% of</span>
-                    <input type="number" name="val-y" class="val-y" placeholder="Y" step="any" autocomplete="off">
+                    <input type="number" name="val-y" class="val-y" placeholder="Y" step="any" autocomplete="off" aria-label="Value">
                 </div>
             `,
         'type3': `
                 <div class="input-group">
                     <span>Change from</span>
-                    <input type="number" name="val-x" class="val-x" placeholder="X" step="any" autocomplete="off">
+                    <input type="number" name="val-x" class="val-x" placeholder="X" step="any" autocomplete="off" aria-label="Original value">
                     <span>to</span>
-                    <input type="number" name="val-y" class="val-y" placeholder="Y" step="any" autocomplete="off">
+                    <input type="number" name="val-y" class="val-y" placeholder="Y" step="any" autocomplete="off" aria-label="New value">
                 </div>
             `,
         'type4': `
                 <div class="input-group">
-                    <input type="number" name="val-x" class="val-x" placeholder="X" step="any" autocomplete="off">
+                    <input type="number" name="val-x" class="val-x" placeholder="X" step="any" autocomplete="off" aria-label="Partial value">
                     <span>is</span>
-                    <input type="number" name="val-y" class="val-y" placeholder="P %" step="any" autocomplete="off">
+                    <input type="number" name="val-y" class="val-y" placeholder="P %" step="any" autocomplete="off" aria-label="Percentage">
                     <span>% of what?</span>
                 </div>
             `
@@ -138,6 +138,7 @@
         const resultValue = document.createElement('span');
         resultValue.className = 'result-value';
         resultValue.id = uniqueId;
+        resultValue.setAttribute('aria-live', 'polite');
         resultValue.textContent = (type === 'type1' || type === 'type3') ? '0.00%' : '0.00';
         resultGroup.appendChild(resultValue);
 
@@ -1281,6 +1282,7 @@
     function createMathField() {
         const mf = document.createElement('math-field');
         mf.setAttribute('virtual-keyboard-mode', 'manual');
+        mf.setAttribute('aria-label', 'Mathematical expression');
         mf.addEventListener('focus', () => {
             document.querySelectorAll('math-field').forEach(f => f.classList.remove('last-focused'));
             mf.classList.add('last-focused');
