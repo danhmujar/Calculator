@@ -1,0 +1,13 @@
+{
+  "workflow": {
+    "research": true,
+    "requirements": true,
+    "roadmap": true,
+    "state": true
+  },
+  "preferences": {
+    "ui_style": "preserve",
+    "goal": "efficiency",
+    "auto_mode": true
+  }
+}
