@@ -1,12 +1,11 @@
 'use strict';
 
+import { store } from './store.js';
+import { renderer } from '../ui/renderer.js';
+
 /**
  * Percentage & Math Calculator - Services Layer
- * 
- * This file contains the core business logic, state management, and event bindings.
- * Wrapped in an IIFE to prevent global scope pollution (APP-L3).
  */
-(function () {
     /* --- Configuration Constants (APP-L5) --- */
     const TOAST_DURATION_MS = 2000;
     const MAX_AUDIT_ENTRIES = 100;
@@ -270,7 +269,7 @@
     let pendingSciRows = null; // Deferred sci rows to restore after lazy-load
 
     function saveState() {
-        const state = {
+        const stateFields = {
             theme: Array.from(document.body.classList).find(c => c.startsWith('theme-')) || '',
             darkMode: document.body.classList.contains('dark-theme'),
             mode: document.body.classList.contains('scientific-mode') ? 'scientific' : 'standard',
@@ -283,7 +282,7 @@
             const type = card.getAttribute('data-type');
             if (!type) return;
 
-            state.cards[type] = Array.from(card.querySelectorAll('.calc-row-instance')).map(row => {
+            stateFields.cards[type] = Array.from(card.querySelectorAll('.calc-row-instance')).map(row => {
                 const xInp = row.querySelector('.val-x');
                 const yInp = row.querySelector('.val-y');
                 return {
@@ -294,10 +293,11 @@
         });
 
         document.querySelectorAll('math-field').forEach(mf => {
-            state.sciRows.push(mf.value);
+            stateFields.sciRows.push(mf.value);
         });
 
-        localStorage.setItem('interactiveCalcState', JSON.stringify(state));
+        // Delegate persistence to the store's functional state management
+        store.setState(stateFields);
     }
 
     function loadState() {
@@ -306,13 +306,15 @@
 
         try {
             const state = JSON.parse(saved);
+            
+            // Sync loaded state into the functional store
+            store.setState(state);
+            
             restoreThemeAndMode(state);
             restoreAuditTape(state);
             restorePercentageCards(state);
-            // If scientific mode is being restored, defer sci rows until after lazy-load.
-            // Otherwise (libs already loaded from a previous session), restore directly.
+            
             if (state.mode === 'scientific' && (typeof math === 'undefined' || typeof MathfieldElement === 'undefined')) {
-                // Store rows for activateScientificMode to pick up after lazy-load
                 pendingSciRows = state.sciRows || null;
             } else {
                 restoreScientificRows(state);
@@ -484,13 +486,13 @@
     });
 
     /* --- Global Calculator State --- */
-    let calcState = {
-        currentValue: '0',
-        previousValue: null,
-        operator: null,
-        resetNext: false,
-        memoryValue: 0
-    };
+    const calcState = new Proxy({}, {
+        get: (_, prop) => store.getState()[prop],
+        set: (_, prop, value) => {
+            store.setState({ [prop]: value });
+            return true;
+        }
+    });
 
     const displayEl = document.getElementById('main-calc-display');
     const previewEl = document.getElementById('main-calc-prev');
@@ -520,61 +522,47 @@
 
     /**
      * Shrink the display font until the text fits within the container,
-     * starting at the max font size. If it still overflows at the
-     * minimum font, fall back to scientific notation.
+     * utilizing the Renderer's Canvas-based layout engine for extreme performance.
      */
     function fitDisplayText(text, targetVal) {
-        displayEl.textContent = text;
-        displayEl.style.fontSize = DISPLAY_MAX_FONT + 'rem';
-
+        if (!displayEl) return;
         const container = displayEl.parentElement;
         const containerWidth = container.clientWidth - 48; // account for padding
 
-        let currentFont = DISPLAY_MAX_FONT;
-        while (displayEl.scrollWidth > containerWidth && currentFont > DISPLAY_MIN_FONT) {
-            currentFont = Math.max(currentFont - DISPLAY_FONT_STEP, DISPLAY_MIN_FONT);
-            displayEl.style.fontSize = currentFont + 'rem';
-        }
+        const res = renderer.fitDisplayText(text, containerWidth, {
+            minRem: DISPLAY_MIN_FONT,
+            maxRem: DISPLAY_MAX_FONT,
+            remToPx: 16
+        });
 
-        // If still overflowing at minimum font, use scientific notation
-        if (displayEl.scrollWidth > containerWidth && Math.abs(targetVal) >= 1e6) {
-            const sci = toSciNotation(targetVal);
-            displayEl.textContent = sci;
-            displayEl.style.fontSize = DISPLAY_MIN_FONT + 'rem';
-
-            // Try scaling sci notation text back up
-            currentFont = DISPLAY_MIN_FONT;
-            while (currentFont < DISPLAY_MAX_FONT) {
-                const next = Math.min(currentFont + DISPLAY_FONT_STEP, DISPLAY_MAX_FONT);
-                displayEl.style.fontSize = next + 'rem';
-                if (displayEl.scrollWidth > containerWidth) {
-                    displayEl.style.fontSize = currentFont + 'rem';
-                    break;
-                }
-                currentFont = next;
-            }
-        }
+        displayEl.textContent = res.text;
+        displayEl.style.fontSize = res.fontSizeRem + 'rem';
     }
 
     function updateDisplay() {
-        if (!displayEl || !previewEl) return;
+        renderer.schedule(() => {
+            if (!displayEl || !previewEl) return;
 
-        let hasDot = calcState.currentValue.endsWith('.');
-        let targetVal = parseFloat(calcState.currentValue);
-        if (isNaN(targetVal)) targetVal = 0;
+            let hasDot = calcState.currentValue.endsWith('.');
+            let targetVal = parseFloat(calcState.currentValue);
+            if (isNaN(targetVal)) targetVal = 0;
 
-        let formatted = proFormatter.format(targetVal);
-        if (hasDot) formatted += '.';
+            let formatted = proFormatter.format(targetVal);
+            if (hasDot) formatted += '.';
 
-        fitDisplayText(formatted, targetVal);
+            fitDisplayText(formatted, targetVal);
 
-        if (calcState.previousValue !== null && calcState.operator) {
-            const opStr = formatOperator(calcState.operator);
-            previewEl.textContent = `${proFormatter.format(calcState.previousValue)} ${opStr}`;
-        } else {
-            previewEl.textContent = '';
-        }
+            if (calcState.previousValue !== null && calcState.operator) {
+                const opStr = formatOperator(calcState.operator);
+                previewEl.textContent = `${proFormatter.format(calcState.previousValue)} ${opStr}`;
+            } else {
+                previewEl.textContent = '';
+            }
+        });
     }
+
+    // Subscribe rendering to store changes
+    store.subscribe(() => updateDisplay());
 
     function calcDigit(digit) {
         if (calcState.resetNext) {
@@ -1440,7 +1428,7 @@
         if (rafPending) return;
         rafPending = true;
 
-        requestAnimationFrame(() => {
+        renderer.schedule(() => {
             const mouseX = e.clientX;
             const mouseY = e.clientY;
 
@@ -1459,7 +1447,8 @@
                 const tx = Math.cos(angle) * dist;
                 const ty = Math.sin(angle) * dist;
 
-                pupil.style.transform = `translate(${tx}px, ${ty}px)`;
+                pupil.style.setProperty('--pupil-x', `${tx}px`);
+                pupil.style.setProperty('--pupil-y', `${ty}px`);
             };
 
             movePupil(pupil1, EYE_RADIUS_PUPIL_1);
@@ -1566,4 +1555,3 @@
         }
         updateOfflineBadge();
     });
-})();

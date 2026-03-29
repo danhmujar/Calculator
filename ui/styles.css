@@ -465,7 +465,10 @@ body[class*="theme-aurora"] .left-panel header {
 }
 
 .pupil {
+    --pupil-x: 0px;
+    --pupil-y: 0px;
     will-change: transform;
+    transform: translate(var(--pupil-x), var(--pupil-y));
 }
 
 /* Prevent iOS double-tap-to-zoom on calculator buttons */
