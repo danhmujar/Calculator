@@ -1,6 +1,7 @@
 import { store } from './store.js';
 import { renderer } from '../ui/renderer.js';
 import { create, addDependencies, evaluateDependencies, numberDependencies } from 'mathjs';
+import { registerSW } from 'virtual:pwa-register';
 import 'mathlive';
 
 // Initialize tree-shaken mathjs
@@ -1392,44 +1393,29 @@ const math = create({
     }
 
     /* --- PWA Service Worker Registration & Update Notification --- */
-    if (window.location.protocol !== 'file:') {
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                // SW-L1 FIX: Explicit scope restriction
-                navigator.serviceWorker.register('./sw.js', { scope: './' })
-                    .then((reg) => {
-                        reg.addEventListener('updatefound', () => {
-                            const newWorker = reg.installing;
-                            if (newWorker) {
-                                newWorker.addEventListener('statechange', () => {
-                                    if (newWorker.state === 'activated' && navigator.serviceWorker.controller) {
-                                        // Show update toast instead of auto-reloading
-                                        const updateToast = document.getElementById('update-toast');
-                                        if (updateToast) {
-                                            updateToast.hidden = false;
-                                            const refreshBtn = document.getElementById('update-refresh-btn');
-                                            if (refreshBtn) {
-                                                refreshBtn.addEventListener('click', () => {
-                                                    saveState();
-                                                    window.location.reload();
-                                                }, { once: true });
-                                            }
-                                            const dismissBtn = document.getElementById('update-dismiss-btn');
-                                            if (dismissBtn) {
-                                                dismissBtn.addEventListener('click', () => {
-                                                    updateToast.hidden = true;
-                                                }, { once: true });
-                                            }
-                                        }
-                                    }
-                                });
-                            }
-                        });
-                    })
-                    .catch((err) => console.warn('SW registration failed:', err));
-            });
-        }
-    }
+    const updateSW = registerSW({
+        onNeedRefresh() {
+            const updateToast = document.getElementById('update-toast');
+            if (updateToast) {
+                updateToast.hidden = false;
+                const refreshBtn = document.getElementById('update-refresh-btn');
+                if (refreshBtn) {
+                    refreshBtn.addEventListener('click', () => {
+                        updateSW(true);
+                    }, { once: true });
+                }
+                const dismissBtn = document.getElementById('update-dismiss-btn');
+                if (dismissBtn) {
+                    dismissBtn.addEventListener('click', () => {
+                        updateToast.hidden = true;
+                    }, { once: true });
+                }
+            }
+        },
+        onOfflineReady() {
+            showToast('App ready for offline use');
+        },
+    });
 
     /* --- PWA: Bind Install Button --- */
     window.addEventListener('DOMContentLoaded', () => {
