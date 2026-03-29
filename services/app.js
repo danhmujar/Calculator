@@ -1,15 +1,11 @@
 import { store } from './store.js';
 import { renderer } from '../ui/renderer.js';
-import { create, addDependencies, evaluateDependencies, numberDependencies } from 'mathjs';
+import { create, all } from 'mathjs';
 import { registerSW } from 'virtual:pwa-register';
 import 'mathlive';
 
-// Initialize tree-shaken mathjs
-const math = create({
-    addDependencies,
-    evaluateDependencies,
-    numberDependencies
-});
+// Initialize mathjs with all functions
+const math = create(all);
 
 /**
  * Percentage & Math Calculator - Services Layer
@@ -169,7 +165,7 @@ const math = create({
         deleteSvg.setAttribute('aria-hidden', 'true');
         
         const useEl = document.createElementNS('http://www.w3.org/2000/svg', 'use');
-        useEl.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', './public/assets/sprites.svg#icon-delete');
+        useEl.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', './assets/sprites.svg#icon-delete');
         deleteSvg.appendChild(useEl);
         
         deleteBtn.appendChild(deleteSvg);
@@ -799,7 +795,7 @@ const math = create({
         svg.setAttribute('aria-hidden', 'true');
 
         const useEl = document.createElementNS('http://www.w3.org/2000/svg', 'use');
-        useEl.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', './public/assets/sprites.svg#icon-copy');
+        useEl.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', './assets/sprites.svg#icon-copy');
         svg.appendChild(useEl);
         
         return svg;
@@ -916,6 +912,17 @@ const math = create({
 
         const mobileBtn = document.getElementById('mobile-panel-toggle-btn');
         if (mobileBtn) mobileBtn.addEventListener('click', toggleDrawer);
+
+        // Enhance Skip Link behavior: ensure drawer is open when jumping to calculator
+        const skipLink = document.querySelector('.skip-link');
+        if (skipLink) {
+            skipLink.addEventListener('click', (e) => {
+                const sidebar = document.getElementById('sidebar');
+                if (sidebar && !sidebar.classList.contains('open')) {
+                    toggleDrawer();
+                }
+            });
+        }
 
         const addMathBtn = document.getElementById('add-math-btn');
         if (addMathBtn) addMathBtn.addEventListener('click', addScientificRow);
@@ -1247,7 +1254,7 @@ const math = create({
         delSvg.setAttribute('aria-hidden', 'true');
         
         const useEl = document.createElementNS('http://www.w3.org/2000/svg', 'use');
-        useEl.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', './public/assets/sprites.svg#icon-delete');
+        useEl.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', './assets/sprites.svg#icon-delete');
         delSvg.appendChild(useEl);
         
         delBtn.appendChild(delSvg);

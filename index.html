@@ -11,7 +11,6 @@
     <meta http-equiv="Content-Security-Policy"
         content="default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data:; img-src 'self' data:; connect-src 'self'; worker-src 'self' blob:;">
     <!-- CSP is enforced via server HTTP headers (e.g., GitHub Pages _headers / Cloudflare) -->
-    <link rel="manifest" href="./manifest.json">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -36,7 +35,7 @@
             <header class="header-row">
                 <div class="header-brand">
                     <div class="calculator-wrapper">
-                        <svg aria-hidden="true" class="calculator-svg" overflow="visible"><use xlink:href="./public/assets/sprites.svg#icon-calc"></use></svg>
+                        <svg aria-hidden="true" class="calculator-svg" overflow="visible"><use xlink:href="./assets/sprites.svg#icon-calc"></use></svg>
                     </div>
                     <div>
                         <h1>Percentage & Math Calculator</h1>
@@ -47,7 +46,7 @@
 
                     <div class="theme-dropdown" id="theme-dropdown-container">
                         <button class="icon-btn palette-btn-inner" id="palette-toggle-btn" title="Choose Color Theme">
-                            <svg aria-hidden="true" class="anim-bounce-hover"><use xlink:href="./public/assets/sprites.svg#icon-palette"></use></svg>
+                            <svg aria-hidden="true" class="anim-bounce-hover"><use xlink:href="./assets/sprites.svg#icon-palette"></use></svg>
                         </button>
 
                         <!-- 2026 Color Palette Picker -->
@@ -103,17 +102,17 @@
                                 <div class="slider-bg">
                                     <div class="slider-bg-day">
                                         <!-- Piling Clouds leaning right, avoiding sun on the left -->
-                                        <svg width="68" height="34" aria-hidden="true" style="position:absolute;right:-2px;top:0"><use xlink:href="./public/assets/sprites.svg#icon-clouds"></use></svg>
+                                        <svg width="68" height="34" aria-hidden="true" style="position:absolute;right:-2px;top:0"><use xlink:href="./assets/sprites.svg#icon-clouds"></use></svg>
                                     </div>
                                     <div class="slider-bg-night">
                                         <!-- Detailed Stars -->
-                                        <svg width="68" height="34" aria-hidden="true" style="position:absolute;left:0;top:0"><use xlink:href="./public/assets/sprites.svg#icon-stars"></use></svg>
+                                        <svg width="68" height="34" aria-hidden="true" style="position:absolute;left:0;top:0"><use xlink:href="./assets/sprites.svg#icon-stars"></use></svg>
                                     </div>
                                 </div>
 
                                 <!-- Decorative Elements ON the Knob -->
-                                <svg aria-hidden="true" class="sun-details"><use xlink:href="./public/assets/sprites.svg#icon-sun"></use></svg>
-                                <svg aria-hidden="true" class="moon-details"><use xlink:href="./public/assets/sprites.svg#icon-moon"></use></svg>
+                                <svg aria-hidden="true" class="sun-details"><use xlink:href="./assets/sprites.svg#icon-sun"></use></svg>
+                                <svg aria-hidden="true" class="moon-details"><use xlink:href="./assets/sprites.svg#icon-moon"></use></svg>
                             </div>
                         </label>
                     </div>
@@ -125,7 +124,7 @@
                 <div class="card-header-wrapper">
                     <h2>X is what % of Y</h2>
                     <button class="add-row-btn" data-add-row="type1" aria-label="Add row to X is what % of Y">
-                        <svg width="14" height="14" aria-hidden="true"><use xlink:href="./public/assets/sprites.svg#icon-plus"></use></svg>
+                        <svg width="14" height="14" aria-hidden="true"><use xlink:href="./assets/sprites.svg#icon-plus"></use></svg>
                         Add Row
                     </button>
                 </div>
@@ -139,7 +138,7 @@
                 <div class="card-header-wrapper">
                     <h2>What is X% of Y</h2>
                     <button class="add-row-btn" data-add-row="type2" aria-label="Add row to What is X% of Y">
-                        <svg width="14" height="14" aria-hidden="true"><use xlink:href="./public/assets/sprites.svg#icon-plus"></use></svg>
+                        <svg width="14" height="14" aria-hidden="true"><use xlink:href="./assets/sprites.svg#icon-plus"></use></svg>
                         Add Row
                     </button>
                 </div>
@@ -153,7 +152,7 @@
                     <h2>Percentage change from X to Y</h2>
                     <button class="add-row-btn" data-add-row="type3"
                         aria-label="Add row to Percentage change from X to Y">
-                        <svg width="14" height="14" aria-hidden="true"><use xlink:href="./public/assets/sprites.svg#icon-plus"></use></svg>
+                        <svg width="14" height="14" aria-hidden="true"><use xlink:href="./assets/sprites.svg#icon-plus"></use></svg>
                         Add Row
                     </button>
                 </div>
@@ -166,7 +165,7 @@
                 <div class="card-header-wrapper">
                     <h2>X is P% of what?</h2>
                     <button class="add-row-btn" data-add-row="type4" aria-label="Add row to X is P% of what?">
-                        <svg width="14" height="14" aria-hidden="true"><use xlink:href="./public/assets/sprites.svg#icon-plus"></use></svg>
+                        <svg width="14" height="14" aria-hidden="true"><use xlink:href="./assets/sprites.svg#icon-plus"></use></svg>
                         Add Row
                     </button>
                 </div>
@@ -189,17 +188,17 @@
                         aria-checked="false" aria-label="Switch to scientific mode">SCI</button>
                 </div>
                 <span class="offline-badge" id="offline-badge" hidden aria-live="polite">
-                    <svg width="12" height="12" aria-hidden="true"><use xlink:href="./public/assets/sprites.svg#icon-offline"></use></svg>
+                    <svg width="12" height="12" aria-hidden="true"><use xlink:href="./assets/sprites.svg#icon-offline"></use></svg>
                     Offline
                 </span>
 
                 <div class="sidebar-controls">
                     <button class="icon-btn" id="history-toggle-btn" title="History"
                         aria-label="Toggle calculation history">
-                        <svg aria-hidden="true" class="anim-wiggle-hover"><use xlink:href="./public/assets/sprites.svg#icon-history"></use></svg>
+                        <svg aria-hidden="true" class="anim-wiggle-hover"><use xlink:href="./assets/sprites.svg#icon-history"></use></svg>
                     </button>
                     <button class="close-drawer icon-btn" id="close-drawer-btn" aria-label="Close sidebar">
-                        <svg aria-hidden="true"><use xlink:href="./public/assets/sprites.svg#icon-close"></use></svg>
+                        <svg aria-hidden="true"><use xlink:href="./assets/sprites.svg#icon-close"></use></svg>
                     </button>
                 </div>
             </div>
@@ -218,7 +217,7 @@
                     <!-- Rows injected here -->
                 </div>
                 <button class="add-math-btn" id="add-math-btn">
-                    <svg width="18" height="18" aria-hidden="true"><use xlink:href="./public/assets/sprites.svg#icon-plus"></use></svg>
+                    <svg width="18" height="18" aria-hidden="true"><use xlink:href="./assets/sprites.svg#icon-plus"></use></svg>
                     New Expression
                 </button>
             </div>
@@ -259,12 +258,12 @@
                 <div class="audit-header">
                     <div class="audit-header-left">
                         <button class="icon-btn" id="history-back-btn" title="Back">
-                            <svg width="18" height="18" aria-hidden="true"><use xlink:href="./public/assets/sprites.svg#icon-chevron-left"></use></svg>
+                            <svg width="18" height="18" aria-hidden="true"><use xlink:href="./assets/sprites.svg#icon-chevron-left"></use></svg>
                         </button>
                         <span>History</span>
                     </div>
                     <button class="icon-btn" id="clear-tape-btn" title="Clear Tape">
-                        <svg width="16" height="16" aria-hidden="true"><use xlink:href="./public/assets/sprites.svg#icon-trash"></use></svg>
+                        <svg width="16" height="16" aria-hidden="true"><use xlink:href="./assets/sprites.svg#icon-trash"></use></svg>
                     </button>
                 </div>
                 <ul class="audit-list" id="audit-list">
@@ -277,7 +276,7 @@
     <!-- Mobile Toggle FAB -->
     <button class="glass-fab mobile-panel-fab" id="mobile-panel-toggle-btn" title="Open Calculator"
         aria-label="Open Calculator">
-        <svg aria-hidden="true"><use xlink:href="./public/assets/sprites.svg#icon-smartphone"></use></svg>
+        <svg aria-hidden="true"><use xlink:href="./assets/sprites.svg#icon-smartphone"></use></svg>
     </button>
 
     <div class="toast" id="toast" role="status" aria-live="polite">Copied to clipboard!</div>
@@ -300,7 +299,7 @@
         <div class="about-modal">
             <!-- Close X -->
             <button class="about-close-x" id="about-close-x" title="Close" aria-label="Close about dialog">
-                <svg width="16" height="16" aria-hidden="true"><use xlink:href="./public/assets/sprites.svg#icon-x"></use></svg>
+                <svg width="16" height="16" aria-hidden="true"><use xlink:href="./assets/sprites.svg#icon-x"></use></svg>
             </button>
 
             <div class="about-modal-inner">
@@ -321,7 +320,7 @@
                     <!-- Tech Stack -->
                     <div>
                         <div class="about-section-title">
-                            <svg aria-hidden="true"><use xlink:href="./public/assets/sprites.svg#icon-code"></use></svg>
+                            <svg aria-hidden="true"><use xlink:href="./assets/sprites.svg#icon-code"></use></svg>
                             Tech Stack
                         </div>
                         <div class="about-badges">
@@ -337,11 +336,11 @@
                     <!-- Security / Architecture -->
                     <div>
                         <div class="about-section-title">
-                            <svg aria-hidden="true"><use xlink:href="./public/assets/sprites.svg#icon-shield"></use></svg>
+                            <svg aria-hidden="true"><use xlink:href="./assets/sprites.svg#icon-shield"></use></svg>
                             Security &amp; Architecture
                         </div>
                         <ul class="about-list">
-                            <li>SRI hashes on CDN scripts</li>
+                            <li>npm-managed dependencies</li>
                             <li>100% client-side, zero data sent</li>
                             <li>Service Worker offline cache</li>
                             <li>localStorage state persistence</li>
@@ -351,7 +350,7 @@
                     <!-- Features -->
                     <div>
                         <div class="about-section-title">
-                            <svg aria-hidden="true"><use xlink:href="./public/assets/sprites.svg#icon-check-circle"></use></svg>
+                            <svg aria-hidden="true"><use xlink:href="./assets/sprites.svg#icon-check-circle"></use></svg>
                             Features
                         </div>
                         <ul class="about-list">
@@ -373,12 +372,11 @@
                     <!-- Limitations -->
                     <div>
                         <div class="about-section-title">
-                            <svg aria-hidden="true"><use xlink:href="./public/assets/sprites.svg#icon-alert-circle"></use></svg>
+                            <svg aria-hidden="true"><use xlink:href="./assets/sprites.svg#icon-alert-circle"></use></svg>
                             Limitations
                         </div>
                         <ul class="about-list about-list--warn">
                             <li>No server, DB, or cloud sync</li>
-                            <li>Scientific mode needs first-time internet</li>
                             <li>IEEE 754 float precision</li>
                             <li>No graphing or unit conversion</li>
                         </ul>
@@ -395,7 +393,7 @@
                         <a class="about-linkedin" href="https://www.linkedin.com/in/danhmujar"
                             target="_blank" rel="noopener noreferrer">Connect on LinkedIn <span>&rarr;</span></a>
                         <button class="about-install-btn" id="pwa-install-btn" hidden>
-                            <svg width="16" height="16" aria-hidden="true"><use xlink:href="./public/assets/sprites.svg#icon-download"></use></svg>
+                            <svg width="16" height="16" aria-hidden="true"><use xlink:href="./assets/sprites.svg#icon-download"></use></svg>
                             Install App
                         </button>
                     </div>
@@ -407,7 +405,7 @@
     <!-- Custom Context Menu -->
     <div id="calc-context-menu" class="calc-context-menu" hidden>
         <button id="calc-context-paste" class="context-menu-btn">
-            <svg width="14" height="14" aria-hidden="true"><use xlink:href="./public/assets/sprites.svg#icon-clipboard"></use></svg>
+            <svg width="14" height="14" aria-hidden="true"><use xlink:href="./assets/sprites.svg#icon-clipboard"></use></svg>
             Paste
         </button>
     </div>

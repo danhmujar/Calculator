@@ -6,7 +6,6 @@ export default defineConfig({
   plugins: [
     VitePWA({
       registerType: 'prompt',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'icon-192.svg', 'icon-512.svg', 'assets/sprites.svg'],
       manifest: {
         name: 'Percentage & Math Calculator',
         short_name: 'Calculator',
@@ -38,9 +37,11 @@ export default defineConfig({
         ]
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,ico}'],
+        globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
         // Exclude the manual sw.js from the glob patterns to prevent collisions
-        globIgnores: ['sw.js']
+        globIgnores: ['sw.js'],
+        clientsClaim: true,
+        skipWaiting: true
       }
     })
   ]
