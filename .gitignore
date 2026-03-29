@@ -56,5 +56,7 @@ archives/
 Thumbs.db
 
 # Logs and Recordings
-*.log
-*.webp.planning/
+*.webp
+
+# Planning and Phase Documentation
+.planning/
