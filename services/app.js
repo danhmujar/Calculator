@@ -170,19 +170,12 @@ import { renderer } from '../ui/renderer.js';
         const deleteSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         deleteSvg.setAttribute('width', '18');
         deleteSvg.setAttribute('height', '18');
-        deleteSvg.setAttribute('viewBox', '0 0 24 24');
-        deleteSvg.setAttribute('fill', 'none');
-        deleteSvg.setAttribute('stroke', 'currentColor');
-        deleteSvg.setAttribute('stroke-width', '2');
-        deleteSvg.setAttribute('stroke-linecap', 'round');
-        deleteSvg.setAttribute('stroke-linejoin', 'round');
-
-        const l1 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        l1.setAttribute('x1', '18'); l1.setAttribute('y1', '6'); l1.setAttribute('x2', '6'); l1.setAttribute('y2', '18');
-        const l2 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        l2.setAttribute('x1', '6'); l2.setAttribute('y1', '6'); l2.setAttribute('x2', '18'); l2.setAttribute('y2', '18');
-        deleteSvg.appendChild(l1);
-        deleteSvg.appendChild(l2);
+        deleteSvg.setAttribute('aria-hidden', 'true');
+        
+        const useEl = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+        useEl.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', './public/assets/sprites.svg#icon-delete');
+        deleteSvg.appendChild(useEl);
+        
         deleteBtn.appendChild(deleteSvg);
         resultGroup.appendChild(deleteBtn);
 
@@ -811,23 +804,12 @@ import { renderer } from '../ui/renderer.js';
         const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         svg.setAttribute('width', size);
         svg.setAttribute('height', size);
-        svg.setAttribute('viewBox', '0 0 24 24');
-        svg.setAttribute('fill', 'none');
-        svg.setAttribute('stroke', 'currentColor');
-        svg.setAttribute('stroke-width', '2');
-        svg.setAttribute('stroke-linecap', 'round');
-        svg.setAttribute('stroke-linejoin', 'round');
+        svg.setAttribute('aria-hidden', 'true');
 
-        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-        rect.setAttribute('x', '9'); rect.setAttribute('y', '9');
-        rect.setAttribute('width', '13'); rect.setAttribute('height', '13');
-        rect.setAttribute('rx', '2'); rect.setAttribute('ry', '2');
-
-        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        path.setAttribute('d', 'M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1');
-
-        svg.appendChild(rect);
-        svg.appendChild(path);
+        const useEl = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+        useEl.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', './public/assets/sprites.svg#icon-copy');
+        svg.appendChild(useEl);
+        
         return svg;
     }
 
@@ -1350,15 +1332,14 @@ import { renderer } from '../ui/renderer.js';
         delBtn.setAttribute('aria-label', 'Delete row');
 
         const delSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        delSvg.setAttribute('width', '16'); delSvg.setAttribute('height', '16');
-        delSvg.setAttribute('viewBox', '0 0 24 24'); delSvg.setAttribute('fill', 'none');
-        delSvg.setAttribute('stroke', 'currentColor'); delSvg.setAttribute('stroke-width', '2');
-        delSvg.setAttribute('stroke-linecap', 'round'); delSvg.setAttribute('stroke-linejoin', 'round');
-        const l1 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        l1.setAttribute('x1', '18'); l1.setAttribute('y1', '6'); l1.setAttribute('x2', '6'); l1.setAttribute('y2', '18');
-        const l2 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        l2.setAttribute('x1', '6'); l2.setAttribute('y1', '6'); l2.setAttribute('x2', '18'); l2.setAttribute('y2', '18');
-        delSvg.appendChild(l1); delSvg.appendChild(l2);
+        delSvg.setAttribute('width', '16');
+        delSvg.setAttribute('height', '16');
+        delSvg.setAttribute('aria-hidden', 'true');
+        
+        const useEl = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+        useEl.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', './public/assets/sprites.svg#icon-delete');
+        delSvg.appendChild(useEl);
+        
         delBtn.appendChild(delSvg);
         delBtn.addEventListener('click', () => {
             // Animate the row collapse before removing from DOM
