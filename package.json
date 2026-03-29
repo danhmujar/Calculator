@@ -11,6 +11,8 @@
   "main": "sw.js",
   "dependencies": {
     "axe-core": "^4.11.1",
+    "mathjs": "^15.1.1",
+    "mathlive": "^0.109.0",
     "playwright-core": "^1.58.2"
   },
   "scripts": {
@@ -26,7 +28,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "bugs": {
     "url": "https://github.com/danhmujar/Calculator/issues"
   },

@@ -1,7 +1,14 @@
-'use strict';
-
 import { store } from './store.js';
 import { renderer } from '../ui/renderer.js';
+import { create, addDependencies, evaluateDependencies, numberDependencies } from 'mathjs';
+import 'mathlive';
+
+// Initialize tree-shaken mathjs
+const math = create({
+    addDependencies,
+    evaluateDependencies,
+    numberDependencies
+});
 
 /**
  * Percentage & Math Calculator - Services Layer
@@ -17,18 +24,6 @@ import { renderer } from '../ui/renderer.js';
     const EYE_FOLLOW_SPEED = 0.04;
     const MATH_EXPR_LIMIT = 1000; // DoS prevention (APP-L8)
 
-    /* --- PWA Configuration --- */
-    const SCI_LIB_URLS = {
-        mathlive: {
-            src: 'https://unpkg.com/mathlive@0.108.3',
-            integrity: 'sha384-JjPSUCAu+59S/H2IC4UecZ4gllGbNCS++kBwHbsk0TKHCp2b6OqkZqsRC9Kch45U'
-        },
-        mathjs: {
-            src: 'https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js',
-            integrity: 'sha384-2NnkIgIitZUPvVF20yEtYm3encP/kCjZ8nxchj4j7cbqmRi9jaVLYz/Pwn/ZgWQ6'
-        }
-    };
-    let sciLibsPreloaded = false;
     let deferredInstallPrompt = null;
 
     /* --- Security Allowlists --- */
@@ -307,11 +302,7 @@ import { renderer } from '../ui/renderer.js';
             restoreAuditTape(state);
             restorePercentageCards(state);
             
-            if (state.mode === 'scientific' && (typeof math === 'undefined' || typeof MathfieldElement === 'undefined')) {
-                pendingSciRows = state.sciRows || null;
-            } else {
-                restoreScientificRows(state);
-            }
+            restoreScientificRows(state);
             return true;
         } catch (e) {
             console.error("Failed to load calc state", e);
@@ -1078,58 +1069,7 @@ import { renderer } from '../ui/renderer.js';
 
     /* --- Scientific Calculator Mode (MathLive + Math.js) --- */
 
-    let isSciLibsLoading = false;
 
-    /**
-     * Load a single CDN script by URL config.
-     * Returns a Promise that resolves when the script has loaded.
-     */
-    function loadScript(config) {
-        return new Promise((resolve, reject) => {
-            const script = document.createElement('script');
-            script.src = config.src;
-            script.crossOrigin = 'anonymous';
-            script.integrity = config.integrity;
-            script.onload = resolve;
-            script.onerror = reject;
-            document.head.appendChild(script);
-        });
-    }
-
-    /**
-     * Loads MathLive + Math.js if not already present.
-     * Returns a Promise that resolves once both are available.
-     */
-    function ensureSciLibs() {
-        const tasks = [];
-        if (typeof MathfieldElement === 'undefined') tasks.push(loadScript(SCI_LIB_URLS.mathlive));
-        if (typeof math === 'undefined') tasks.push(loadScript(SCI_LIB_URLS.mathjs));
-        if (tasks.length === 0) return Promise.resolve();
-        return Promise.all(tasks);
-    }
-
-    /**
-     * Pre-fetch scientific libraries in the background once the main
-     * thread is idle. This ensures instant SCI-mode activation and
-     * allows the Service Worker to cache them for offline use.
-     */
-    function initIdleBackgroundFetch() {
-        const idleCb = window.requestIdleCallback || ((cb) => setTimeout(cb, 2000));
-        idleCb(() => {
-            if (typeof MathfieldElement !== 'undefined' && typeof math !== 'undefined') {
-                sciLibsPreloaded = true;
-                return;
-            }
-            ensureSciLibs()
-                .then(() => {
-                    sciLibsPreloaded = true;
-                    console.info('[PWA] Scientific libraries pre-loaded in background.');
-                })
-                .catch((err) => {
-                    console.warn('[PWA] Background pre-fetch failed (will retry on SCI click).', err);
-                });
-        }, { timeout: 5000 });
-    }
 
     function setCalcMode(mode) {
         const sidebar = document.getElementById('sidebar');
@@ -1138,37 +1078,6 @@ import { renderer } from '../ui/renderer.js';
         const sciContainer = document.getElementById('sci-container');
 
         if (mode === 'scientific') {
-            // Allow offline if libs were pre-loaded (cached by SW or idle fetch)
-            const libsAvailable = typeof math !== 'undefined' && typeof MathfieldElement !== 'undefined';
-            if (!libsAvailable && !navigator.onLine) {
-                showToast('Scientific Mode requires an internet connection to load libraries.');
-                return;
-            }
-
-            // Lazy Load Libraries (skipped if pre-loaded)
-            if (!libsAvailable) {
-                if (isSciLibsLoading) return;
-                isSciLibsLoading = true;
-
-                const originalText = btnSci.textContent;
-                btnSci.textContent = '...';
-
-                ensureSciLibs()
-                    .then(() => {
-                        isSciLibsLoading = false;
-                        sciLibsPreloaded = true;
-                        btnSci.textContent = originalText;
-                        activateScientificMode(sidebar, btnStd, btnSci, sciContainer);
-                    })
-                    .catch((err) => {
-                        isSciLibsLoading = false;
-                        btnSci.textContent = originalText;
-                        showToast('Failed to load scientific libraries.');
-                        console.error('Failed to load MathLive/MathJS', err);
-                    });
-                return;
-            }
-
             activateScientificMode(sidebar, btnStd, btnSci, sciContainer);
 
         } else {
@@ -1518,13 +1427,7 @@ import { renderer } from '../ui/renderer.js';
                         });
                     })
                     .catch((err) => console.warn('SW registration failed:', err));
-
-                // Trigger background pre-fetch after SW registration
-                initIdleBackgroundFetch();
             });
-        } else {
-            // No SW support, still try idle pre-fetch
-            initIdleBackgroundFetch();
         }
     }
 

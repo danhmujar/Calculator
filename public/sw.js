@@ -1,5 +1,5 @@
 // Service Worker — Percentage & Math Calculator PWA
-const CACHE_NAME = 'calc-v13';
+const CACHE_NAME = 'calc-v14';
 const MAX_CACHE_ITEMS = 50;
 
 // App shell to pre-cache on install (CDN libs are cached on-demand via fetch handler)
@@ -24,10 +24,7 @@ const PRECACHE_URLS = [
     './ui/fonts/font-23.woff2', './ui/fonts/font-24.woff2', './ui/fonts/font-25.woff2', './ui/fonts/font-26.woff2',
     './ui/fonts/font-27.woff2', './ui/fonts/font-28.woff2', './ui/fonts/font-29.woff2', './ui/fonts/font-3.woff2',
     './ui/fonts/font-30.woff2', './ui/fonts/font-31.woff2', './ui/fonts/font-4.woff2', './ui/fonts/font-5.woff2',
-    './ui/fonts/font-6.woff2', './ui/fonts/font-7.woff2', './ui/fonts/font-8.woff2', './ui/fonts/font-9.woff2',
-    // Scientific mode CDN libraries (version-pinned for offline SCI mode)
-    'https://unpkg.com/mathlive@0.108.3',
-    'https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js'
+    './ui/fonts/font-6.woff2', './ui/fonts/font-7.woff2', './ui/fonts/font-8.woff2', './ui/fonts/font-9.woff2'
 ];
 
 // Helper to limit cache size (SW-M2)
@@ -122,24 +119,11 @@ self.addEventListener('fetch', (event) => {
                 })
         );
     } else {
-        // ── Cache-first for CDN resources ──
+        // --- External Resources (e.g. Google Fonts) ---
         event.respondWith(
             caches.match(event.request).then((cachedResponse) => {
                 if (cachedResponse) return cachedResponse;
-
-                return fetch(event.request).then((networkResponse) => {
-                    if (event.request.method === 'GET' && networkResponse.ok) {
-                        const clone = networkResponse.clone();
-                        caches.open(CACHE_NAME).then((cache) => {
-                            cache.put(event.request, clone);
-                            limitCacheSize(CACHE_NAME, MAX_CACHE_ITEMS);
-                        }).catch(err => console.warn('SW: Cache write failed', err));
-                    }
-                    return networkResponse;
-                }).catch(() => {
-                    // Fallback for CDN resources if both cache and network fail
-                    return new Response('Offline and resource not in cache', { status: 503 });
-                });
+                return fetch(event.request);
             })
         );
     }

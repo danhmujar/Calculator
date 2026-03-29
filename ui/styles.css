@@ -172,6 +172,11 @@ body {
     --keyboard-toolbar-background-hover: var(--calc-btn-hover);
 }
 
+/* Fix MathLive FOUC */
+math-field:not(:defined) {
+    visibility: hidden;
+}
+
 /* Custom Scrollbar */
 /* Standard (Firefox) */
 * {
