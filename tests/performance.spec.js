@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Performance: Eye Tracking Hardware Acceleration', () => {
     test.beforeEach(async ({ page }) => {
-        await page.goto('http://localhost:5173');
+        await page.goto('http://localhost:4173/Calculator/');
         await page.waitForSelector('#pupil1');
     });
 
