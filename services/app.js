@@ -1195,27 +1195,31 @@ const math = create(all);
                 btnSci.setAttribute('aria-checked', 'true');
             }
             if (sciContainer) sciContainer.classList.add('active');
-        });
 
-        const sciRowsWrapper = document.getElementById('sci-rows-wrapper');
+            // Defer row creation to a nested rAF so the container
+            // has painted with display:flex before we measure heights.
+            requestAnimationFrame(() => {
+                const sciRowsWrapper = document.getElementById('sci-rows-wrapper');
 
-        // Check for deferred scientific rows from state restoration
-        if (pendingSciRows && pendingSciRows.length > 0) {
-            if (sciRowsWrapper) sciRowsWrapper.replaceChildren();
-            pendingSciRows.forEach((val, index) => {
-                addScientificRow();
-                setTimeout(() => {
-                    const mfs = document.querySelectorAll('math-field');
-                    if (mfs[index]) {
-                        mfs[index].value = val;
-                        mfs[index].dispatchEvent(new Event('input', { bubbles: true }));
-                    }
-                }, SCI_RESTORE_DELAY_BASE_MS * (index + 1));
+                // Check for deferred scientific rows from state restoration
+                if (pendingSciRows && pendingSciRows.length > 0) {
+                    if (sciRowsWrapper) sciRowsWrapper.replaceChildren();
+                    pendingSciRows.forEach((val, index) => {
+                        addScientificRow();
+                        setTimeout(() => {
+                            const mfs = document.querySelectorAll('math-field');
+                            if (mfs[index]) {
+                                mfs[index].value = val;
+                                mfs[index].dispatchEvent(new Event('input', { bubbles: true }));
+                            }
+                        }, SCI_RESTORE_DELAY_BASE_MS * (index + 1));
+                    });
+                    pendingSciRows = null;
+                } else if (sciRowsWrapper && sciRowsWrapper.children.length === 0) {
+                    addScientificRow();
+                }
             });
-            pendingSciRows = null;
-        } else if (sciRowsWrapper && sciRowsWrapper.children.length === 0) {
-            addScientificRow();
-        }
+        });
     }
 
     function addScientificRow() {
@@ -1248,6 +1252,12 @@ const math = create(all);
                     row.removeEventListener('transitionend', handler);
                 }
             }, { once: true });
+
+            // Safety: if scrollHeight was 0 (parent not yet visible),
+            // clear the constraint immediately so the row isn't clamped.
+            if (row.scrollHeight === 0) {
+                row.style.maxHeight = '';
+            }
         });
 
         const resEl = document.getElementById(uniqueId);
