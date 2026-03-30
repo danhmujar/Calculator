@@ -3,6 +3,11 @@ import { renderer } from '../ui/renderer.js';
 import { create, all } from 'mathjs/number';
 import { registerSW } from 'virtual:pwa-register';
 import { initEyeTracking } from '../ui/eye-tracker.js';
+import { MathfieldElement } from 'mathlive';
+
+// PWA/Deployment Strategy: Use local fonts for offline support and GitHub Pages compatibility.
+// If the local fetch fails or is not found, MathLive has internal fallbacks.
+MathfieldElement.fontsDirectory = '/Calculator/fonts';
 
 // Initialize mathjs with number-only dependencies
 const math = create(all);
