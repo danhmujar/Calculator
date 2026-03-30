@@ -3,6 +3,14 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
   base: '/Calculator/',
+  server: {
+    port: 5173,
+    strictPort: true
+  },
+  preview: {
+    port: 5173,
+    strictPort: true
+  },
   plugins: [
     VitePWA({
       registerType: 'prompt',
