@@ -23,23 +23,23 @@
 - [x] [P2-T2] Modernize PWA & Build: Integrate `vite-plugin-pwa`, enable asset hashing, and remove `scripts/postbuild.js`.
 - [x] [P2-T3] Dependency Overhaul: Migrate from CDN scripts to npm-managed packages (`mathjs`, `mathlive`) for better bundling and tree-shaking.
 
-## Phase 3: Library & Event Optimization
+## Phase 3: Library & Event Optimization (COMPLETED ✅)
 **Goal:** Fine-tune interactions and third-party library usage.
 
 **Plans:** 3 plans
 
-- [ ] 03-01-PLAN.md — Library Optimization
-- [ ] 03-02-PLAN.md — Eye-Tracking Modularization
-- [ ] 03-03-PLAN.md — Event Delegation Refactor
+- [x] 03-01-PLAN.md — Library Optimization
+- [x] 03-02-PLAN.md — Eye-Tracking Modularization
+- [x] 03-03-PLAN.md — Event Delegation Refactor
 
 **Requirements:**
-- [ ] [P3-T1] Optimize Math Engines: Refactor `mathjs` usage to use a custom, lightweight build. Refine MathLive's lazy-loading strategy.
-- [ ] [P3-T2] Optimize Eye-Tracking: Rewrite the pupil positioning logic to use CSS variables for smoother performance and cleaner JS.
-- [ ] [P3-T3] Refactor Events: Consolidate event listeners and ensure efficient event delegation where applicable.
+- [x] [P3-T1] Optimize Math Engines: Refactor `mathjs` usage to use a custom, lightweight build. Refine MathLive's lazy-loading strategy.
+- [x] [P3-T2] Optimize Eye-Tracking: Rewrite the pupil positioning logic to use CSS variables for smoother performance and cleaner JS.
+- [x] [P3-T3] Refactor Events: Consolidate event listeners and ensure efficient event delegation where applicable.
 
-## Phase 4: Final Validation & Polish
+## Phase 4: Final Validation & Polish (COMPLETED ✅)
 **Goal:** Ensure absolute fidelity to the original logic and UI.
 
-- [P4-T1] Performance Audit: Conduct a full Lighthouse audit and ensure zero regressions in interactivity.
-- [P4-T2] Regression Testing: Run all Playwright tests to verify calculation logic and UI behavior.
-- [P4-T3] Accessibility Check: Run Axe-core audits to ensure ARIA and keyboard compliance are maintained.
+- [x] [P4-T1] Performance Audit: Conduct a full Lighthouse audit and ensure zero regressions in interactivity.
+- [x] [P4-T2] Regression Testing: Run all Playwright tests to verify calculation logic and UI behavior.
+- [x] [P4-T3] Accessibility Check: Run Axe-core audits to ensure ARIA and keyboard compliance are maintained.

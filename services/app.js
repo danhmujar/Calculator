@@ -823,9 +823,12 @@ const math = create(all);
         if (isAurora && body.classList.contains('dark-theme')) {
             body.classList.remove('theme-aurora', 'theme-aurora-ocean', 'theme-aurora-cyber', 'theme-aurora-sunset');
 
-            document.querySelectorAll('.theme-swatch').forEach(btn => btn.classList.remove('active'));
-            const defaultSwatch = document.querySelector('.theme-swatch[data-theme=""]');
-            if (defaultSwatch) defaultSwatch.classList.add('active');
+            const picker = document.querySelector('.theme-picker');
+            if (picker) {
+                picker.querySelectorAll('.theme-swatch').forEach(btn => btn.classList.remove('active'));
+                const defaultSwatch = picker.querySelector('.theme-swatch[data-theme=""]');
+                if (defaultSwatch) defaultSwatch.classList.add('active');
+            }
         }
 
         body.classList.toggle('dark-theme');
@@ -845,10 +848,11 @@ const math = create(all);
 
     /* === Centralized Event Bindings === */
     (function bindEvents() {
+        // 1. Keypad Regional Delegation
         const keypad = document.getElementById('calc-keypad');
         if (keypad) {
             keypad.addEventListener('click', function (e) {
-                const btn = e.target.closest('[data-action]');
+                const btn = e.target.closest('.calc-btn');
                 if (!btn) return;
                 const action = btn.getAttribute('data-action');
                 const value = btn.getAttribute('data-value');
@@ -864,6 +868,55 @@ const math = create(all);
             });
         }
 
+        // 2. Left Panel Regional Delegation (Add Row)
+        const leftPanel = document.querySelector('.left-panel');
+        if (leftPanel) {
+            leftPanel.addEventListener('click', (e) => {
+                const addRowBtn = e.target.closest('[data-add-row]');
+                if (addRowBtn) {
+                    addRow(addRowBtn, addRowBtn.getAttribute('data-add-row'));
+                }
+            });
+        }
+
+        // 3. Sidebar Regional Delegation (Mode, History, Clear, Close, Add Math)
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar) {
+            sidebar.addEventListener('click', (e) => {
+                // Mode Toggle
+                const modeBtn = e.target.closest('[data-mode]');
+                if (modeBtn) {
+                    setCalcMode(modeBtn.getAttribute('data-mode'));
+                    return;
+                }
+
+                // History Toggles
+                if (e.target.closest('#history-toggle-btn') || e.target.closest('#history-back-btn')) {
+                    toggleHistory();
+                    return;
+                }
+
+                // Clear Tape
+                if (e.target.closest('#clear-tape-btn')) {
+                    clearAuditTape();
+                    return;
+                }
+
+                // Close Drawer
+                if (e.target.closest('#close-drawer-btn')) {
+                    toggleDrawer();
+                    return;
+                }
+
+                // Add Scientific Row
+                if (e.target.closest('#add-math-btn')) {
+                    addScientificRow();
+                    return;
+                }
+            });
+        }
+
+        // 4. Theme & Palette Delegation
         const picker = document.querySelector('.theme-picker');
         if (picker) {
             picker.addEventListener('click', function (e) {
@@ -885,45 +938,19 @@ const math = create(all);
             themeCheckbox.addEventListener('change', toggleTheme);
         }
 
-        document.querySelectorAll('[data-add-row]').forEach(function (btn) {
-            btn.addEventListener('click', function () {
-                addRow(btn, btn.getAttribute('data-add-row'));
-            });
-        });
-
-        document.querySelectorAll('[data-mode]').forEach(function (btn) {
-            btn.addEventListener('click', function () {
-                setCalcMode(btn.getAttribute('data-mode'));
-            });
-        });
-
-        const historyBtn = document.getElementById('history-toggle-btn');
-        if (historyBtn) historyBtn.addEventListener('click', toggleHistory);
-        const historyBackBtn = document.getElementById('history-back-btn');
-        if (historyBackBtn) historyBackBtn.addEventListener('click', toggleHistory);
-
-        const clearTapeBtn = document.getElementById('clear-tape-btn');
-        if (clearTapeBtn) clearTapeBtn.addEventListener('click', clearAuditTape);
-
-        const closeDrawerBtn = document.getElementById('close-drawer-btn');
-        if (closeDrawerBtn) closeDrawerBtn.addEventListener('click', toggleDrawer);
-
+        // 5. External UI Controls
         const mobileBtn = document.getElementById('mobile-panel-toggle-btn');
         if (mobileBtn) mobileBtn.addEventListener('click', toggleDrawer);
 
-        // Enhance Skip Link behavior: ensure drawer is open when jumping to calculator
         const skipLink = document.querySelector('.skip-link');
         if (skipLink) {
             skipLink.addEventListener('click', (e) => {
-                const sidebar = document.getElementById('sidebar');
-                if (sidebar && !sidebar.classList.contains('open')) {
+                const sidebarEl = document.getElementById('sidebar');
+                if (sidebarEl && !sidebarEl.classList.contains('open')) {
                     toggleDrawer();
                 }
             });
         }
-
-        const addMathBtn = document.getElementById('add-math-btn');
-        if (addMathBtn) addMathBtn.addEventListener('click', addScientificRow);
 
         // Paste Support for Calculator
         document.addEventListener('paste', function (e) {
@@ -1025,10 +1052,13 @@ const math = create(all);
     function setThemeColor(btnEl, themeClass) {
         if (themeClass && !VALID_THEMES.includes(themeClass)) return;
 
-        document.querySelectorAll('.theme-swatch').forEach(btn => {
-            btn.classList.remove('active');
-            btn.setAttribute('aria-checked', 'false');
-        });
+        const picker = document.querySelector('.theme-picker');
+        if (picker) {
+            picker.querySelectorAll('.theme-swatch').forEach(btn => {
+                btn.classList.remove('active');
+                btn.setAttribute('aria-checked', 'false');
+            });
+        }
         btnEl.classList.add('active');
         btnEl.setAttribute('aria-checked', 'true');
 

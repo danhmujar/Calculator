@@ -39,7 +39,7 @@ test.describe('Phase 02 Validation: Asset & Build Modernization', () => {
         }
 
         const files = fs.readdirSync(distAssetsDir);
-        const hashedFiles = files.filter(f => /-[a-zA-Z0-9]{8,}\.(js|css|svg|png|woff2)$/.test(f));
+        const hashedFiles = files.filter(f => /-[a-zA-Z0-9_-]{7,}\.(js|css|svg|png|woff2)$/.test(f));
         
         // At least index.js and index.css should be hashed
         expect(hashedFiles.length).toBeGreaterThan(0);

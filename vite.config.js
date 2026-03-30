@@ -38,8 +38,12 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
-        // Exclude the manual sw.js from the glob patterns to prevent collisions
-        globIgnores: ['sw.js'],
+        // Exclude the manual sw.js and dev-only folders from the glob patterns
+        globIgnores: [
+          'sw.js',
+          'tests/**',
+          '.planning/**'
+        ],
         clientsClaim: true,
         skipWaiting: true
       }
