@@ -6,11 +6,11 @@
       <rect width="50" height="25" x="25" y="15" fill="#f8fafc" rx="4" ry="4"/>
       <g class="eye">
         <circle cx="38" cy="27" r="7" fill="#fff" stroke="#334155" stroke-width="2"/>
-        <circle cx="38" cy="27" r="3" fill="#334155" class="pupil" id="pupil1"/>
+        <circle cx="38" cy="27" r="3" fill="#334155" class="pupil pupil-1" id="pupil1"/>
       </g>
       <g class="eye">
         <circle cx="62" cy="27" r="7" fill="#fff" stroke="#334155" stroke-width="2"/>
-        <circle cx="62" cy="27" r="3" fill="#334155" class="pupil" id="pupil2"/>
+        <circle cx="62" cy="27" r="3" fill="#334155" class="pupil pupil-2" id="pupil2"/>
       </g>
       <g fill="#fff" opacity=".8">
         <rect width="8" height="8" x="28" y="48" rx="2"/><rect width="8" height="8" x="42" y="48" rx="2"/><rect width="8" height="8" x="56" y="48" rx="2"/><rect width="8" height="8" x="70" y="48" rx="2"/>

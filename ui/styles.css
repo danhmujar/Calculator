@@ -74,11 +74,17 @@
     --close-btn-bg: rgba(0, 0, 0, 0.06);
     --close-btn-bg-hover: rgba(0, 0, 0, 0.12);
 
-    /* Neumorphism (Soft UI) Base Variables */
+    /* --- Neumorphism (Soft UI) Base Variables --- */
     --shadow-soft-light: rgba(255, 255, 255, 0.9);
     --shadow-soft-dark: rgba(0, 0, 0, 0.08);
     --shadow-soft-out: -4px -4px 10px var(--shadow-soft-light), 4px 4px 10px var(--shadow-soft-dark);
     --shadow-soft-in: inset -4px -4px 10px var(--shadow-soft-light), inset 4px 4px 10px var(--shadow-soft-dark);
+
+    /* Eye Tracking Variables */
+    --pupil-x-1: 0px;
+    --pupil-y-1: 0px;
+    --pupil-x-2: 0px;
+    --pupil-y-2: 0px;
 }
 
 /* Dark Mode Theme overrides */
@@ -471,10 +477,15 @@ body[class*="theme-aurora"] .left-panel header {
 }
 
 .pupil {
-    --pupil-x: 0px;
-    --pupil-y: 0px;
     will-change: transform;
-    transform: translate(var(--pupil-x), var(--pupil-y));
+}
+
+.pupil-1 {
+    transform: translate3d(var(--pupil-x-1, 0px), var(--pupil-y-1, 0px), 0);
+}
+
+.pupil-2 {
+    transform: translate3d(var(--pupil-x-2, 0px), var(--pupil-y-2, 0px), 0);
 }
 
 /* Prevent iOS double-tap-to-zoom on calculator buttons */

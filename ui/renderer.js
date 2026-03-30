@@ -31,9 +31,10 @@ export class Renderer {
    * @param {Function} callback 
    */
   schedule(callback) {
+    if (this.queue.has(callback)) return;
     this.queue.add(callback);
     
-    if (!this.rafId) {
+    if (this.rafId === null) {
       const scheduleFrame = isBrowser ? requestAnimationFrame : (cb) => setTimeout(cb, 16);
       this.rafId = scheduleFrame(() => {
         this.flush();
@@ -45,9 +46,9 @@ export class Renderer {
    * Execute callback queue
    */
   flush() {
+    this.rafId = null;
     const callbacks = Array.from(this.queue);
     this.queue.clear();
-    this.rafId = null;
 
     for (const cb of callbacks) {
       try {

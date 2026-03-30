@@ -21,6 +21,14 @@
     <!-- Critical CSS Preload -->
     <link rel="preload" href="./ui/styles.css" as="style">
     <link rel="stylesheet" href="./ui/styles.css">
+    <style>
+        :root {
+            --pupil-x-1: 0px;
+            --pupil-y-1: 0px;
+            --pupil-x-2: 0px;
+            --pupil-y-2: 0px;
+        }
+    </style>
 </head>
 
 <body>
@@ -35,7 +43,23 @@
             <header class="header-row">
                 <div class="header-brand">
                     <div class="calculator-wrapper">
-                        <svg aria-hidden="true" class="calculator-svg" overflow="visible"><use xlink:href="./assets/sprites.svg#icon-calc"></use></svg>
+                                            <svg aria-hidden="true" class="calculator-svg" viewBox="15 5 70 90" overflow="visible">
+                        <rect width="60" height="80" x="20" y="10" fill="var(--primary-blue)" class="calculator-body" rx="8" ry="8"/>
+                        <rect width="50" height="25" x="25" y="15" fill="#f8fafc" rx="4" ry="4"/>
+                        <g class="eye">
+                            <circle cx="38" cy="27" r="7" fill="#fff" stroke="#334155" stroke-width="2"/>
+                            <circle cx="38" cy="27" r="3" fill="#334155" class="pupil pupil-1" id="pupil1"/>
+                        </g>
+                        <g class="eye">
+                            <circle cx="62" cy="27" r="7" fill="#fff" stroke="#334155" stroke-width="2"/>
+                            <circle cx="62" cy="27" r="3" fill="#334155" class="pupil pupil-2" id="pupil2"/>
+                        </g>
+                        <g fill="#fff" opacity=".8">
+                            <rect width="8" height="8" x="28" y="48" rx="2"/><rect width="8" height="8" x="42" y="48" rx="2"/><rect width="8" height="8" x="56" y="48" rx="2"/><rect width="8" height="8" x="70" y="48" rx="2"/>
+                            <rect width="8" height="8" x="28" y="62" rx="2"/><rect width="8" height="8" x="42" y="62" rx="2"/><rect width="8" height="8" x="56" y="62" rx="2"/><rect width="8" height="8" x="70" y="62" rx="2"/>
+                            <rect width="22" height="8" x="28" y="76" rx="2"/><rect width="8" height="8" x="56" y="76" rx="2"/><rect width="8" height="8" x="70" y="76" fill="#fcd34d" opacity="1" rx="2"/>
+                        </g>
+                    </svg>
                     </div>
                     <div>
                         <h1>Percentage & Math Calculator</h1>

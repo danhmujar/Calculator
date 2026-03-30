@@ -59,4 +59,4 @@ Thumbs.db
 *.webp
 
 # Planning and Phase Documentation
-# .planning/
+.planning/

@@ -1,10 +1,11 @@
 import { store } from './store.js';
 import { renderer } from '../ui/renderer.js';
-import { create, allDependencies } from 'mathjs/number';
+import { create, all } from 'mathjs/number';
 import { registerSW } from 'virtual:pwa-register';
+import { initEyeTracking } from '../ui/eye-tracker.js';
 
 // Initialize mathjs with number-only dependencies
-const math = create(allDependencies);
+const math = create(all);
 
 /**
  * Percentage & Math Calculator - Services Layer
@@ -15,9 +16,6 @@ const math = create(allDependencies);
     const SAVE_DEBOUNCE_MS = 500;
     const INPUT_LENGTH_LIMIT = 15;
     const SCI_RESTORE_DELAY_BASE_MS = 100;
-    const EYE_RADIUS_PUPIL_1 = 6;
-    const EYE_RADIUS_PUPIL_2 = 5;
-    const EYE_FOLLOW_SPEED = 0.04;
     const MATH_EXPR_LIMIT = 1000; // DoS prevention (APP-L8)
 
     let deferredInstallPrompt = null;
@@ -406,6 +404,7 @@ const math = create(allDependencies);
     })();
 
     window.addEventListener('DOMContentLoaded', () => {
+        initEyeTracking();
         const loaded = loadState();
         if (!loaded) {
             document.querySelectorAll('.calc-card').forEach(card => {
@@ -1327,44 +1326,6 @@ const math = create(allDependencies);
             }
         });
     }
-
-    /* --- Chameleon Eye Tracking --- */
-    const pupil1 = document.getElementById('pupil1');
-    const pupil2 = document.getElementById('pupil2');
-
-    let rafPending = false; // APP-L9 FIX: Throttle flag
-    document.addEventListener('mousemove', (e) => {
-        if (rafPending) return;
-        rafPending = true;
-
-        renderer.schedule(() => {
-            const mouseX = e.clientX;
-            const mouseY = e.clientY;
-
-            const movePupil = (pupil, maxRadius) => {
-                if (!pupil) return;
-                const rect = pupil.parentElement.getBoundingClientRect();
-                const eyeCenterX = rect.left + rect.width / 2;
-                const eyeCenterY = rect.top + rect.height / 2;
-
-                const dx = mouseX - eyeCenterX;
-                const dy = mouseY - eyeCenterY;
-                const angle = Math.atan2(dy, dx);
-
-                const dist = Math.min(maxRadius, Math.hypot(dx, dy) * EYE_FOLLOW_SPEED);
-
-                const tx = Math.cos(angle) * dist;
-                const ty = Math.sin(angle) * dist;
-
-                pupil.style.setProperty('--pupil-x', `${tx}px`);
-                pupil.style.setProperty('--pupil-y', `${ty}px`);
-            };
-
-            movePupil(pupil1, EYE_RADIUS_PUPIL_1);
-            movePupil(pupil2, EYE_RADIUS_PUPIL_2);
-            rafPending = false;
-        });
-    });
 
     /* --- PWA: Online/Offline State --- */
     function updateOfflineBadge() {
