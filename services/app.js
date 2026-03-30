@@ -449,6 +449,19 @@ const math = create(all);
                     rightPanel.removeEventListener('animationend', openHandler);
                 }, { once: true });
             }
+
+            // APP-U1: Ensure sidebar opens when maximizing or resizing to desktop
+            let wasMobile = window.innerWidth <= 1024;
+            window.addEventListener('resize', () => {
+                const isDesktop = window.innerWidth > 1024;
+                if (isDesktop && wasMobile && !rightPanel.classList.contains('open')) {
+                    void rightPanel.offsetWidth;
+                    requestAnimationFrame(() => {
+                        rightPanel.classList.add('open');
+                    });
+                }
+                wasMobile = !isDesktop;
+            });
         }
 
         document.querySelectorAll('button[title]:not([aria-label])').forEach(btn => {
