@@ -43,3 +43,10 @@
 - [x] [P4-T1] Performance Audit: Conduct a full Lighthouse audit and ensure zero regressions in interactivity.
 - [x] [P4-T2] Regression Testing: Run all Playwright tests to verify calculation logic and UI behavior.
 - [x] [P4-T3] Accessibility Check: Run Axe-core audits to ensure ARIA and keyboard compliance are maintained.
+
+## Phase 5: Animation Optimization
+**Goal:** Optimize animations and rendering for consistent performance.
+
+- [ ] [P5-T1] Refine Eye-Tracking: Optimize CSS-variable driven pupil positioning for hardware acceleration.
+- [ ] [P5-T2] Display Rendering Tuning: Profile and optimize the canvas-based or font-based display rendering.
+- [ ] [P5-T3] Animation Performance Audit: Ensure all transitions only use `transform` and `opacity` to avoid layout thrashing.

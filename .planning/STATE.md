@@ -28,8 +28,13 @@
 - [x] [P4-T2] Regression Testing (Verified in Phase 03)
 - [x] [P4-T3] Accessibility Check (Verified in Phase 03)
 
+## Phase: 5 - Animation Optimization (PLANNED)
+- [ ] [P5-T1] Refine Eye-Tracking (CSS-Variable Performance)
+- [ ] [P5-T2] Display Rendering Tuning
+- [ ] [P5-T3] Animation Performance Audit
+
 ## Next Step
-Project successfully validated and polished for deployment.
+Implement Phase 05: Animation Optimization.
 
 ## Last Updated
 2026-03-30
