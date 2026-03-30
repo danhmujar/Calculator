@@ -1,11 +1,10 @@
 import { store } from './store.js';
 import { renderer } from '../ui/renderer.js';
-import { create, all } from 'mathjs';
+import { create, allDependencies } from 'mathjs/number';
 import { registerSW } from 'virtual:pwa-register';
-import 'mathlive';
 
-// Initialize mathjs with all functions
-const math = create(all);
+// Initialize mathjs with number-only dependencies
+const math = create(allDependencies);
 
 /**
  * Percentage & Math Calculator - Services Layer
@@ -1134,11 +1133,23 @@ const math = create(all);
         }
     }
 
-    function activateScientificMode(sidebar, btnStd, btnSci, sciContainer) {
+    async function activateScientificMode(sidebar, btnStd, btnSci, sciContainer) {
         const leftPanel = document.querySelector('.left-panel');
 
         // Freeze left panel content before shrink to prevent reflow jumps.
         if (leftPanel) leftPanel.style.overflow = 'hidden';
+
+        // Lazy-load MathLive if not already present
+        if (!window.MathfieldElement) {
+            showToast('Loading Scientific Engine...');
+            try {
+                await import('mathlive');
+            } catch (err) {
+                console.error('Failed to load MathLive', err);
+                showToast('Error loading scientific engine');
+                return;
+            }
+        }
 
         // Force a layout recalculation so the browser captures the current
         // (expanded) state before we apply the collapsed class.

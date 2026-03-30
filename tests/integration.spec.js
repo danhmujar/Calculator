@@ -4,7 +4,7 @@ import path from 'path';
 test.describe('E2E Integration: Store -> Renderer -> UI', () => {
     test.beforeEach(async ({ page }) => {
         // Load the actual application
-        await page.goto('http://localhost:5173'); // Assuming vite default port
+        await page.goto('http://localhost:4173/Calculator/');
         await page.waitForSelector('#main-calc-display');
     });
 
