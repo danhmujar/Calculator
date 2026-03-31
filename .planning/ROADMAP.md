@@ -45,8 +45,8 @@
   3. **Buffers**: Dynamic vertex buffers efficiently update to reflect calculator layout changes using VAOs and Buffer Orphaning.
   4. **Verifiability**: Running `npm run dev` shows WebGL-rendered primitives alongside the existing DOM UI.
 **Plans**: 3 plans
-- [ ] 07-01-PLAN.md — WebGL Foundation & Context Initialization
-- [ ] 07-02-PLAN.md — Shader Infrastructure & SDF Primitives
+- [x] 07-01-PLAN.md — WebGL Foundation & Context Initialization
+- [x] 07-02-PLAN.md — Shader Infrastructure & SDF Primitives
 - [ ] 07-03-PLAN.md — Dynamic Buffer Management & Integration
 **UI hint**: yes
 
@@ -97,7 +97,7 @@
 | 4. Final Validation & Polish | 3/3 | COMPLETED | 2024-03-31 |
 | 5. Animation Optimization | 1/1 | COMPLETED | 2024-03-31 |
 | 6. Architectural Hardening | 5/5 | COMPLETED | 2024-04-01 |
-| 7. WebGL 2.0 Core | 0/3 | Not started | - |
+| 7. WebGL 2.0 Core | 2/3 | In Progress | - |
 | 8. WebGL Typography | 0/1 | Not started | - |
 | 9. Performance Batching | 0/1 | Not started | - |
 | 10. Final Verification | 0/1 | Not started | - |

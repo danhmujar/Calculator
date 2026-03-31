@@ -2,38 +2,40 @@
 
 ## Project Reference
 **Core Value**: A high-performance, feature-rich scientific calculator with PWA support, persistent state, and a Raw WebGL 2.0 rendering layer.
-**Current Focus**: Phase 6: Architectural Hardening
+**Current Focus**: Phase 7: WebGL 2.0 Core & Primitive Rendering
 
 ## Current Position
-- **Phase**: 6: Architectural Hardening
-- **Plan**: .planning/phases/06-architectural-hardening/06-01-PLAN.md, 06-02-PLAN.md, 06-03-PLAN.md, 06-04-PLAN.md, 06-05-PLAN.md
-- **Status**: IN_PROGRESS
-- **Progress**: [||||------] 40% (Phase 06-02 complete)
+- **Phase**: 07: WebGL 2.0 Core & Primitive Rendering
+- **Plan**: 07-02
+- **Status**: COMPLETED
+- **Progress**: [||||||    ] 66%
 
 ## Performance Metrics
-- **Bundle size**: TBD (Vite optimized)
-- **Lighthouse Score**: TBD
-- **Memory footprint**: O(1) state reads (Target after Phase 6)
-- **Frame Rate**: Target 60 FPS (WebGL migration goal)
+| Phase | Plan | Duration | Tasks | Files |
+|-------|------|----------|-------|-------|
+| 07    | 01   | 15m      | 1     | 2     |
+| 07    | 02   | 20m      | 2     | 3     |
 
 ## Accumulated Context
 ### Decisions
-- Transitions 1-5 completed, establishing the baseline app performance.
+- Transitions 1-6 completed, establishing the baseline app performance and architectural hardening.
 - Full migration to Raw WebGL 2.0 (no external libraries) for the rendering layer.
-- Phase 6 will address all technical debt listed in `CONCERNS.md` to provide a solid foundation for WebGL.
-- Mandatory runnability and verifiability at the end of every phase.
+- Using SDF-based rounded rectangles for high-precision UI primitive rendering.
+- Top-left coordinate system (0,0) in vertex shaders to match DOM coordinates.
 
 ### Todos
-- [ ] Initialize Phase 6 Plan (`/gsd:plan-phase 6`)
-- [ ] Decompose `services/app.js` into modular services.
-- [x] Implement O(1) state reads and segmented state in `services/store.js`.
-- [ ] Fix scientific row restoration race conditions and mobile sidebar issues.
-- [ ] Eliminate `innerHTML` and harden `math.js` security.
-- [ ] Implement LRU cache in `ui/renderer.js`.
+- [x] Initialize WebGL 2.0 Context in `ui/webgl/context.js`.
+- [x] Implement Shader Compilation Manager in `ui/webgl/shaders.js`.
+- [x] Implement SDF Primitive Shaders.
+- [ ] Implement Buffer Orphaning and VAO management in `ui/webgl/buffers.js`.
 
 ### Blockers
 - None currently identified.
 
 ## Session Continuity
-- **Next Step**: Define the detailed plan for Phase 6.
-- **Focus Areas**: Modularity, State Optimization, Reliable Restoration, Security Hardening.
+- **Next Step**: Execute Phase 7 Plan 03 (Buffer Management).
+- **Focus Areas**: Dynamic Vertex Buffers, VAO-per-layout, Buffer Orphaning.
+
+## Session Info
+- **Last session**: 2026-04-01
+- **Stopped at**: Completed 07-02-PLAN.md
