@@ -7,7 +7,7 @@
 - [x] **Phase 3: Library & Event Optimization** - Fine-tune interactions and third-party library usage.
 - [x] **Phase 4: Final Validation & Polish** - Ensure fidelity to original logic and UI.
 - [x] **Phase 5: Animation Optimization** - Refine hardware-accelerated animations and rendering.
-- [ ] **Phase 6: Architectural Hardening** - Refactor monolithic application layer and resolve all core technical debt.
+- [x] **Phase 6: Architectural Hardening** - Refactor monolithic application layer and resolve all core technical debt.
 - [ ] **Phase 7: WebGL 2.0 Core & Primitive Rendering** - Initialize raw WebGL 2.0 context and render UI primitives.
 - [ ] **Phase 8: Advanced WebGL Typography & Texturing** - Implement glyph atlas for MathLive/KaTeX and render math expressions.
 - [ ] **Phase 9: High-Performance Batching & State Sync** - Implement batch renderer and synchronize WebGL with the modular store.
@@ -33,23 +33,7 @@
 **Status**: COMPLETED
 
 ### Phase 6: Architectural Hardening
-**Goal**: Decompose the application monolith, optimize state management, and resolve all security and reliability concerns as a foundation for WebGL.
-**Depends on**: Phase 5
-**Requirements**: REQ-ARCH-01, REQ-ARCH-02, REQ-ARCH-03, REQ-STORE-01, REQ-STORE-02, REQ-BUG-01, REQ-BUG-02, REQ-BUG-03, REQ-SEC-01, REQ-SEC-02, REQ-TEST-01
-**Success Criteria** (what must be TRUE):
-  1. **Modularity**: `services/app.js` is decommissioned; logic moved to `UIManager`, `CalculatorService`, and `PWAManager`.
-  2. **State Efficiency**: `services/store.js` uses shallow cloning for O(1) reads and segments state into transient/persistent parts.
-  3. **Reliability**: Scientific rows are restored reliably across all devices (including mobile) via event-driven initialization (no `setTimeout`).
-  4. **Security**: `innerHTML` is eliminated in favor of safe DOM APIs, and `math.js` is configured with restrictive security settings.
-  5. **Performance**: `ui/renderer.js` implements an LRU cache strategy for text measurement caches.
-  6. **Testability**: Event delegation is refactored out of IIFEs; unit tests verify modular services in isolation.
-**Plans**: 5 plans
-- [x] 06-01-PLAN.md — State Optimization (Lazy Shallow Cloning)
-- [x] 06-02-PLAN.md — Security Hardening & Calculation Service
-- [x] 06-03-PLAN.md — UI & PWA Modularization (LRU Cache)
-- [x] 06-04-PLAN.md — Event Orchestration & App Decommissioning
-- [ ] 06-05-PLAN.md — Reliability & Performance Audit
-**UI hint**: yes
+**Status**: COMPLETED
 
 ### Phase 7: WebGL 2.0 Core & Primitive Rendering
 **Goal**: Initialize a raw WebGL 2.0 rendering pipeline and render basic UI components.
@@ -57,10 +41,13 @@
 **Requirements**: REQ-WGL-01, REQ-WGL-02, REQ-WGL-03
 **Success Criteria** (what must be TRUE):
   1. **Context**: A WebGL 2.0 canvas is initialized and integrated into the `UIManager`.
-  2. **Shaders**: Custom GLSL shaders render primitive shapes (buttons, backgrounds) with high precision.
-  3. **Buffers**: Dynamic vertex buffers efficiently update to reflect calculator layout changes.
+  2. **Shaders**: Custom GLSL shaders render primitive shapes (buttons, backgrounds) with high precision using SDFs.
+  3. **Buffers**: Dynamic vertex buffers efficiently update to reflect calculator layout changes using VAOs and Buffer Orphaning.
   4. **Verifiability**: Running `npm run dev` shows WebGL-rendered primitives alongside the existing DOM UI.
-**Plans**: TBD
+**Plans**: 3 plans
+- [ ] 07-01-PLAN.md — WebGL Foundation & Context Initialization
+- [ ] 07-02-PLAN.md — Shader Infrastructure & SDF Primitives
+- [ ] 07-03-PLAN.md — Dynamic Buffer Management & Integration
 **UI hint**: yes
 
 ### Phase 8: Advanced WebGL Typography & Texturing
@@ -94,7 +81,7 @@
   1. **Clean Swap**: The legacy DOM rendering layer is removed; the app runs 100% on Raw WebGL 2.0.
   2. **Visual Parity**: Manual audit confirms zero visual regressions across all calculator modes.
   3. **Input Parity**: Touch and gesture interactions are fully verified on physical mobile devices.
-  4. **Final Verification**: App passes all UAT criteria in a fully "Runnable" production-ready state.
+  4. **Final Verification**: App passes all UAT criteria in a fully "Runnable" state.
 **Plans**: TBD
 **UI hint**: yes
 
@@ -109,8 +96,8 @@
 | 3. Library & Event Optimization | 3/3 | COMPLETED | 2024-03-30 |
 | 4. Final Validation & Polish | 3/3 | COMPLETED | 2024-03-31 |
 | 5. Animation Optimization | 1/1 | COMPLETED | 2024-03-31 |
-| 6. Architectural Hardening | 4/5 | IN PROGRESS | - |
-| 7. WebGL 2.0 Core | 0/1 | Not started | - |
+| 6. Architectural Hardening | 5/5 | COMPLETED | 2024-04-01 |
+| 7. WebGL 2.0 Core | 0/3 | Not started | - |
 | 8. WebGL Typography | 0/1 | Not started | - |
 | 9. Performance Batching | 0/1 | Not started | - |
 | 10. Final Verification | 0/1 | Not started | - |
