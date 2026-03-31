@@ -22,44 +22,71 @@ export class UIManager {
 
         this.VALID_CARD_TYPES = ['type1', 'type2', 'type3', 'type4'];
 
-        this.ROW_TEMPLATES = {
-            'type1': `
-                <div class="input-group">
-                    <input type="number" name="val-x" class="val-x" placeholder="X" step="any" autocomplete="off" aria-label="First value">
-                    <span>is what % of</span>
-                    <input type="number" name="val-y" class="val-y" placeholder="Y" step="any" autocomplete="off" aria-label="Second value">
-                </div>
-            `,
-            'type2': `
-                <div class="input-group">
-                    <span>What is</span>
-                    <input type="number" name="val-x" class="val-x" placeholder="X %" step="any" autocomplete="off" aria-label="Percentage">
-                    <span>% of</span>
-                    <input type="number" name="val-y" class="val-y" placeholder="Y" step="any" autocomplete="off" aria-label="Value">
-                </div>
-            `,
-            'type3': `
-                <div class="input-group">
-                    <span>Change from</span>
-                    <input type="number" name="val-x" class="val-x" placeholder="X" step="any" autocomplete="off" aria-label="Original value">
-                    <span>to</span>
-                    <input type="number" name="val-y" class="val-y" placeholder="Y" step="any" autocomplete="off" aria-label="New value">
-                </div>
-            `,
-            'type4': `
-                <div class="input-group">
-                    <input type="number" name="val-x" class="val-x" placeholder="X" step="any" autocomplete="off" aria-label="Partial value">
-                    <span>is</span>
-                    <input type="number" name="val-y" class="val-y" placeholder="P %" step="any" autocomplete="off" aria-label="Percentage">
-                    <span>% of what?</span>
-                </div>
-            `
+        this.ROW_BUILDERS = {
+            'type1': (parent) => {
+                const group = document.createElement('div');
+                group.className = 'input-group';
+                const x = this.createRowInput('val-x', 'X', 'First value');
+                const span = document.createElement('span');
+                span.textContent = 'is what % of';
+                const y = this.createRowInput('val-y', 'Y', 'Second value');
+                group.append(x, ' ', span, ' ', y);
+                parent.appendChild(group);
+            },
+            'type2': (parent) => {
+                const group = document.createElement('div');
+                group.className = 'input-group';
+                const span1 = document.createElement('span');
+                span1.textContent = 'What is';
+                const x = this.createRowInput('val-x', 'X %', 'Percentage');
+                const span2 = document.createElement('span');
+                span2.textContent = '% of';
+                const y = this.createRowInput('val-y', 'Y', 'Value');
+                group.append(span1, ' ', x, ' ', span2, ' ', y);
+                parent.appendChild(group);
+            },
+            'type3': (parent) => {
+                const group = document.createElement('div');
+                group.className = 'input-group';
+                const span1 = document.createElement('span');
+                span1.textContent = 'Change from';
+                const x = this.createRowInput('val-x', 'X', 'Original value');
+                const span2 = document.createElement('span');
+                span2.textContent = 'to';
+                const y = this.createRowInput('val-y', 'Y', 'New value');
+                group.append(span1, ' ', x, ' ', span2, ' ', y);
+                parent.appendChild(group);
+            },
+            'type4': (parent) => {
+                const group = document.createElement('div');
+                group.className = 'input-group';
+                const x = this.createRowInput('val-x', 'X', 'Partial value');
+                const span1 = document.createElement('span');
+                span1.textContent = 'is';
+                const y = this.createRowInput('val-y', 'P %', 'Percentage');
+                const span2 = document.createElement('span');
+                span2.textContent = '% of what?';
+                group.append(x, ' ', span1, ' ', y, ' ', span2);
+                parent.appendChild(group);
+            }
         };
 
         this.proFormatter = new Intl.NumberFormat('en-US', {
             minimumFractionDigits: 0,
             maximumFractionDigits: 4
         });
+    }
+
+    createRowInput(name, placeholder, ariaLabel) {
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.name = name;
+        input.className = name;
+        input.placeholder = placeholder;
+        input.step = 'any';
+        input.autocomplete = 'off';
+        input.setAttribute('aria-label', ariaLabel);
+        return input;
     }
 
     /**
@@ -335,7 +362,9 @@ export class UIManager {
 
         const templateContainer = document.createElement('div');
         templateContainer.className = 'row-template-content';
-        templateContainer.innerHTML = this.ROW_TEMPLATES[type];
+        if (this.ROW_BUILDERS[type]) {
+            this.ROW_BUILDERS[type](templateContainer);
+        }
         container.appendChild(templateContainer);
 
         const resultGroup = document.createElement('div');
