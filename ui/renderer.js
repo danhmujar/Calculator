@@ -1,5 +1,30 @@
 const isBrowser = typeof window !== 'undefined' && typeof document !== 'undefined';
 
+/**
+ * ES6 Map-based LRU Cache for O(1) text measurement access with fixed capacity.
+ */
+export class LRUCache extends Map {
+  constructor(capacity) {
+    super();
+    this.capacity = capacity;
+  }
+  get(key) {
+    if (!super.has(key)) return undefined;
+    const val = super.get(key);
+    super.delete(key);
+    super.set(key, val);
+    return val;
+  }
+  set(key, value) {
+    if (super.has(key)) super.delete(key);
+    super.set(key, value);
+    if (this.size > this.capacity) {
+      this.delete(this.keys().next().value);
+    }
+    return this;
+  }
+}
+
 export class Renderer {
   constructor() {
     this.rafId = null;
@@ -21,8 +46,8 @@ export class Renderer {
       this.ctx.font = `${this.referenceFontSize}px sans-serif`;
     }
     
-    // O(1) cache storage
-    this.textWidthCache = new Map();
+    // O(1) LRU cache storage with 1000 item capacity to prevent memory leaks
+    this.textWidthCache = new LRUCache(1000);
   }
 
   /**
@@ -83,7 +108,8 @@ export class Renderer {
       this.textWidthCache.set(strText, textWidthRef);
     }
     
-    if (textWidthRef === 0) {
+    if (textWidthRef === 0 || containerWidth <= 0) {
+      // Return maximum size if container is not yet ready or hidden to avoid "tiny font" flicker (REQ-UI-06)
       return { text: strText, fontSizeRem: maxRem };
     }
 
@@ -95,7 +121,8 @@ export class Renderer {
     let finalText = strText;
 
     // Fallback to scienfitic notation if text surpasses container bounds even at minimum possible size.
-    if (requiredSizeRem < minRem) {
+    // Ensure containerWidth is valid to avoid false positives during layout transitions (REQ-UI-06).
+    if (requiredSizeRem < minRem && containerWidth > 0) {
       const parsedNum = Number(strText.replace(/,/g, ''));
       if (!isNaN(parsedNum) && strText.trim().length > 0) {
         // Render large figures via toExponential. 
