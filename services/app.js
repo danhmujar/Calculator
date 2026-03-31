@@ -1,307 +1,104 @@
 import { store } from './store.js';
-import { renderer } from '../ui/renderer.js';
-import { create, all } from 'mathjs/number';
-import { registerSW } from 'virtual:pwa-register';
+import { uiManager } from '../ui/uimanager.js';
+import { pwaManager } from './pwa.js';
+import { CalculatorService } from './calculator.js';
 import { initEyeTracking } from '../ui/eye-tracker.js';
-import { MathfieldElement } from 'mathlive';
-
-// PWA/Deployment Strategy: Use local fonts for offline support and GitHub Pages compatibility.
-// If the local fetch fails or is not found, MathLive has internal fallbacks.
-MathfieldElement.fontsDirectory = '/Calculator/fonts';
-
-// Initialize mathjs with number-only dependencies
-const math = create(all);
+import { EventManager } from './events.js';
 
 /**
- * Percentage & Math Calculator - Services Layer
+ * Percentage & Math Calculator - Orchestrator
  */
-    /* --- Configuration Constants (APP-L5) --- */
-    const TOAST_DURATION_MS = 2000;
-    const MAX_AUDIT_ENTRIES = 100;
-    const SAVE_DEBOUNCE_MS = 500;
-    const INPUT_LENGTH_LIMIT = 15;
-    const SCI_RESTORE_DELAY_BASE_MS = 100;
-    const MATH_EXPR_LIMIT = 1000; // DoS prevention (APP-L8)
-
-    let deferredInstallPrompt = null;
-
-    /* --- Security Allowlists --- */
-    const VALID_THEMES = [
-        'theme-teal', 'theme-terracotta', 'theme-forest', 'theme-slate',
-        'theme-rosewood', 'theme-pistachio', 'theme-purple',
-        'theme-aurora', 'theme-aurora-ocean', 'theme-aurora-cyber', 'theme-aurora-sunset',
-        '' // Default theme
-    ];
-
-    const VALID_CARD_TYPES = ['type1', 'type2', 'type3', 'type4'];
-
-    /* Formatter for professional decimal format */
-    const proFormatter = new Intl.NumberFormat('en-US', {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 4
-    });
-
-    /* --- Helper Functions --- */
-
-    /**
-     * Converts internal operators to display symbols (APP-L4)
-     */
-    function formatOperator(op) {
-        switch (op) {
-            case '*': return '×';
-            case '/': return '÷';
-            case '-': return '−';
-            default: return op;
-        }
-    }
-
-    /* --- Dynamic Left Panel Logic --- */
-
-    const ROW_TEMPLATES = {
-        'type1': `
-                <div class="input-group">
-                    <input type="number" name="val-x" class="val-x" placeholder="X" step="any" autocomplete="off" aria-label="First value">
-                    <span>is what % of</span>
-                    <input type="number" name="val-y" class="val-y" placeholder="Y" step="any" autocomplete="off" aria-label="Second value">
-                </div>
-            `,
-        'type2': `
-                <div class="input-group">
-                    <span>What is</span>
-                    <input type="number" name="val-x" class="val-x" placeholder="X %" step="any" autocomplete="off" aria-label="Percentage">
-                    <span>% of</span>
-                    <input type="number" name="val-y" class="val-y" placeholder="Y" step="any" autocomplete="off" aria-label="Value">
-                </div>
-            `,
-        'type3': `
-                <div class="input-group">
-                    <span>Change from</span>
-                    <input type="number" name="val-x" class="val-x" placeholder="X" step="any" autocomplete="off" aria-label="Original value">
-                    <span>to</span>
-                    <input type="number" name="val-y" class="val-y" placeholder="Y" step="any" autocomplete="off" aria-label="New value">
-                </div>
-            `,
-        'type4': `
-                <div class="input-group">
-                    <input type="number" name="val-x" class="val-x" placeholder="X" step="any" autocomplete="off" aria-label="Partial value">
-                    <span>is</span>
-                    <input type="number" name="val-y" class="val-y" placeholder="P %" step="any" autocomplete="off" aria-label="Percentage">
-                    <span>% of what?</span>
-                </div>
-            `
-    };
-
-    function calculateRowResult(type, x, y) {
-        let resText = '0.00';
-        if (x === null || y === null || isNaN(x) || isNaN(y)) {
-            return (type === 'type1' || type === 'type3') ? '0.00%' : '0.00';
-        }
-
-        switch (type) {
-            case 'type1':
-                if (y !== 0) resText = proFormatter.format((x / y) * 100) + '%';
-                else resText = 'Error';
-                break;
-            case 'type2':
-                resText = proFormatter.format((x / 100) * y);
-                break;
-            case 'type3':
-                if (x !== 0) {
-                    const res = ((y - x) / Math.abs(x)) * 100;
-                    const sign = res > 0 ? '+' : '';
-                    resText = sign + proFormatter.format(res) + '%';
-                } else resText = 'Error';
-                break;
-            case 'type4':
-                if (y !== 0) resText = proFormatter.format(x / (y / 100));
-                else resText = 'Error';
-                break;
-        }
-        return resText;
-    }
-
-    function createRow(type) {
-        const container = document.createElement('div');
-        container.className = 'calc-row-instance';
-
-        const uniqueId = 'res-' + crypto.randomUUID().slice(0, 8);
-
-        // Build Row Template part
-        const templateContainer = document.createElement('div');
-        templateContainer.className = 'row-template-content';
-
-        // Safety: ROW_TEMPLATES contain static spans and inputs, no user data
-        templateContainer.innerHTML = ROW_TEMPLATES[type];
-        container.appendChild(templateContainer);
-
-        // Build Result Group part programmatically
-        const resultGroup = document.createElement('div');
-        resultGroup.className = 'result-group';
-
-        const resultLabel = document.createElement('span');
-        resultLabel.textContent = 'Result:';
-        resultGroup.appendChild(resultLabel);
-
-        const resultValue = document.createElement('span');
-        resultValue.className = 'result-value';
-        resultValue.id = uniqueId;
-        resultValue.setAttribute('aria-live', 'polite');
-        resultValue.textContent = (type === 'type1' || type === 'type3') ? '0.00%' : '0.00';
-        resultGroup.appendChild(resultValue);
-
-        const copyBtn = document.createElement('button');
-        copyBtn.className = 'icon-btn copy-row-btn';
-        copyBtn.title = 'Copy to clipboard';
-        copyBtn.setAttribute('aria-label', 'Copy result');
-        copyBtn.appendChild(createCopySvg(18));
-        resultGroup.appendChild(copyBtn);
-
-        const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'icon-btn delete-row-btn';
-        deleteBtn.title = 'Delete Row';
-        deleteBtn.setAttribute('aria-label', 'Delete row');
-
-        const deleteSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        deleteSvg.setAttribute('width', '18');
-        deleteSvg.setAttribute('height', '18');
-        deleteSvg.setAttribute('aria-hidden', 'true');
-        
-        const useEl = document.createElementNS('http://www.w3.org/2000/svg', 'use');
-        useEl.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', './assets/sprites.svg#icon-delete');
-        deleteSvg.appendChild(useEl);
-        
-        deleteBtn.appendChild(deleteSvg);
-        resultGroup.appendChild(deleteBtn);
-
-        container.appendChild(resultGroup);
-
-        // Bind copy and delete
-        copyBtn.addEventListener('click', () => copyResult(uniqueId));
-        deleteBtn.addEventListener('click', () => deleteRow(deleteBtn));
-
-        // Setup listeners
-        const xInput = container.querySelector('.val-x');
-        const yInput = container.querySelector('.val-y');
-        const resEl = resultValue;
-
-        const updater = () => {
-            const xVal = parseFloat(xInput.value);
-            const yVal = parseFloat(yInput.value);
-            resEl.textContent = calculateRowResult(type,
-                isNaN(xVal) ? null : xVal,
-                isNaN(yVal) ? null : yVal
-            );
-        };
-
-        xInput.addEventListener('input', updater);
-        yInput.addEventListener('input', updater);
-
-        return container;
-    }
-
-    function addRow(btnEl, type) {
-        const container = btnEl.closest('.calc-card').querySelector('.calc-rows-container');
-        const newRow = createRow(type);
-
-        // Start collapsed
-        newRow.classList.add('row-enter');
-        container.appendChild(newRow);
-
-        // Force layout flush, then remove the collapsed class to trigger the expand transition
-        void newRow.offsetWidth;
-        requestAnimationFrame(() => {
-            newRow.style.maxHeight = newRow.scrollHeight + 'px';
-            newRow.classList.remove('row-enter');
-
-            // Clean up inline max-height after transition completes
-            newRow.addEventListener('transitionend', function handler(e) {
-                if (e.propertyName === 'max-height') {
-                    newRow.style.maxHeight = '';
-                    newRow.removeEventListener('transitionend', handler);
-                }
-            }, { once: true });
+class AppOrchestrator {
+    constructor() {
+        this.MAX_AUDIT_ENTRIES = 100;
+        this.SAVE_DEBOUNCE_MS = 500;
+        this.INPUT_LENGTH_LIMIT = 15;
+        this.auditEntries = [];
+        this.saveTimeout = null;
+        this.proFormatter = new Intl.NumberFormat('en-US', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 4
         });
+
+        this.calcState = this.initCalcStateProxy();
     }
 
-    function deleteRow(btnEl) {
-        const rowInstance = btnEl.closest('.calc-row-instance');
-        if (!rowInstance) return;
+    init() {
+        window.addEventListener('DOMContentLoaded', () => {
+            uiManager.init();
+            pwaManager.init(uiManager.showToast.bind(uiManager));
+            initEyeTracking();
 
-        // Set explicit max-height from current height so the transition has a start value
-        rowInstance.style.maxHeight = rowInstance.scrollHeight + 'px';
-        void rowInstance.offsetWidth;
-
-        // Trigger collapse animation
-        requestAnimationFrame(() => {
-            rowInstance.classList.add('row-exit');
-
-            const cleanup = () => {
-                rowInstance.remove();
-            };
-
-            rowInstance.addEventListener('transitionend', function handler(e) {
-                if (e.propertyName === 'max-height') {
-                    cleanup();
-                    rowInstance.removeEventListener('transitionend', handler);
+            const eventManager = new EventManager({
+                onDigit: (digit) => this.calcDigit(digit),
+                onOperation: (op) => this.calcOperation(op),
+                onMemory: (action) => this.calcMemory(action),
+                onAction: (action) => this.calcAction(action),
+                onPercentage: () => this.calcPercentage(),
+                onEquals: () => this.calcEquals(),
+                onTriggerSave: () => {
+                    this.syncScientificRows();
+                    this.syncPercentageCards();
+                },
+                onClearAudit: () => { this.calcState.auditData = []; },
+                onPaste: (val) => {
+                    this.calcState.currentValue = val;
+                    this.calcState.resetNext = true;
+                    if (this.calcState.operator === null) this.calcState.previousValue = null;
+                    this.updateDisplay();
                 }
-            }, { once: true });
-
-            // Safety fallback
-            setTimeout(cleanup, 400);
-        });
-    }
-
-    /* --- State Persistence (localStorage) --- */
-    let auditEntries = [];
-    let pendingSciRows = null; // Deferred sci rows to restore after lazy-load
-
-    function saveState() {
-        const stateFields = {
-            theme: Array.from(document.body.classList).find(c => c.startsWith('theme-')) || '',
-            darkMode: document.body.classList.contains('dark-theme'),
-            mode: document.body.classList.contains('scientific-mode') ? 'scientific' : 'standard',
-            cards: {},
-            sciRows: [],
-            auditData: auditEntries
-        };
-
-        document.querySelectorAll('.calc-card').forEach(card => {
-            const type = card.getAttribute('data-type');
-            if (!type) return;
-
-            stateFields.cards[type] = Array.from(card.querySelectorAll('.calc-row-instance')).map(row => {
-                const xInp = row.querySelector('.val-x');
-                const yInp = row.querySelector('.val-y');
-                return {
-                    x: xInp ? xInp.value : '',
-                    y: yInp ? yInp.value : ''
-                };
             });
-        });
+            eventManager.init();
 
-        document.querySelectorAll('math-field').forEach(mf => {
-            stateFields.sciRows.push(mf.value);
-        });
+            const loaded = this.loadState();
+            if (!loaded) {
+                document.querySelectorAll('.calc-card').forEach(card => {
+                    const type = card.getAttribute('data-type');
+                    const container = card.querySelector('.calc-rows-container');
+                    if (container) container.appendChild(uiManager.createRow(type));
+                });
+            }
 
-        // Delegate persistence to the store's functional state management
-        store.setState(stateFields);
+            // Subscribe rendering to store changes
+            store.subscribe(() => this.updateDisplay());
+        });
     }
 
-    function loadState() {
+    initCalcStateProxy() {
+        return new Proxy({}, {
+            get: (_, prop) => {
+                const state = store.getState();
+                if (state.persistent && prop in state.persistent) return state.persistent[prop];
+                if (state.transient && prop in state.transient) return state.transient[prop];
+                return state[prop];
+            },
+            set: (_, prop, value) => {
+                const state = store.getState();
+                if (state.persistent && prop in state.persistent) {
+                    store.state.persistent[prop] = value;
+                } else if (state.transient && prop in state.transient) {
+                    store.state.transient[prop] = value;
+                } else {
+                    store.state[prop] = value;
+                }
+                return true;
+            }
+        });
+    }
+
+    loadState() {
         const saved = localStorage.getItem('interactiveCalcState');
         if (!saved) return false;
 
         try {
             const state = JSON.parse(saved);
+            const effectiveState = state.persistent || state;
+            store.setState({ persistent: effectiveState });
             
-            // Sync loaded state into the functional store
-            store.setState(state);
+            uiManager.restoreState(effectiveState, {
+                addAuditEntry: (a, b, op, res) => this.addAuditEntry(a, b, op, res, false)
+            });
             
-            restoreThemeAndMode(state);
-            restoreAuditTape(state);
-            restorePercentageCards(state);
-            
-            restoreScientificRows(state);
             return true;
         } catch (e) {
             console.error("Failed to load calc state", e);
@@ -309,1166 +106,163 @@ const math = create(all);
         }
     }
 
-    function restoreThemeAndMode(state) {
-        if (state.darkMode && !document.body.classList.contains('dark-theme')) toggleTheme();
-        if (!state.darkMode && document.body.classList.contains('dark-theme')) toggleTheme();
-
-        const checkbox = document.getElementById('checkbox');
-        if (checkbox) checkbox.checked = state.darkMode;
-
-        if (state.theme && VALID_THEMES.includes(state.theme)) {
-            const btn = document.querySelector('.theme-swatch[data-theme="' + state.theme + '"]');
-            if (btn) setThemeColor(btn, state.theme);
-        }
-
-        if (state.mode === 'scientific') {
-            const isMobileDrawer = window.matchMedia('(max-width: 1024px)').matches;
-            if (!isMobileDrawer) {
-                setCalcMode('scientific');
-            }
-            // On mobile, skip restoring SCI mode — the drawer is closed,
-            // so the left panel would be invisible with no way to recover.
-        }
+    updateDisplay() {
+        uiManager.updateDisplay(this.calcState, uiManager.formatOperator.bind(uiManager));
     }
 
-    function restoreAuditTape(state) {
-        if (state.auditData && Array.isArray(state.auditData)) {
-            state.auditData.slice().reverse().forEach(entry => {
-                if (typeof entry.a === 'number' && typeof entry.b === 'number' &&
-                    typeof entry.op === 'string' && typeof entry.res === 'number' &&
-                    isFinite(entry.a) && isFinite(entry.b) && isFinite(entry.res)) {
-                    addAuditEntry(entry.a, entry.b, entry.op, entry.res);
-                }
+    syncScientificRows() {
+        const rows = Array.from(document.querySelectorAll('math-field')).map(mf => mf.value);
+        this.calcState.sciRows = rows;
+    }
+
+    syncPercentageCards() {
+        const cardsData = {};
+        document.querySelectorAll('.calc-card').forEach(card => {
+            const type = card.getAttribute('data-type');
+            const rows = [];
+            card.querySelectorAll('.calc-row-instance').forEach(row => {
+                const x = row.querySelector('.val-x').value;
+                const y = row.querySelector('.val-y').value;
+                rows.push({ x, y });
             });
-        }
+            cardsData[type] = rows;
+        });
+        this.calcState.cards = cardsData;
     }
 
-    function restorePercentageCards(state) {
-        Object.keys(state.cards || {}).forEach(type => {
-            if (!VALID_CARD_TYPES.includes(type)) return;
-
-            const card = document.querySelector(`.calc-card[data-type="${type}"]`);
-            if (card) {
-                const container = card.querySelector('.calc-rows-container');
-                if (!container) return;
-
-                container.replaceChildren();
-                if (state.cards[type].length === 0) {
-                    container.appendChild(createRow(type));
-                } else {
-                    state.cards[type].forEach(rowData => {
-                        const newRow = createRow(type);
-                        const x = newRow.querySelector('.val-x');
-                        const y = newRow.querySelector('.val-y');
-                        if (x && y) {
-                            x.value = rowData.x || '';
-                            y.value = rowData.y || '';
-                            container.appendChild(newRow);
-                            x.dispatchEvent(new Event('input'));
-                        }
-                    });
-                }
-            }
-        });
-    }
-
-    function restoreScientificRows(state) {
-        if (state.sciRows && state.sciRows.length > 0) {
-            const sciWrapper = document.querySelector('.sci-rows-wrapper');
-            if (sciWrapper) {
-                sciWrapper.replaceChildren();
-                state.sciRows.forEach((val, index) => {
-                    addScientificRow();
-                    setTimeout(() => {
-                        const mfs = document.querySelectorAll('math-field');
-                        if (mfs[index]) {
-                            mfs[index].value = val;
-                            mfs[index].dispatchEvent(new Event('input', { bubbles: true }));
-                        }
-                    }, SCI_RESTORE_DELAY_BASE_MS * (index + 1));
-                });
-            }
-        }
-    }
-
-    (function initSaveTriggers() {
-        let saveTimeout;
-        function triggerSave() {
-            clearTimeout(saveTimeout);
-            saveTimeout = setTimeout(saveState, SAVE_DEBOUNCE_MS);
-        }
-
-        const inputs = document.querySelectorAll('.calc-card, .scientific-container');
-        inputs.forEach(container => {
-            container.addEventListener('input', triggerSave);
-        });
-
-        document.addEventListener('click', (e) => {
-            if (e.target.closest('button')) triggerSave();
-        });
-    })();
-
-    window.addEventListener('DOMContentLoaded', () => {
-        initEyeTracking();
-        const loaded = loadState();
-        if (!loaded) {
-            document.querySelectorAll('.calc-card').forEach(card => {
-                const type = card.getAttribute('data-type');
-                const container = card.querySelector('.calc-rows-container');
-                if (container) container.appendChild(createRow(type));
-            });
-        }
-
-        const header = document.querySelector('.left-panel header');
-        if (header) {
-            header.classList.add('anim-fade-up');
-            header.style.animationDelay = '0.05s';
-        }
-        document.querySelectorAll('.calc-card').forEach((card, i) => {
-            card.classList.add('anim-fade-up');
-            card.style.animationDelay = `${0.1 + (i * 0.08)}s`;
-        });
-        const rightPanel = document.querySelector('.right-panel');
-        if (rightPanel) {
-            rightPanel.classList.add('anim-slide-right');
-            rightPanel.style.animationDelay = '0.1s';
-
-            // Remove entrance animation class after it plays to prevent
-            // flicker when subsequently toggling the sidebar open/close.
-            rightPanel.addEventListener('animationend', function handler() {
-                rightPanel.classList.remove('anim-slide-right');
-                rightPanel.removeEventListener('animationend', handler);
-            }, { once: true });
-
-            // Desktop: sidebar starts open after entrance animation
-            if (window.innerWidth > 1024) {
-                // Delay adding .open until after the entrance anim finishes
-                // so the slide-in animation plays first, then .open locks it visible.
-                rightPanel.addEventListener('animationend', function openHandler() {
-                    rightPanel.classList.add('open');
-                    rightPanel.removeEventListener('animationend', openHandler);
-                }, { once: true });
-            }
-
-            // APP-U1: Ensure sidebar opens when maximizing or resizing to desktop
-            let wasMobile = window.innerWidth <= 1024;
-            window.addEventListener('resize', () => {
-                const isDesktop = window.innerWidth > 1024;
-                if (isDesktop && wasMobile && !rightPanel.classList.contains('open')) {
-                    void rightPanel.offsetWidth;
-                    requestAnimationFrame(() => {
-                        rightPanel.classList.add('open');
-                    });
-                }
-                wasMobile = !isDesktop;
-            });
-        }
-
-        document.querySelectorAll('button[title]:not([aria-label])').forEach(btn => {
-            btn.setAttribute('aria-label', btn.getAttribute('title'));
-        });
-
-        setTimeout(() => {
-            if (window.mathVirtualKeyboard) {
-                window.mathVirtualKeyboard.addEventListener('virtual-keyboard-toggle', () => {
-                    if (window.mathVirtualKeyboard.visible) {
-                        const target = document.querySelector('math-field.last-focused') || document.querySelector('math-field');
-                        if (target) {
-                            setTimeout(() => target.focus(), 50);
-                        }
-                    }
-                });
-            }
-        }, 500);
-    });
-
-    /* --- Global Calculator State --- */
-    const calcState = new Proxy({}, {
-        get: (_, prop) => store.getState()[prop],
-        set: (_, prop, value) => {
-            store.setState({ [prop]: value });
-            return true;
-        }
-    });
-
-    const displayEl = document.getElementById('main-calc-display');
-    const previewEl = document.getElementById('main-calc-prev');
-    const auditList = document.getElementById('audit-list');
-    const memoryIndicatorEl = document.getElementById('memory-indicator');
-
-    function updateMemoryIndicator() {
-        if (!memoryIndicatorEl) return;
-        if (calcState.memoryValue !== 0) {
-            memoryIndicatorEl.hidden = false;
+    calcDigit(digit) {
+        if (this.calcState.resetNext) {
+            this.calcState.currentValue = digit;
+            this.calcState.resetNext = false;
         } else {
-            memoryIndicatorEl.hidden = true;
-        }
-    }
-
-    const DISPLAY_MAX_FONT = 2.5;   // rem
-    const DISPLAY_MIN_FONT = 1.0;   // rem
-    const DISPLAY_FONT_STEP = 0.2;  // rem
-
-    /** Format a number in scientific notation: 9.99999998E+17 */
-    function toSciNotation(val) {
-        const exp = Math.floor(Math.log10(Math.abs(val)));
-        const coeff = val / Math.pow(10, exp);
-        const coeffStr = parseFloat(coeff.toPrecision(10)).toString();
-        return `${coeffStr}E+${exp}`;
-    }
-
-    let lastDisplayText = '';
-    let lastContainerWidth = 0;
-
-    /**
-     * Shrink the display font until the text fits within the container,
-     * utilizing the Renderer's Canvas-based layout engine for extreme performance.
-     */
-    function fitDisplayText(text, targetVal) {
-        if (!displayEl) return;
-        const container = displayEl.parentElement;
-        const containerWidth = container.clientWidth - 48; // account for padding
-
-        if (text === lastDisplayText && containerWidth === lastContainerWidth) {
-            return;
-        }
-
-        lastDisplayText = text;
-        lastContainerWidth = containerWidth;
-
-        const res = renderer.fitDisplayText(text, containerWidth, {
-            minRem: DISPLAY_MIN_FONT,
-            maxRem: DISPLAY_MAX_FONT,
-            remToPx: 16
-        });
-
-        displayEl.textContent = res.text;
-        displayEl.style.fontSize = res.fontSizeRem + 'rem';
-    }
-
-    function updateDisplay() {
-        renderer.schedule(() => {
-            if (!displayEl || !previewEl) return;
-
-            let hasDot = calcState.currentValue.endsWith('.');
-            let targetVal = parseFloat(calcState.currentValue);
-            if (isNaN(targetVal)) targetVal = 0;
-
-            let formatted = proFormatter.format(targetVal);
-            if (hasDot) formatted += '.';
-
-            fitDisplayText(formatted, targetVal);
-
-            if (calcState.previousValue !== null && calcState.operator) {
-                const opStr = formatOperator(calcState.operator);
-                previewEl.textContent = `${proFormatter.format(calcState.previousValue)} ${opStr}`;
-            } else {
-                previewEl.textContent = '';
-            }
-        });
-    }
-
-    // Subscribe rendering to store changes
-    store.subscribe(() => updateDisplay());
-
-    function calcDigit(digit) {
-        if (calcState.resetNext) {
-            calcState.currentValue = digit;
-            calcState.resetNext = false;
-        } else {
-            if (calcState.currentValue.replace(/[^0-9]/g, '').length >= INPUT_LENGTH_LIMIT) return;
+            if (this.calcState.currentValue.replace(/[^0-9]/g, '').length >= this.INPUT_LENGTH_LIMIT) return;
 
             if (digit === '.') {
-                if (!calcState.currentValue.includes('.')) {
-                    calcState.currentValue += '.';
+                if (!this.calcState.currentValue.includes('.')) {
+                    this.calcState.currentValue += '.';
                 }
             } else {
-                if (calcState.currentValue === '0' || calcState.currentValue === '-0') {
-                    calcState.currentValue = calcState.currentValue.startsWith('-') ? '-' + digit : digit;
+                if (this.calcState.currentValue === '0' || this.calcState.currentValue === '-0') {
+                    this.calcState.currentValue = this.calcState.currentValue.startsWith('-') ? '-' + digit : digit;
                 } else {
-                    calcState.currentValue += digit;
+                    this.calcState.currentValue += digit;
                 }
             }
         }
-        updateDisplay();
+        this.updateDisplay();
     }
 
-    function calcAction(action) {
+    calcAction(action) {
         if (action === 'clear') {
-            calcState.currentValue = '0';
-            calcState.previousValue = null;
-            calcState.operator = null;
-            calcState.resetNext = false;
-            if (previewEl) previewEl.textContent = '';
-            updateDisplay();
+            this.calcState.currentValue = '0';
+            this.calcState.previousValue = null;
+            this.calcState.operator = null;
+            this.calcState.resetNext = false;
+            this.updateDisplay();
         } else if (action === 'backspace') {
-            if (calcState.resetNext) return;
-            calcState.currentValue = calcState.currentValue.slice(0, -1);
-            if (calcState.currentValue === '' || calcState.currentValue === '-') {
-                calcState.currentValue = '0';
+            if (this.calcState.resetNext) return;
+            this.calcState.currentValue = this.calcState.currentValue.slice(0, -1);
+            if (this.calcState.currentValue === '' || this.calcState.currentValue === '-') {
+                this.calcState.currentValue = '0';
             }
-            updateDisplay();
+            this.updateDisplay();
         }
     }
 
-    function calcMemory(action) {
-        const val = parseFloat(calcState.currentValue);
+    calcMemory(action) {
+        const val = parseFloat(this.calcState.currentValue);
 
         if (action === 'MC') {
-            calcState.memoryValue = 0;
-            showToast("Memory Cleared");
+            this.calcState.memoryValue = 0;
+            uiManager.showToast("Memory Cleared");
         } else if (action === 'MR') {
-            calcState.currentValue = calcState.memoryValue.toString();
-            calcState.resetNext = true;
-            updateDisplay();
-            showToast("Memory Recalled: " + proFormatter.format(calcState.memoryValue));
+            this.calcState.currentValue = this.calcState.memoryValue.toString();
+            this.calcState.resetNext = true;
+            this.updateDisplay();
+            uiManager.showToast("Memory Recalled: " + this.proFormatter.format(this.calcState.memoryValue));
         } else if (action === 'M+') {
             if (!isNaN(val)) {
-                calcState.memoryValue += val;
-                calcState.resetNext = true;
-                showToast("Added to Memory");
+                this.calcState.memoryValue += val;
+                this.calcState.resetNext = true;
+                uiManager.showToast("Added to Memory");
             }
         } else if (action === 'M-') {
             if (!isNaN(val)) {
-                calcState.memoryValue -= val;
-                calcState.resetNext = true;
-                showToast("Subtracted from Memory");
+                this.calcState.memoryValue -= val;
+                this.calcState.resetNext = true;
+                uiManager.showToast("Subtracted from Memory");
             }
         }
-        updateMemoryIndicator();
+        uiManager.updateMemoryIndicator(this.calcState.memoryValue);
     }
-    function calcPercentage() {
-        let val = parseFloat(calcState.currentValue);
+
+    calcPercentage() {
+        let val = parseFloat(this.calcState.currentValue);
         if (!isNaN(val)) {
-            calcState.currentValue = (val / 100).toString();
-            if (calcState.resetNext === false && calcState.operator === null) {
-                calcState.resetNext = true;
+            this.calcState.currentValue = (val / 100).toString();
+            if (this.calcState.resetNext === false && this.calcState.operator === null) {
+                this.calcState.resetNext = true;
             }
-            updateDisplay();
+            this.updateDisplay();
         }
     }
 
-    function calculateInternal(a, b, op) {
-        a = parseFloat(a);
-        b = parseFloat(b);
-        let result;
-        switch (op) {
-            case '+': result = a + b; break;
-            case '-': result = a - b; break;
-            case '*': result = a * b; break;
-            case '/':
-                if (b === 0) {
-                    showToast('Cannot divide by zero');
-                    return null;
+    calcOperation(op) {
+        if (this.calcState.operator && !this.calcState.resetNext) {
+            this.calcEquals(false);
+        }
+        this.calcState.previousValue = parseFloat(this.calcState.currentValue);
+        this.calcState.operator = op;
+        this.calcState.resetNext = true;
+        this.updateDisplay();
+    }
+
+    calcEquals(logHistory = true) {
+        if (this.calcState.operator && this.calcState.previousValue !== null) {
+            const currentNum = parseFloat(this.calcState.currentValue);
+            const prevNum = this.calcState.previousValue;
+            const result = CalculatorService.evaluate(`a ${this.calcState.operator} b`, { a: prevNum, b: currentNum });
+
+            if (result === null) {
+                if (this.calcState.operator === '/' && currentNum === 0) {
+                    uiManager.showToast('Cannot divide by zero');
                 }
-                result = a / b;
-                break;
-            default: result = b;
-        }
-        if (!isFinite(result)) return 0;
-        return result;
-    }
-
-    function calcOperation(op) {
-        if (calcState.operator && !calcState.resetNext) {
-            calcEquals(false);
-        }
-        calcState.previousValue = parseFloat(calcState.currentValue);
-        calcState.operator = op;
-        calcState.resetNext = true;
-        updateDisplay();
-    }
-
-    function calcEquals(logHistory = true) {
-        if (calcState.operator && calcState.previousValue !== null) {
-            const currentNum = parseFloat(calcState.currentValue);
-            const prevNum = calcState.previousValue;
-            const result = calculateInternal(prevNum, currentNum, calcState.operator);
-
-            if (result === null) return;
-
-            if (logHistory) {
-                addAuditEntry(prevNum, currentNum, calcState.operator, result);
-            }
-
-            calcState.currentValue = result.toString();
-            calcState.previousValue = null;
-            calcState.operator = null;
-            calcState.resetNext = true;
-            updateDisplay();
-        }
-    }
-
-    function addAuditEntry(a, b, op, res) {
-        auditEntries.unshift({ a: a, b: b, op: op, res: res });
-        if (auditEntries.length > MAX_AUDIT_ENTRIES) auditEntries.length = MAX_AUDIT_ENTRIES;
-
-        const opStr = formatOperator(op);
-        const equation = proFormatter.format(a) + ' ' + opStr + ' ' + proFormatter.format(b);
-        const resultFormat = proFormatter.format(res);
-
-        const li = document.createElement('li');
-        li.className = 'audit-item';
-
-        const eqDiv = document.createElement('div');
-        eqDiv.className = 'audit-equation';
-        eqDiv.textContent = equation + ' =';
-
-        const resultRow = document.createElement('div');
-        resultRow.className = 'audit-result-row';
-
-        const actionsDiv = createAuditActions(res, resultFormat);
-        const resDiv = document.createElement('div');
-        resDiv.className = 'audit-result';
-        resDiv.textContent = resultFormat;
-
-        resultRow.appendChild(actionsDiv);
-        resultRow.appendChild(resDiv);
-        li.appendChild(eqDiv);
-        li.appendChild(resultRow);
-        if (auditList) auditList.prepend(li);
-    }
-
-    function createAuditActions(res, resultFormat) {
-        const actionsDiv = document.createElement('div');
-        actionsDiv.className = 'audit-actions';
-
-        const useBtn = document.createElement('button');
-        useBtn.className = 'btn-use';
-        useBtn.textContent = 'Use';
-        useBtn.addEventListener('click', () => useAuditValue(res));
-
-        const copyBtn = document.createElement('button');
-        copyBtn.className = 'icon-btn';
-        copyBtn.title = 'Copy';
-        copyBtn.setAttribute('aria-label', 'Copy result');
-        copyBtn.appendChild(createCopySvg(14));
-
-        copyBtn.addEventListener('click', () => {
-            const rawValue = resultFormat.replace(/[%,]/g, '');
-            if (rawValue) {
-                navigator.clipboard.writeText(rawValue).then(() => {
-                    showToast('Copied to clipboard!');
-                }).catch(() => {
-                    showToast('Copy failed');
-                });
-            }
-        });
-
-        actionsDiv.appendChild(useBtn);
-        actionsDiv.appendChild(copyBtn);
-        return actionsDiv;
-    }
-
-    function clearAuditTape() {
-        if (auditList) auditList.textContent = '';
-        auditEntries = [];
-    }
-
-    function useAuditValue(val) {
-        calcState.currentValue = val.toString();
-        calcState.resetNext = true;
-        updateDisplay();
-        toggleHistory();
-        if (window.innerWidth <= 1024 && displayEl) {
-            displayEl.style.color = 'var(--primary-blue)';
-            setTimeout(() => { displayEl.style.color = ''; }, 300);
-        }
-    }
-
-    /* --- Utility functions --- */
-
-    function copyResult(elementId, hardcodedValue, isMathRow) {
-        let textToCopy;
-        if (isMathRow) {
-            const el = document.getElementById(elementId);
-            if (el) {
-                textToCopy = el.textContent.replace('=', '').trim().replace(/[%,]/g, '');
-            }
-        } else if (hardcodedValue) {
-            textToCopy = hardcodedValue.replace(/[%,]/g, '');
-        } else {
-            const el = document.getElementById(elementId);
-            if (el) textToCopy = el.textContent.replace(/[%,]/g, '');
-        }
-
-        if (textToCopy) {
-            navigator.clipboard.writeText(textToCopy).then(function () {
-                showToast('Copied to clipboard!');
-            }).catch(function () {
-                showToast('Copy failed');
-            });
-        }
-    }
-
-    let toastTimeout;
-    function showToast(msg = "Copied to clipboard!") {
-        const toast = document.getElementById('toast');
-        if (!toast) return;
-
-        clearTimeout(toastTimeout);
-        toast.textContent = msg;
-        toast.classList.add('show');
-        toastTimeout = setTimeout(() => {
-            toast.classList.remove('show');
-        }, TOAST_DURATION_MS);
-    }
-
-    function createCopySvg(size = 14) {
-        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        svg.setAttribute('width', size);
-        svg.setAttribute('height', size);
-        svg.setAttribute('aria-hidden', 'true');
-
-        const useEl = document.createElementNS('http://www.w3.org/2000/svg', 'use');
-        useEl.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', './assets/sprites.svg#icon-copy');
-        svg.appendChild(useEl);
-        
-        return svg;
-    }
-
-    function toggleDrawer() {
-        const sidebar = document.getElementById('sidebar');
-        if (sidebar) {
-            // Force browser to capture current state before toggle.
-            void sidebar.offsetWidth;
-            requestAnimationFrame(() => {
-                sidebar.classList.toggle('open');
-            });
-        }
-    }
-
-    function toggleHistory() {
-        const historyDrawer = document.getElementById('history-drawer');
-        if (historyDrawer) historyDrawer.classList.toggle('open');
-    }
-
-    /* --- Theme Toggle --- */
-    function toggleTheme() {
-        const body = document.body;
-
-        const isAurora = Array.from(body.classList).some(c => c.startsWith('theme-aurora'));
-        if (isAurora && body.classList.contains('dark-theme')) {
-            body.classList.remove('theme-aurora', 'theme-aurora-ocean', 'theme-aurora-cyber', 'theme-aurora-sunset');
-
-            const picker = document.querySelector('.theme-picker');
-            if (picker) {
-                picker.querySelectorAll('.theme-swatch').forEach(btn => btn.classList.remove('active'));
-                const defaultSwatch = picker.querySelector('.theme-swatch[data-theme=""]');
-                if (defaultSwatch) defaultSwatch.classList.add('active');
-            }
-        }
-
-        body.classList.toggle('dark-theme');
-
-        const checkbox = document.getElementById('checkbox');
-        if (checkbox) {
-            checkbox.checked = body.classList.contains('dark-theme');
-        }
-    }
-
-    /* --- Custom Color Picker --- */
-    function togglePaletteDropdown(event) {
-        if (event) event.stopPropagation();
-        const dropdown = document.getElementById('theme-dropdown-container');
-        if (dropdown) dropdown.classList.toggle('active');
-    }
-
-    /* === Centralized Event Bindings === */
-    (function bindEvents() {
-        // 1. Keypad Regional Delegation
-        const keypad = document.getElementById('calc-keypad');
-        if (keypad) {
-            keypad.addEventListener('click', function (e) {
-                const btn = e.target.closest('.calc-btn');
-                if (!btn) return;
-                const action = btn.getAttribute('data-action');
-                const value = btn.getAttribute('data-value');
-                switch (action) {
-                    case 'digit': calcDigit(value); break;
-                    case 'op': calcOperation(value); break;
-                    case 'memory': calcMemory(value); break;
-                    case 'clear': calcAction('clear'); break;
-                    case 'backspace': calcAction('backspace'); break;
-                    case 'percent': calcPercentage(); break;
-                    case 'equals': calcEquals(); break;
-                }
-            });
-        }
-
-        // 2. Left Panel Regional Delegation (Add Row)
-        const leftPanel = document.querySelector('.left-panel');
-        if (leftPanel) {
-            leftPanel.addEventListener('click', (e) => {
-                const addRowBtn = e.target.closest('[data-add-row]');
-                if (addRowBtn) {
-                    addRow(addRowBtn, addRowBtn.getAttribute('data-add-row'));
-                }
-            });
-        }
-
-        // 3. Sidebar Regional Delegation (Mode, History, Clear, Close, Add Math)
-        const sidebar = document.getElementById('sidebar');
-        if (sidebar) {
-            sidebar.addEventListener('click', (e) => {
-                // Mode Toggle
-                const modeBtn = e.target.closest('[data-mode]');
-                if (modeBtn) {
-                    setCalcMode(modeBtn.getAttribute('data-mode'));
-                    return;
-                }
-
-                // History Toggles
-                if (e.target.closest('#history-toggle-btn') || e.target.closest('#history-back-btn')) {
-                    toggleHistory();
-                    return;
-                }
-
-                // Clear Tape
-                if (e.target.closest('#clear-tape-btn')) {
-                    clearAuditTape();
-                    return;
-                }
-
-                // Close Drawer
-                if (e.target.closest('#close-drawer-btn')) {
-                    toggleDrawer();
-                    return;
-                }
-
-                // Add Scientific Row
-                if (e.target.closest('#add-math-btn')) {
-                    addScientificRow();
-                    return;
-                }
-            });
-        }
-
-        // 4. Theme & Palette Delegation
-        const picker = document.querySelector('.theme-picker');
-        if (picker) {
-            picker.addEventListener('click', function (e) {
-                const swatch = e.target.closest('.theme-swatch');
-                if (!swatch) return;
-                setThemeColor(swatch, swatch.getAttribute('data-theme'));
-            });
-        }
-
-        const paletteBtn = document.getElementById('palette-toggle-btn');
-        if (paletteBtn) {
-            paletteBtn.addEventListener('click', function (e) {
-                togglePaletteDropdown(e);
-            });
-        }
-
-        const themeCheckbox = document.getElementById('checkbox');
-        if (themeCheckbox) {
-            themeCheckbox.addEventListener('change', toggleTheme);
-        }
-
-        // 5. External UI Controls
-        const mobileBtn = document.getElementById('mobile-panel-toggle-btn');
-        if (mobileBtn) mobileBtn.addEventListener('click', toggleDrawer);
-
-        const skipLink = document.querySelector('.skip-link');
-        if (skipLink) {
-            skipLink.addEventListener('click', (e) => {
-                const sidebarEl = document.getElementById('sidebar');
-                if (sidebarEl && !sidebarEl.classList.contains('open')) {
-                    toggleDrawer();
-                }
-            });
-        }
-
-        // Paste Support for Calculator
-        document.addEventListener('paste', function (e) {
-            // Ignore if pasting into an input or math-field explicitly
-            const tag = e.target.tagName.toLowerCase();
-            if (tag === 'input' || tag === 'math-field' || tag === 'textarea') return;
-            
-            const pasteData = (e.clipboardData || window.clipboardData).getData('text');
-            if (!pasteData) return;
-
-            // Filter out commas and extract the first logical numeric value (e.g. "$1,200.50 text" -> "1200.50")
-            const cleaned = pasteData.replace(/,/g, '');
-            const match = cleaned.match(/-?\d+(?:\.\d+)?/);
-            
-            if (match) {
-                calcState.currentValue = match[0];
-                calcState.resetNext = true; 
-                // Don't wipe previous value if we have a pending operator
-                if (calcState.operator === null) {
-                    calcState.previousValue = null;
-                }
-                updateDisplay();
-                
-                // Visual feedback
-                const display = document.getElementById('main-calc-display');
-                if (display) {
-                    display.style.color = 'var(--primary-blue)';
-                    setTimeout(() => { display.style.color = ''; }, 300);
-                }
-                
-                // Trigger save
-                if (typeof triggerSave === 'function') triggerSave();
-                showToast("Pasted Value");
-            }
-        });
-
-        // Paste Support for Calculator (Right Click Context Menu)
-        const contextMenu = document.getElementById('calc-context-menu');
-        const pasteBtn = document.getElementById('calc-context-paste');
-        const calcDisplay = document.getElementById('main-calc-display');
-
-        if (calcDisplay && contextMenu && pasteBtn) {
-            calcDisplay.addEventListener('contextmenu', (e) => {
-                e.preventDefault();
-                
-                // Position the menu
-                const x = e.clientX;
-                const y = e.clientY;
-                
-                contextMenu.style.left = `${x}px`;
-                contextMenu.style.top = `${y}px`;
-                contextMenu.hidden = false;
-            });
-
-            pasteBtn.addEventListener('click', async () => {
-                contextMenu.hidden = true;
-                try {
-                    const text = await navigator.clipboard.readText();
-                    if (!text) return;
-                    
-                    const cleaned = text.replace(/,/g, '');
-                    const match = cleaned.match(/-?\d+(?:\.\d+)?/);
-                    
-                    if (match) {
-                        calcState.currentValue = match[0];
-                        calcState.resetNext = true;
-                        if (calcState.operator === null) {
-                            calcState.previousValue = null;
-                        }
-                        updateDisplay();
-                        
-                        calcDisplay.style.color = 'var(--primary-blue)';
-                        setTimeout(() => { calcDisplay.style.color = ''; }, 300);
-                        
-                        if (typeof triggerSave === 'function') triggerSave();
-                        showToast("Pasted Value");
-                    }
-                } catch (err) {
-                    console.error("Failed to read clipboard", err);
-                    showToast("Paste permission denied");
-                }
-            });
-
-            document.addEventListener('click', (e) => {
-                if (!contextMenu.hidden && !contextMenu.contains(e.target)) {
-                    contextMenu.hidden = true;
-                }
-            });
-        }
-    })();
-
-    document.addEventListener('click', (event) => {
-        const dropdown = document.getElementById('theme-dropdown-container');
-        if (dropdown && dropdown.classList.contains('active') && !dropdown.contains(event.target)) {
-            dropdown.classList.remove('active');
-        }
-    });
-
-    function setThemeColor(btnEl, themeClass) {
-        if (themeClass && !VALID_THEMES.includes(themeClass)) return;
-
-        const picker = document.querySelector('.theme-picker');
-        if (picker) {
-            picker.querySelectorAll('.theme-swatch').forEach(btn => {
-                btn.classList.remove('active');
-                btn.setAttribute('aria-checked', 'false');
-            });
-        }
-        btnEl.classList.add('active');
-        btnEl.setAttribute('aria-checked', 'true');
-
-        document.body.classList.remove('theme-teal', 'theme-terracotta', 'theme-forest', 'theme-slate', 'theme-rosewood', 'theme-pistachio', 'theme-purple', 'theme-aurora', 'theme-aurora-ocean', 'theme-aurora-cyber', 'theme-aurora-sunset');
-
-        if (themeClass) {
-            document.body.classList.add(themeClass);
-
-            if (themeClass.startsWith('theme-aurora')) {
-                document.body.classList.add('dark-theme');
-                const checkbox = document.getElementById('checkbox');
-                if (checkbox) checkbox.checked = true;
-            }
-        }
-
-        const dropdown = document.getElementById('theme-dropdown-container');
-        if (dropdown) dropdown.classList.remove('active');
-    }
-
-    /* --- Keyboard Shortcuts --- */
-    document.addEventListener('keydown', (e) => {
-        if (e.target.tagName.toLowerCase() === 'input' || e.target.tagName.toLowerCase() === 'math-field') return;
-
-        const sidebar = document.getElementById('sidebar');
-        if (sidebar && sidebar.classList.contains('scientific-active')) return;
-
-        if (e.key >= '0' && e.key <= '9') {
-            calcDigit(e.key);
-        } else if (e.key === '.') {
-            calcDigit('.');
-        } else if (e.key === 'Backspace') {
-            calcAction('backspace');
-        } else if (e.key === 'Escape') {
-            calcAction('clear');
-        } else if (e.key === '%') {
-            calcPercentage();
-        } else if (['+', '-', '*', '/'].includes(e.key)) {
-            calcOperation(e.key);
-        } else if (e.key === 'Enter' || e.key === '=') {
-            e.preventDefault();
-            calcEquals();
-        }
-    });
-
-    /* --- Scientific Calculator Mode (MathLive + Math.js) --- */
-
-
-
-    function setCalcMode(mode) {
-        const sidebar = document.getElementById('sidebar');
-        const btnStd = document.getElementById('btn-mode-std');
-        const btnSci = document.getElementById('btn-mode-sci');
-        const sciContainer = document.getElementById('sci-container');
-
-        if (mode === 'scientific') {
-            activateScientificMode(sidebar, btnStd, btnSci, sciContainer);
-
-        } else {
-            // --- SCI → STD reverse transition ---
-            const leftPanel = document.querySelector('.left-panel');
-
-            // Freeze the left-panel content so it doesn't reflow during expand.
-            if (leftPanel) leftPanel.style.overflow = 'hidden';
-
-            // Force the browser to capture the current (collapsed) state.
-            if (leftPanel) void leftPanel.offsetWidth;
-
-            // Batch all class changes in a single animation frame so the
-            // browser transitions everything together from the collapsed state.
-            requestAnimationFrame(() => {
-                document.body.classList.remove('scientific-mode');
-                if (sciContainer) sciContainer.classList.remove('active');
-                
-                if (sidebar) sidebar.classList.remove('scientific-active');
-                if (btnSci) {
-                    btnSci.classList.remove('active');
-                    btnSci.setAttribute('aria-checked', 'false');
-                }
-                if (btnStd) {
-                    btnStd.classList.add('active');
-                    btnStd.setAttribute('aria-checked', 'true');
-                }
-
-                // Defer resetting overflow until expansion finishes.
-                if (leftPanel) {
-                    const cleanup = (e) => {
-                        if (e && e.propertyName !== 'opacity' && e.propertyName !== 'width' && e.propertyName !== 'flex-basis') return;
-                        
-                        leftPanel.style.overflow = '';
-                        leftPanel.removeEventListener('transitionend', cleanup);
-                        clearTimeout(safetyTimeout);
-                    };
-
-                    const safetyTimeout = setTimeout(() => {
-                        cleanup();
-                    }, 600);
-
-                    leftPanel.addEventListener('transitionend', cleanup);
-                }
-            });
-        }
-    }
-
-    async function activateScientificMode(sidebar, btnStd, btnSci, sciContainer) {
-        const leftPanel = document.querySelector('.left-panel');
-
-        // Freeze left panel content before shrink to prevent reflow jumps.
-        if (leftPanel) leftPanel.style.overflow = 'hidden';
-
-        // Lazy-load MathLive if not already present
-        if (!window.MathfieldElement) {
-            showToast('Loading Scientific Engine...');
-            try {
-                await import('mathlive');
-            } catch (err) {
-                console.error('Failed to load MathLive', err);
-                showToast('Error loading scientific engine');
                 return;
             }
-        }
 
-        // Force a layout recalculation so the browser captures the current
-        // (expanded) state before we apply the collapsed class.
-        if (leftPanel) void leftPanel.offsetWidth;
-        requestAnimationFrame(() => {
-            document.body.classList.add('scientific-mode');
-            if (sidebar) sidebar.classList.add('scientific-active');
-            if (btnStd) {
-                btnStd.classList.remove('active');
-                btnStd.setAttribute('aria-checked', 'false');
+            if (logHistory) {
+                this.addAuditEntry(prevNum, currentNum, this.calcState.operator, result);
             }
-            if (btnSci) {
-                btnSci.classList.add('active');
-                btnSci.setAttribute('aria-checked', 'true');
-            }
-            if (sciContainer) sciContainer.classList.add('active');
 
-            // Defer row creation to a nested rAF so the container
-            // has painted with display:flex before we measure heights.
-            requestAnimationFrame(() => {
-                const sciRowsWrapper = document.getElementById('sci-rows-wrapper');
-
-                // Check for deferred scientific rows from state restoration
-                if (pendingSciRows && pendingSciRows.length > 0) {
-                    if (sciRowsWrapper) sciRowsWrapper.replaceChildren();
-                    pendingSciRows.forEach((val, index) => {
-                        addScientificRow();
-                        setTimeout(() => {
-                            const mfs = document.querySelectorAll('math-field');
-                            if (mfs[index]) {
-                                mfs[index].value = val;
-                                mfs[index].dispatchEvent(new Event('input', { bubbles: true }));
-                            }
-                        }, SCI_RESTORE_DELAY_BASE_MS * (index + 1));
-                    });
-                    pendingSciRows = null;
-                } else if (sciRowsWrapper && sciRowsWrapper.children.length === 0) {
-                    addScientificRow();
-                }
-            });
-        });
-    }
-
-    function addScientificRow() {
-        const wrapper = document.querySelector('.sci-rows-wrapper');
-        if (!wrapper) return;
-
-        const row = document.createElement('div');
-        row.className = 'math-row';
-
-        const uniqueId = 'math-res-' + crypto.randomUUID().slice(0, 8);
-        const mf = createMathField();
-        const actionsDiv = createMathActions(uniqueId, row);
-
-        row.appendChild(mf);
-        row.appendChild(actionsDiv);
-
-        // Start collapsed
-        row.classList.add('row-enter');
-        wrapper.appendChild(row);
-
-        // Force layout flush, then expand
-        void row.offsetWidth;
-        requestAnimationFrame(() => {
-            row.style.maxHeight = row.scrollHeight + 'px';
-            row.classList.remove('row-enter');
-
-            row.addEventListener('transitionend', function handler(e) {
-                if (e.propertyName === 'max-height') {
-                    row.style.maxHeight = '';
-                    row.removeEventListener('transitionend', handler);
-                }
-            }, { once: true });
-
-            // Safety: if scrollHeight was 0 (parent not yet visible),
-            // clear the constraint immediately so the row isn't clamped.
-            if (row.scrollHeight === 0) {
-                row.style.maxHeight = '';
-            }
-        });
-
-        const resEl = document.getElementById(uniqueId);
-        if (resEl) setupMathFieldListeners(mf, resEl);
-        mf.focus();
-    }
-
-    function createMathField() {
-        const mf = document.createElement('math-field');
-        mf.setAttribute('virtual-keyboard-mode', 'manual');
-        mf.setAttribute('aria-label', 'Mathematical expression');
-        mf.addEventListener('focus', () => {
-            document.querySelectorAll('math-field').forEach(f => f.classList.remove('last-focused'));
-            mf.classList.add('last-focused');
-        });
-        return mf;
-    }
-
-    function createMathActions(uniqueId, rowEl) {
-        const actionsDiv = document.createElement('div');
-        actionsDiv.className = 'math-actions';
-
-        const resEl = document.createElement('span');
-        resEl.className = 'math-result';
-        resEl.id = uniqueId;
-        resEl.setAttribute('aria-live', 'polite');
-        resEl.textContent = '= ';
-
-        const copyBtn = document.createElement('button');
-        copyBtn.className = 'icon-btn';
-        copyBtn.title = 'Copy Result';
-        copyBtn.setAttribute('aria-label', 'Copy result');
-        copyBtn.appendChild(createCopySvg(16));
-        copyBtn.addEventListener('click', () => copyResult(uniqueId, null, true));
-
-        const delBtn = document.createElement('button');
-        delBtn.className = 'icon-btn delete-row-btn';
-        delBtn.title = 'Delete';
-        delBtn.setAttribute('aria-label', 'Delete row');
-
-        const delSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        delSvg.setAttribute('width', '16');
-        delSvg.setAttribute('height', '16');
-        delSvg.setAttribute('aria-hidden', 'true');
-        
-        const useEl = document.createElementNS('http://www.w3.org/2000/svg', 'use');
-        useEl.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', './assets/sprites.svg#icon-delete');
-        delSvg.appendChild(useEl);
-        
-        delBtn.appendChild(delSvg);
-        delBtn.addEventListener('click', () => {
-            // Animate the row collapse before removing from DOM
-            rowEl.style.maxHeight = rowEl.scrollHeight + 'px';
-            void rowEl.offsetWidth;
-
-            requestAnimationFrame(() => {
-                rowEl.classList.add('row-exit');
-
-                const cleanup = () => {
-                    rowEl.remove();
-                };
-
-                rowEl.addEventListener('transitionend', function handler(e) {
-                    if (e.propertyName === 'max-height') {
-                        cleanup();
-                        rowEl.removeEventListener('transitionend', handler);
-                    }
-                }, { once: true });
-
-                // Safety fallback
-                setTimeout(cleanup, 400);
-            });
-        });
-
-        actionsDiv.appendChild(resEl);
-        actionsDiv.appendChild(copyBtn);
-        actionsDiv.appendChild(delBtn);
-        return actionsDiv;
-    }
-
-    function setupMathFieldListeners(mf, resEl) {
-        mf.addEventListener('input', () => {
-            try {
-                const expr = mf.getValue('ascii-math');
-                if (!expr || expr.trim() === '') {
-                    resEl.textContent = '= ';
-                    return;
-                }
-
-                // APP-L8 FIX: Limit expression complexity
-                if (expr.length > MATH_EXPR_LIMIT) {
-                    resEl.textContent = '= ERR: TOO LONG';
-                    return;
-                }
-
-                const calculated = math.evaluate(expr);
-                if (typeof calculated === 'number' && !isNaN(calculated)) {
-                    resEl.textContent = '= ' + proFormatter.format(calculated);
-                } else if (calculated && calculated.value !== undefined) {
-                    resEl.textContent = '= ' + proFormatter.format(calculated.value);
-                } else {
-                    resEl.textContent = '= ';
-                }
-            } catch (e) {
-                resEl.textContent = '= ';
-            }
-        });
-    }
-
-    /* --- PWA: Online/Offline State --- */
-    function updateOfflineBadge() {
-        const badge = document.getElementById('offline-badge');
-        if (!badge) return;
-        if (navigator.onLine) {
-            badge.hidden = true;
-        } else {
-            badge.hidden = false;
+            this.calcState.currentValue = result.toString();
+            this.calcState.previousValue = null;
+            this.calcState.operator = null;
+            this.calcState.resetNext = true;
+            this.updateDisplay();
         }
     }
 
-    window.addEventListener('online', () => {
-        updateOfflineBadge();
-        showToast('Back online');
-    });
-    window.addEventListener('offline', () => {
-        updateOfflineBadge();
-        showToast('Working offline');
-    });
-
-    /* --- PWA: Install Promotion --- */
-    window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredInstallPrompt = e;
-        const installBtn = document.getElementById('pwa-install-btn');
-        if (installBtn) installBtn.hidden = false;
-    });
-
-    function handleInstallClick() {
-        if (!deferredInstallPrompt) {
-            showToast('App is already installed or not available.');
-            return;
+    addAuditEntry(a, b, op, res, shouldSave = true) {
+        if (shouldSave) {
+            this.auditEntries.unshift({ a: a, b: b, op: op, res: res });
+            if (this.auditEntries.length > this.MAX_AUDIT_ENTRIES) this.auditEntries.length = this.MAX_AUDIT_ENTRIES;
         }
-        deferredInstallPrompt.prompt();
-        deferredInstallPrompt.userChoice.then((choiceResult) => {
-            if (choiceResult.outcome === 'accepted') {
-                showToast('App installed!');
-            }
-            deferredInstallPrompt = null;
-            const installBtn = document.getElementById('pwa-install-btn');
-            if (installBtn) installBtn.hidden = true;
-        });
+        uiManager.addAuditEntry(a, b, op, res, uiManager.formatOperator.bind(uiManager), (val) => this.useAuditValue(val));
     }
 
-    /* --- PWA Service Worker Registration & Update Notification --- */
-    const updateSW = registerSW({
-        onNeedRefresh() {
-            const updateToast = document.getElementById('update-toast');
-            if (updateToast) {
-                updateToast.hidden = false;
-                const refreshBtn = document.getElementById('update-refresh-btn');
-                if (refreshBtn) {
-                    refreshBtn.addEventListener('click', () => {
-                        updateSW(true);
-                    }, { once: true });
-                }
-                const dismissBtn = document.getElementById('update-dismiss-btn');
-                if (dismissBtn) {
-                    dismissBtn.addEventListener('click', () => {
-                        updateToast.hidden = true;
-                    }, { once: true });
-                }
-            }
-        },
-        onOfflineReady() {
-            showToast('App ready for offline use');
-        },
-    });
-
-    /* --- PWA: Bind Install Button --- */
-    window.addEventListener('DOMContentLoaded', () => {
-        const installBtn = document.getElementById('pwa-install-btn');
-        if (installBtn) {
-            installBtn.addEventListener('click', handleInstallClick);
+    useAuditValue(val) {
+        this.calcState.currentValue = val.toString();
+        this.calcState.resetNext = true;
+        this.updateDisplay();
+        uiManager.toggleHistory();
+        const displayEl = document.getElementById('main-calc-display');
+        if (window.innerWidth <= 1024 && displayEl) {
+            displayEl.style.color = 'var(--primary-blue)';
+            setTimeout(() => { if (displayEl) displayEl.style.color = ''; }, 300);
         }
-        updateOfflineBadge();
-    });
+    }
+}
+
+const app = new AppOrchestrator();
+app.init();
+export { app };

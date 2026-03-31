@@ -1,86 +1,78 @@
 // ui/ui.js
 
-// About modal open/close logic with focus trap and ARIA management
-(function () {
-    const FOCUS_DELAY_MS = 50;
-    const overlay = document.getElementById('about-overlay');
-    if (!overlay) return;
+/**
+ * AboutModal - Manages the "About" dialog with focus trap and ARIA support.
+ */
+class AboutModal {
+    constructor() {
+        this.FOCUS_DELAY_MS = 50;
+        this.overlay = document.getElementById('about-overlay');
+        if (!this.overlay) return;
 
-    const modal = overlay.querySelector('.about-modal');
-    const fabBtn = document.getElementById('about-fab-btn');
-    const closeX = document.getElementById('about-close-x');
-    
-    if (!modal || !fabBtn || !closeX) return;
+        this.modal = this.overlay.querySelector('.about-modal');
+        this.fabBtn = document.getElementById('about-fab-btn');
+        this.closeX = document.getElementById('about-close-x');
+        this.previouslyFocused = null;
 
-    let previouslyFocused = null;
+        this.init();
+    }
 
-    function getFocusableElements() {
-        return modal.querySelectorAll(
+    init() {
+        if (!this.modal || !this.fabBtn || !this.closeX) return;
+
+        this.fabBtn.addEventListener('click', () => this.open());
+        this.closeX.addEventListener('click', () => this.close());
+        this.overlay.addEventListener('click', (e) => {
+            if (e.target === this.overlay) this.close();
+        });
+
+        this.modal.addEventListener('keydown', (e) => this.handleTab(e));
+    }
+
+    getFocusableElements() {
+        return this.modal.querySelectorAll(
             'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
         );
     }
 
-    function openAbout() {
-        previouslyFocused = document.activeElement;
-        overlay.classList.add('open');
-        overlay.setAttribute('aria-hidden', 'false');
-        
-        // UI-M1 FIX: Add aria-labelledby
-        modal.setAttribute('aria-labelledby', 'about-heading');
-        
-        // UI-M4 FIX: Lock body scroll
+    open() {
+        this.previouslyFocused = document.activeElement;
+        this.overlay.classList.add('open');
+        this.overlay.setAttribute('aria-hidden', 'false');
+        this.modal.setAttribute('aria-labelledby', 'about-heading');
         document.body.style.overflow = 'hidden';
         
-        // UI-M2 FIX: Inert background landmarks
         document.querySelectorAll('.layout-container, .mobile-panel-fab, .about-fab').forEach(el => {
             el.setAttribute('inert', '');
         });
 
-        // Register Escape listener when open
-        document.addEventListener('keydown', escapeHandler);
-
-        // Focus the close button after opening
-        setTimeout(function () { closeX.focus(); }, FOCUS_DELAY_MS);
+        this.escapeHandler = (e) => {
+            if (e.key === 'Escape' && this.overlay.classList.contains('open')) {
+                this.close();
+            }
+        };
+        document.addEventListener('keydown', this.escapeHandler);
+        setTimeout(() => this.closeX.focus(), this.FOCUS_DELAY_MS);
     }
 
-    function closeAbout() {
-        overlay.classList.remove('open');
-        overlay.setAttribute('aria-hidden', 'true');
-
-        // UI-M4 FIX: Restore body scroll
+    close() {
+        this.overlay.classList.remove('open');
+        this.overlay.setAttribute('aria-hidden', 'true');
         document.body.style.overflow = '';
-
-        // UI-M2 FIX: Remove inert from background landmarks
+        
         document.querySelectorAll('.layout-container, .mobile-panel-fab, .about-fab').forEach(el => {
             el.removeAttribute('inert');
         });
 
-        // Remove Escape listener when closed
-        document.removeEventListener('keydown', escapeHandler);
-
-        // Restore focus to the element that opened the modal
-        if (previouslyFocused && previouslyFocused.focus) {
-            previouslyFocused.focus();
+        document.removeEventListener('keydown', this.escapeHandler);
+        if (this.previouslyFocused && this.previouslyFocused.focus) {
+            this.previouslyFocused.focus();
         }
     }
 
-    function escapeHandler(e) {
-        if (e.key === 'Escape' && overlay.classList.contains('open')) {
-            closeAbout();
-            e.stopImmediatePropagation();
-        }
-    }
-
-    fabBtn.addEventListener('click', openAbout);
-    closeX.addEventListener('click', closeAbout);
-    overlay.addEventListener('click', function (e) {
-        if (e.target === overlay) closeAbout();
-    });
-
-    // Focus trap — Tab/Shift+Tab cycle within the modal
-    modal.addEventListener('keydown', function (e) {
+    handleTab(e) {
         if (e.key !== 'Tab') return;
-        const focusable = getFocusableElements();
+        const focusable = this.getFocusableElements();
         if (focusable.length === 0) return;
         const first = focusable[0];
         const last = focusable[focusable.length - 1];
@@ -95,51 +87,66 @@
                 first.focus();
             }
         }
-    });
-})();
+    }
+}
 
-// Draggable Resizer Logic
-(function () {
-    const resizer = document.getElementById('panel-resizer');
-    const rightPanel = document.getElementById('sidebar');
-    if (!resizer || !rightPanel) return;
+/**
+ * SidebarResizer - Handles draggable resizing of the sidebar.
+ */
+class SidebarResizer {
+    constructor() {
+        this.resizer = document.getElementById('panel-resizer');
+        this.sidebar = document.getElementById('sidebar');
+        if (!this.resizer || !this.sidebar) return;
 
-    let isResizing = false;
-
-    // Load saved width from preferences
-    const savedWidth = localStorage.getItem('calcSidebarWidth');
-    if (savedWidth) {
-        document.documentElement.style.setProperty('--sidebar-width', savedWidth + 'px');
+        this.isResizing = false;
+        this.init();
     }
 
-    resizer.addEventListener('pointerdown', function(e) {
-        isResizing = true;
-        resizer.classList.add('active');
-        document.body.classList.add('is-resizing'); // Disable CSS transitions during drag
+    init() {
+        const savedWidth = localStorage.getItem('calcSidebarWidth');
+        if (savedWidth) {
+            document.documentElement.style.setProperty('--sidebar-width', savedWidth + 'px');
+        }
+
+        this.resizer.addEventListener('pointerdown', (e) => this.startResize(e));
+        document.addEventListener('pointermove', (e) => this.resize(e));
+        document.addEventListener('pointerup', (e) => this.stopResize(e));
+    }
+
+    startResize(e) {
+        this.isResizing = true;
+        this.resizer.classList.add('active');
+        document.body.classList.add('is-resizing');
         document.body.style.cursor = 'col-resize';
-        e.preventDefault(); // Prevent text selection
-        resizer.setPointerCapture(e.pointerId);
-    });
+        e.preventDefault();
+        this.resizer.setPointerCapture(e.pointerId);
+    }
 
-    resizer.addEventListener('pointermove', function(e) {
-        if (!isResizing) return;
-        // rightPanel is on the right, so new width is window width - mouse X
+    resize(e) {
+        if (!this.isResizing) return;
         const newWidth = window.innerWidth - e.clientX;
-        document.documentElement.style.setProperty('--sidebar-width', newWidth + 'px');
-        // Accessibility: keep aria-valuenow in sync with actual width
-        resizer.setAttribute('aria-valuenow', Math.round(newWidth));
-    });
+        // Constraint check: 250px - 80% of window
+        const clampedWidth = Math.max(250, Math.min(newWidth, window.innerWidth * 0.8));
+        document.documentElement.style.setProperty('--sidebar-width', clampedWidth + 'px');
+        this.resizer.setAttribute('aria-valuenow', Math.round(clampedWidth));
+    }
 
-    resizer.addEventListener('pointerup', function(e) {
-        if (!isResizing) return;
-        isResizing = false;
-        resizer.classList.remove('active');
-        document.body.classList.remove('is-resizing'); // Re-enable CSS transitions
+    stopResize(e) {
+        if (!this.isResizing) return;
+        this.isResizing = false;
+        this.resizer.classList.remove('active');
+        document.body.classList.remove('is-resizing');
         document.body.style.cursor = '';
-        resizer.releasePointerCapture(e.pointerId);
+        this.resizer.releasePointerCapture(e.pointerId);
         
-        // Save final computed width
-        const finalWidth = rightPanel.getBoundingClientRect().width;
+        const finalWidth = this.sidebar.getBoundingClientRect().width;
         localStorage.setItem('calcSidebarWidth', finalWidth);
-    });
-})();
+    }
+}
+
+// Initialize UI components on load
+window.addEventListener('DOMContentLoaded', () => {
+    new AboutModal();
+    new SidebarResizer();
+});

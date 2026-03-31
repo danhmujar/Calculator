@@ -121,4 +121,136 @@ test.describe('Store state persistence', () => {
         expect(result.presetValue).toBe(42);
         expect(result.baseline).toBe(0);
     });
+
+    test.describe('Proxy-based Optimization (TDD)', () => {
+        test('O(1) read overhead: getState returns a reference or Proxy, not a deep copy', async ({ page }) => {
+            const isReferenceOrProxy = await page.evaluate(async () => {
+                const { Store } = await import('./store.js');
+                const initial = { deep: { nesting: 1 } };
+                const s = new Store(initial);
+                
+                const state1 = s.getState();
+                const state2 = s.getState();
+                
+                // If it's a deep copy (current), this should be false
+                // If it's a Proxy or reference (optimized), this should be true (or state2 should be Proxy)
+                // For lazy cloning, subsequent calls to getState() without changes should return the same object
+                return state1.deep === state2.deep;
+            });
+            expect(isReferenceOrProxy).toBe(true);
+        });
+
+        test('Structural sharing: unchanged objects maintain reference equality', async ({ page }) => {
+            const result = await page.evaluate(async () => {
+                const { Store } = await import('./store.js');
+                const initial = { 
+                    a: { val: 1 },
+                    b: { val: 2 }
+                };
+                const s = new Store(initial);
+                const stateBefore = s.getState();
+                
+                s.setState({ a: { val: 11 } });
+                const stateAfter = s.getState();
+                
+                return {
+                    aChanged: stateBefore.a !== stateAfter.a,
+                    bShared: stateBefore.b === stateAfter.b
+                };
+            });
+            expect(result.aChanged).toBe(true);
+            expect(result.bShared).toBe(true);
+        });
+
+        test('Lazy shallow cloning: only the modified path is cloned', async ({ page }) => {
+            const result = await page.evaluate(async () => {
+                const { Store } = await import('./store.js');
+                const initial = { 
+                    root: { 
+                        sub: { leaf: 1 },
+                        other: { leaf: 2 }
+                    }
+                };
+                const s = new Store(initial);
+                const stateBefore = s.getState();
+                
+                // Update nested property
+                // This assumes setState can handle nested paths or we use a Proxy on the state directly
+                // If setState is still shallow merge at root:
+                s.setState({ root: { ...s.getState().root, sub: { leaf: 11 } } });
+                const stateAfter = s.getState();
+                
+                return {
+                    rootCloned: stateBefore.root !== stateAfter.root,
+                    subCloned: stateBefore.root.sub !== stateAfter.root.sub,
+                    otherShared: stateBefore.root.other === stateAfter.root.other
+                };
+            });
+            expect(result.rootCloned).toBe(true);
+            expect(result.subCloned).toBe(true);
+            expect(result.otherShared).toBe(true);
+        });
+
+        test('Transient state does not persist across page refreshes', async ({ page }) => {
+            const result = await page.evaluate(async () => {
+                const { Store } = await import('./store.js');
+                const s = new Store({
+                    persistent: { theme: 'blue' },
+                    transient: { temp: 'xyz' }
+                });
+                
+                // Trigger save via property set (CoW)
+                s.state.persistent.theme = 'red';
+                s.state.transient.temp = 'abc';
+                
+                // Wait for debounce
+                await new Promise(r => setTimeout(r, 600));
+                
+                // Simulate refresh: Read from localStorage
+                const saved = JSON.parse(window.localStorage.getItem('interactiveCalcState'));
+                return {
+                    themeSaved: saved.theme === 'red',
+                    tempNotSaved: saved.temp === undefined
+                };
+            });
+            expect(result.themeSaved).toBe(true);
+            expect(result.tempNotSaved).toBe(true);
+        });
+
+        test('Batch updates notify subscribers only once', async ({ page }) => {
+            const result = await page.evaluate(async () => {
+                const { Store } = await import('./store.js');
+                const s = new Store({ a: 1, b: 2 });
+                
+                let count = 0;
+                s.subscribe(() => count++);
+                
+                s.batch(() => {
+                    s.state.a = 10;
+                    s.state.b = 20;
+                });
+                
+                return count;
+            });
+            expect(result).toBe(1);
+        });
+
+        test('Structural sharing: arrays maintain reference equality when not modified', async ({ page }) => {
+            const result = await page.evaluate(async () => {
+                const { Store } = await import('./store.js');
+                const initial = { 
+                    arr: [1, 2, 3],
+                    obj: { x: 1 }
+                };
+                const s = new Store(initial);
+                const stateBefore = s.getState();
+                
+                s.state.obj.x = 2;
+                const stateAfter = s.getState();
+                
+                return stateBefore.arr === stateAfter.arr;
+            });
+            expect(result).toBe(true);
+        });
+    });
 });

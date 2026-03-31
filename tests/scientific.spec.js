@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Scientific Mode: Lazy Loading & MathLive', () => {
     test.beforeEach(async ({ page }) => {
-        await page.goto('http://localhost:4173/Calculator/');
+        await page.goto('http://localhost:5173/Calculator/');
         await page.waitForSelector('#main-calc-display');
     });
 

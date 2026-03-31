@@ -66,19 +66,18 @@ test.describe('E2E Integration: Store -> Renderer -> UI', () => {
         await page.evaluate(() => localStorage.clear());
         await page.reload();
 
-        // Set a value
-        await page.click('button[data-value="5"]');
-        await page.click('button[data-value="2"]');
-        await expect(page.locator('#main-calc-display')).toHaveText('52');
+        // Switch to scientific mode (persistent field)
+        await page.click('#btn-mode-sci');
+        await expect(page.locator('body')).toHaveClass(/scientific-mode/);
 
-        // Wait for debounce (500ms)
-        await page.waitForTimeout(600);
+        // Wait for double debounce (500ms in app.js + 500ms in store.js)
+        await page.waitForTimeout(1200);
 
         // Reload page
         await page.reload();
-        await page.waitForSelector('#main-calc-display');
+        await page.waitForSelector('#sci-container');
 
-        // Should restore '52'
-        await expect(page.locator('#main-calc-display')).toHaveText('52');
+        // Should restore scientific mode
+        await expect(page.locator('body')).toHaveClass(/scientific-mode/);
     });
 });
