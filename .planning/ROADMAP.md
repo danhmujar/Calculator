@@ -43,7 +43,12 @@
   4. **Security**: `innerHTML` is eliminated in favor of safe DOM APIs, and `math.js` is configured with restrictive security settings.
   5. **Performance**: `ui/renderer.js` implements an LRU cache strategy for text measurement caches.
   6. **Testability**: Event delegation is refactored out of IIFEs; unit tests verify modular services in isolation.
-**Plans**: TBD
+**Plans**: 5 plans
+- [ ] 06-01-PLAN.md — State Optimization (Lazy Shallow Cloning)
+- [ ] 06-02-PLAN.md — Security Hardening & Calculation Service
+- [ ] 06-03-PLAN.md — UI & PWA Modularization (LRU Cache)
+- [ ] 06-04-PLAN.md — Event Orchestration & App Decommissioning
+- [ ] 06-05-PLAN.md — Reliability & Performance Audit
 **UI hint**: yes
 
 ### Phase 7: WebGL 2.0 Core & Primitive Rendering
@@ -104,7 +109,7 @@
 | 3. Library & Event Optimization | 3/3 | COMPLETED | 2024-03-30 |
 | 4. Final Validation & Polish | 3/3 | COMPLETED | 2024-03-31 |
 | 5. Animation Optimization | 1/1 | COMPLETED | 2024-03-31 |
-| 6. Architectural Hardening | 0/1 | Not started | - |
+| 6. Architectural Hardening | 0/5 | Not started | - |
 | 7. WebGL 2.0 Core | 0/1 | Not started | - |
 | 8. WebGL Typography | 0/1 | Not started | - |
 | 9. Performance Batching | 0/1 | Not started | - |
