@@ -1,6 +1,7 @@
 import { store } from '../services/store.js';
 import { renderer } from './renderer.js';
 import { CalculatorService } from '../services/calculator.js';
+import { WebGLContext } from './webgl/context.js';
 
 /**
  * UIManager - Coordinates DOM layout, theme management, and UI transitions.
@@ -106,6 +107,15 @@ export class UIManager {
         this.previewEl = document.getElementById('main-calc-prev');
         this.auditList = document.getElementById('audit-list');
         this.memoryIndicatorEl = document.getElementById('memory-indicator');
+
+        // Initialize WebGL Underlay (REQ-WGL-01)
+        this.webgl = new WebGLContext();
+        const layoutContainer = document.querySelector('.layout-container');
+        if (layoutContainer && this.webgl.canvas) {
+            layoutContainer.prepend(this.webgl.canvas);
+            // Initial clear for verification
+            this.webgl.clear([0, 0, 0, 1]);
+        }
 
         this.setupEntranceAnimations();
         this.setupResizeHandler();
@@ -291,6 +301,11 @@ export class UIManager {
                 });
             }
             wasMobile = !isDesktop;
+
+            // Synchronize WebGL viewport (REQ-WGL-01)
+            if (this.webgl) {
+                this.webgl.resize();
+            }
         });
 
         // REQ-UI-06: Robust text fitting via ResizeObserver to handle side-panel transitions and resizer handle.
