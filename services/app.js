@@ -517,6 +517,9 @@ const math = create(all);
         return `${coeffStr}E+${exp}`;
     }
 
+    let lastDisplayText = '';
+    let lastContainerWidth = 0;
+
     /**
      * Shrink the display font until the text fits within the container,
      * utilizing the Renderer's Canvas-based layout engine for extreme performance.
@@ -525,6 +528,13 @@ const math = create(all);
         if (!displayEl) return;
         const container = displayEl.parentElement;
         const containerWidth = container.clientWidth - 48; // account for padding
+
+        if (text === lastDisplayText && containerWidth === lastContainerWidth) {
+            return;
+        }
+
+        lastDisplayText = text;
+        lastContainerWidth = containerWidth;
 
         const res = renderer.fitDisplayText(text, containerWidth, {
             minRem: DISPLAY_MIN_FONT,

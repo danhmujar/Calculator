@@ -10,6 +10,19 @@ const EYE_FOLLOW_SPEED = 0.15;
  */
 export function initEyeTracking() {
     let rafPending = false;
+    const boundsCache = new Map();
+
+    const observer = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+            boundsCache.set(entry.target, entry.target.getBoundingClientRect());
+        }
+    });
+
+    const eyeContainers = document.querySelectorAll('.calculator-wrapper svg');
+    eyeContainers.forEach(svg => {
+        observer.observe(svg);
+        boundsCache.set(svg, svg.getBoundingClientRect());
+    });
 
     document.addEventListener('mousemove', (e) => {
         if (rafPending) return;
@@ -19,10 +32,9 @@ export function initEyeTracking() {
             const mouseX = e.clientX;
             const mouseY = e.clientY;
 
-            const eyeContainers = document.querySelectorAll('.calculator-wrapper svg');
-
-            eyeContainers.forEach((svg, index) => {
-                const rect = svg.getBoundingClientRect();
+            eyeContainers.forEach((svg) => {
+                const rect = boundsCache.get(svg);
+                if (!rect) return;
                 
                 // SVG viewBox="15 5 70 90"
                 // Left pupil: cx="38", cy="27" -> (38-15)/70 for X, (27-5)/90 for Y
@@ -51,12 +63,13 @@ export function initEyeTracking() {
                 const tx2 = Math.cos(angle2) * dist2;
                 const ty2 = Math.sin(angle2) * dist2;
 
-                // For simplicity in this app, we assume only one calculator icon is visible at a time
-                // or they all share the same eye direction.
-                document.documentElement.style.setProperty('--pupil-x-1', `${tx1}px`);
-                document.documentElement.style.setProperty('--pupil-y-1', `${ty1}px`);
-                document.documentElement.style.setProperty('--pupil-x-2', `${tx2}px`);
-                document.documentElement.style.setProperty('--pupil-y-2', `${ty2}px`);
+                const wrapper = svg.closest('.calculator-wrapper');
+                if (wrapper) {
+                    wrapper.style.setProperty('--pupil-x-1', `${tx1}px`);
+                    wrapper.style.setProperty('--pupil-y-1', `${ty1}px`);
+                    wrapper.style.setProperty('--pupil-x-2', `${tx2}px`);
+                    wrapper.style.setProperty('--pupil-y-2', `${ty2}px`);
+                }
             });
 
             rafPending = false;

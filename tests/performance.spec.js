@@ -4,7 +4,7 @@ test.describe('Performance: Eye Tracking Hardware Acceleration', () => {
     test.beforeEach(async ({ page }) => {
         page.on('console', msg => console.log('BROWSER CONSOLE:', msg.text()));
         page.on('pageerror', err => console.log('BROWSER ERROR:', err.message));
-        await page.goto('http://localhost:4173/Calculator/');
+        await page.goto('http://localhost:5173/Calculator/');
         await page.waitForSelector('.calculator-wrapper svg');
     });
 
@@ -12,7 +12,7 @@ test.describe('Performance: Eye Tracking Hardware Acceleration', () => {
         // Move mouse to far left with steps to trigger events
         await page.mouse.move(10, 300, { steps: 10 });
         await page.waitForTimeout(500);
-        const leftXRaw = await page.evaluate(() => document.documentElement.style.getPropertyValue('--pupil-x-1'));
+        const leftXRaw = await page.evaluate(() => document.querySelector('.calculator-wrapper').style.getPropertyValue('--pupil-x-1'));
         console.log('Left X Raw (direct):', leftXRaw);
         const leftX = parseFloat(leftXRaw || '0');
 
@@ -20,7 +20,7 @@ test.describe('Performance: Eye Tracking Hardware Acceleration', () => {
         const { width } = page.viewportSize();
         await page.mouse.move(width - 10, 300, { steps: 10 });
         await page.waitForTimeout(500);
-        const rightXRaw = await page.evaluate(() => document.documentElement.style.getPropertyValue('--pupil-x-1'));
+        const rightXRaw = await page.evaluate(() => document.querySelector('.calculator-wrapper').style.getPropertyValue('--pupil-x-1'));
         console.log('Right X Raw (direct):', rightXRaw);
         const rightX = parseFloat(rightXRaw || '0');
 
@@ -38,7 +38,7 @@ test.describe('Performance: Eye Tracking Hardware Acceleration', () => {
         }
 
         // The UI should still be responsive and CSS variables should be updated correctly
-        const pupilX = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--pupil-x-1'));
+        const pupilX = await page.evaluate(() => getComputedStyle(document.querySelector('.calculator-wrapper')).getPropertyValue('--pupil-x-1'));
         expect(pupilX).not.toBe('0px');
     });
 });

@@ -67,14 +67,16 @@ export class Renderer {
    * @returns {{text: string, fontSizeRem: number}} Formatted payload
    */
   fitDisplayText(text, containerWidth, options = {}) {
+    const strText = String(text);
+    
+    // O(1) Absolute fast-path: prioritized cache hit
+    let textWidthRef = this.textWidthCache.get(strText);
+
     // Defaults safely based on the UI CSS constants.
     const minRem = options.minRem || 1;
     const maxRem = options.maxRem || 3.5;
     const remToPx = options.remToPx || 16;
     
-    const strText = String(text);
-    
-    let textWidthRef = this.textWidthCache.get(strText);
     if (textWidthRef === undefined) {
       // Calculate layout at exactly 100px font base, using Canvas layout engine.
       textWidthRef = this.ctx.measureText(strText).width;
