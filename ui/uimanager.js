@@ -2,6 +2,7 @@ import { store } from '../services/store.js';
 import { renderer } from './renderer.js';
 import { CalculatorService } from '../services/calculator.js';
 import { WebGLContext } from './webgl/context.js';
+import { WebGLRenderer } from './webgl/renderer.js';
 
 /**
  * UIManager - Coordinates DOM layout, theme management, and UI transitions.
@@ -110,11 +111,12 @@ export class UIManager {
 
         // Initialize WebGL Underlay (REQ-WGL-01)
         this.webgl = new WebGLContext();
+        this.webglRenderer = new WebGLRenderer(this.webgl);
         const layoutContainer = document.querySelector('.layout-container');
         if (layoutContainer && this.webgl.canvas) {
             layoutContainer.prepend(this.webgl.canvas);
             // Initial clear for verification
-            this.webgl.clear([0, 0, 0, 1]);
+            this.webglRenderer.render();
         }
 
         this.setupEntranceAnimations();
@@ -305,6 +307,9 @@ export class UIManager {
             // Synchronize WebGL viewport (REQ-WGL-01)
             if (this.webgl) {
                 this.webgl.resize();
+            }
+            if (this.webglRenderer) {
+                this.webglRenderer.render();
             }
         });
 
@@ -649,6 +654,10 @@ export class UIManager {
                 this.previewEl.textContent = `${this.proFormatter.format(calcState.previousValue)} ${opStr}`;
             } else {
                 this.previewEl.textContent = '';
+            }
+
+            if (this.webglRenderer) {
+                this.webglRenderer.render();
             }
         });
     }
