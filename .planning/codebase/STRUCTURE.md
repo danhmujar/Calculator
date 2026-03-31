@@ -1,100 +1,105 @@
 # Codebase Structure
 
-**Analysis Date:** 2025-05-13
+**Analysis Date:** 2026-03-31
 
 ## Directory Layout
 
 ```
-[project-root]/
-├── public/          # Static assets and service worker
-├── services/        # Core business logic and state
-├── ui/              # Visual components, styles, and fonts
-├── scripts/         # Build and post-build scripts
-├── index.html       # Application entry point
-├── package.json     # Node.js manifest
-├── vite.config.js   # Vite build configuration
-└── sw.js            # Service worker (symlinked/copied from public)
+Calculator/
+├── public/                 # Static assets (fonts, icons, sprites)
+├── services/               # Core application logic and state management
+├── tests/                  # Playwright test suites (e2e, unit, accessibility)
+├── ui/                     # Presentation layer (styles, rendering, UI components)
+├── .agent/                 # Agent-specific skills and metadata
+├── .github/                # GitHub Actions workflows
+├── .planning/              # GSD-specific implementation plans and codebase docs
+├── index.html              # Main application entry point
+├── package.json            # Dependencies and scripts
+└── vite.config.js          # Build configuration and PWA plugin setup
 ```
 
 ## Directory Purposes
 
-**`public/`:**
-- Purpose: Contains assets that are served directly without processing by Vite (except `sw.js`).
-- Contains: Icons (`icon-192.svg`, `icon-512.svg`), manifest (`manifest.json`), service worker (`sw.js`).
-- Key files: `public/sw.js` (PWA caching and offline logic).
+**services/:**
+- Purpose: Contains the core business logic and state management.
+- Contains: `app.js` (orchestrator), `store.js` (state container).
+- Key files: `services/app.js`, `services/store.js`.
 
-**`services/`:**
-- Purpose: Houses the application's core logic and service layer.
-- Contains: Main application script (`app.js`).
-- Key files: `services/app.js` (state management, event bindings, calculation logic).
+**ui/:**
+- Purpose: Presentation layer and UI interaction.
+- Contains: `styles.css`, `ui.js` (common components), `renderer.js` (display logic), `eye-tracker.js` (animations).
+- Key files: `ui/styles.css`, `ui/renderer.js`.
 
-**`ui/`:**
-- Purpose: Manages the presentation layer, including styles, fonts, and UI-specific logic.
-- Contains: Stylesheets (`styles.css`, `fonts.css`), fonts (`fonts/`), and UI component logic (`ui.js`).
-- Key files: `ui/ui.js` (modals and resizers), `ui/styles.css` (global styles).
+**public/:**
+- Purpose: Static assets served directly without processing by Vite.
+- Contains: `fonts/`, `assets/sprites.svg`, PWA icons.
+- Key files: `public/assets/sprites.svg`.
 
-**`scripts/`:**
-- Purpose: Scripts for the build and deployment pipeline.
-- Contains: `postbuild.js` (finalizes the build artifact).
+**tests/:**
+- Purpose: Automated testing of the application.
+- Contains: Playwright test files for accessibility, performance, and functionality.
+- Key files: `tests/accessibility.spec.js`, `tests/integration.spec.js`.
 
 ## Key File Locations
 
 **Entry Points:**
-- `index.html`: Main HTML document and entry point for the Vite application.
-- `services/app.js`: Root module for business logic and state.
+- `index.html`: Main HTML entry.
+- `services/app.js`: Main JavaScript entry and orchestrator.
 
 **Configuration:**
-- `vite.config.js`: Configuration for Vite bundler.
-- `package.json`: Dependencies and script definitions.
-- `public/manifest.json`: PWA manifest definition.
+- `package.json`: Manifest of dependencies and build scripts.
+- `vite.config.js`: Configuration for Vite and the PWA plugin.
+- `.gitignore`: Standard exclusion patterns for git.
 
 **Core Logic:**
-- `services/app.js`: Centralized business logic, state management, and event orchestration.
+- `services/app.js`: Implementation of calculation algorithms and mode switching.
+- `services/store.js`: Implementation of the functional state store.
 
 **Testing:**
-- `.agent/skills/`: Custom agent-based tests and workflows (not part of the standard runtime).
-- `node_modules/@playwright/test`: Playwright integration for automated testing.
+- `tests/`: Directory for all automated tests.
 
 ## Naming Conventions
 
 **Files:**
-- Kebab-case or lowercase for assets: `icon-192.svg`, `fonts.css`.
-- Descriptive names for scripts: `app.js`, `ui.js`.
+- JavaScript: `camelCase.js` (e.g., `eye-tracker.js`, `app.js`).
+- Styles: `kebab-case.css` (e.g., `styles.css`).
+- Tests: `[description].spec.js`.
 
 **Directories:**
-- Lowercase and descriptive: `public`, `services`, `ui`.
+- Directories: `kebab-case` or simple names (e.g., `services`, `public`).
 
 ## Where to Add New Code
 
-**New Calculation Logic:**
-1. Implement the calculation logic in `services/app.js` (e.g., inside `calculateRowResult` or as a new standalone service function).
-2. Define a template in `ROW_TEMPLATES` within `services/app.js`.
-3. Add a corresponding `calc-card` in `index.html`.
+**New Calculation Feature:**
+- Logic: Add to `services/app.js` or create a new service if complex.
+- UI: Add HTML to `index.html` and styles to `ui/styles.css`.
+- State: Add to `defaultState` in `services/store.js`.
 
-**New UI Feature (Modals, Panels):**
-1. Add the HTML structure to `index.html`.
-2. Implement visual styles in `ui/styles.css`.
-3. Add interaction logic (focus traps, transitions) in `ui/ui.js` (wrap in an IIFE).
+**New UI Component:**
+- Implementation: Create a new file in `ui/` (e.g., `ui/modal.js`).
+- Styles: Add to `ui/styles.css`.
+- Initialization: Import and call the initialization function in `services/app.js`.
 
-**New Styles or Variables:**
-- Global variables and theme-specific styles belong in `ui/styles.css`.
-- Font-face declarations belong in `ui/fonts.css`.
-
-**Static Assets:**
-- Place new icons, images, or configuration files (like `robots.txt`) in the `public/` directory.
+**Utilities:**
+- Shared helpers: `ui/renderer.js` for rendering or create a new file in `services/` or `ui/`.
 
 ## Special Directories
 
-**`node_modules/`:**
-- Purpose: External build-time dependencies (Vite, Playwright).
-- Generated: Yes (via `npm install`).
+**.planning/:**
+- Purpose: GSD-specific directory for implementation plans and codebase mapping documents.
+- Generated: No (manual creation).
+- Committed: Yes.
+
+**node_modules/:**
+- Purpose: External dependencies managed by npm.
+- Generated: Yes.
 - Committed: No.
 
-**`dist/`:**
-- Purpose: Final production build output.
-- Generated: Yes (via `npm run build`).
-- Committed: No (usually ignored by git).
+**dist/:**
+- Purpose: Compiled and bundled production build.
+- Generated: Yes (by Vite).
+- Committed: No.
 
 ---
 
-*Structure analysis: 2025-05-13*
+*Structure analysis: 2026-03-31*

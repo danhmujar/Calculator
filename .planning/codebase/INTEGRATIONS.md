@@ -1,51 +1,47 @@
 # External Integrations
 
-**Analysis Date:** 2025-05-15
+**Analysis Date:** 2025-02-14
 
 ## APIs & External Services
 
-**Math Services:**
-- MathLive - Used for LaTeX-based formula input and scientific calculation UI.
-  - SDK/Client: `https://unpkg.com/mathlive@0.108.3`
-  - Auth: None (Public CDN)
-- Math.js - Primary engine for evaluating complex mathematical expressions and handling precision.
-  - SDK/Client: `https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js`
-  - Auth: None (Public CDN)
+**Math Logic:**
+- `mathjs` - Client-side math library for all arithmetic and formula evaluations.
+- `mathlive` - Client-side library for WYSIWYG mathematical expression input.
+
+**Accessibility:**
+- `axe-core` - Automated accessibility testing within the Playwright test suite.
 
 ## Data Storage
 
 **Databases:**
-- None - Application is entirely client-side.
+- None (100% client-side application).
 
 **File Storage:**
-- Local Filesystem Only - No cloud storage.
+- Local filesystem (via Service Worker) - PWA assets (JS, CSS, HTML, SVG, WOFF2) are cached locally for offline functionality.
 
 **Caching:**
-- Service Worker Cache - Custom implementation in `public/sw.js` using Cache API to store the app shell and CDN libraries for offline use.
-- LocalStorage - Used for persisting application state and user preferences:
-  - `interactiveCalcState`: Stores the calculator display, history, and mode.
-  - `calcSidebarWidth`: Stores the user-resized width of the calculator panel.
+- `localStorage` - Used for persisting application state including calculator history, active theme, and input values across sessions. Implementation in `services/store.js`.
 
 ## Authentication & Identity
 
 **Auth Provider:**
-- None - The app is open and requires no authentication.
+- None (100% client-side application).
 
 ## Monitoring & Observability
 
 **Error Tracking:**
-- None.
+- Browser console logging - No external error monitoring service (Sentry, etc.) detected.
 
 **Logs:**
-- Console - Basic debugging via browser developer tools.
+- No server-side logs.
 
 ## CI/CD & Deployment
 
 **Hosting:**
-- GitHub Pages - Primary hosting platform for the web application.
+- GitHub Pages - Static hosting via `.github/workflows/deploy.yml`.
 
 **CI Pipeline:**
-- GitHub Actions - Defined in `.github/workflows/deploy.yml` for building and deploying to GitHub Pages on every push to the `main` branch.
+- GitHub Actions - Automated build and deployment to GitHub Pages triggered on push to `main` branch.
 
 ## Environment Configuration
 
@@ -53,7 +49,7 @@
 - None.
 
 **Secrets location:**
-- Not applicable - The project contains no secrets or sensitive configuration.
+- None detected.
 
 ## Webhooks & Callbacks
 
@@ -65,4 +61,4 @@
 
 ---
 
-*Integration audit: 2025-05-15*
+*Integration audit: 2025-02-14*

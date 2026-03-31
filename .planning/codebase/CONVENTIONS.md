@@ -1,98 +1,99 @@
 # Coding Conventions
 
-**Analysis Date:** 2025-03-29
+**Analysis Date:** 2026-03-31
 
 ## Naming Patterns
 
 **Files:**
-- Lowercase and simple: `app.js`, `ui.js`, `sw.js`
-- Kebab-case for configuration and scripts: `vite.config.js`, `postbuild.js`
+- Kebab-case for most files: `eye-tracker.js`, `display.spec.js`, `vite.config.js`.
+- Simple lowercase for core files: `ui.js`, `app.js`, `store.js`, `renderer.js`.
+- Directories are simple lowercase: `ui`, `services`, `tests`, `public`.
 
 **Functions:**
-- camelCase: `formatOperator`, `calculateResult`, `updateDisplay`
+- camelCase for standard functions: `openAbout()`, `closeAbout()`, `escapeHandler(e)`, `fitDisplayText()`.
+- IIFEs used in `ui/ui.js` for module scoping without polluting global namespace.
 
 **Variables:**
-- camelCase: `calcState`, `proFormatter`, `deferredInstallPrompt`
+- camelCase for variables: `previouslyFocused`, `overlay`, `modal`, `isResizing`.
+- SCREAMING_SNAKE_CASE for configuration constants: `FOCUS_DELAY_MS`.
 
-**Constants:**
-- UPPER_SNAKE_CASE: `TOAST_DURATION_MS`, `MAX_AUDIT_ENTRIES`, `CACHE_NAME`
+**Types:**
+- PascalCase for Classes: `Renderer` in `ui/renderer.js`, `Store` in `services/store.js`.
+- Private methods/properties use underscore prefix: `_persistState`, `_saveTimeout`.
 
 ## Code Style
 
-**Modularization:**
-- Use of IIFE (Immediately Invoked Function Expressions) to encapsulate logic and prevent global scope pollution.
-- Example: `(function () { ... })();` in `services/app.js` and `ui/ui.js`.
-
 **Formatting:**
-- 4-space indentation.
-- Single quotes for strings: `'use strict'`, `'click'`.
-- Mandatory use of `'use strict';` at the top of IIFEs.
+- Indentation: Mixed use of 2-space and 4-space indentation.
+  - 2-space: `ui/renderer.js`.
+  - 4-space: `ui/ui.js`, `services/store.js`, `services/app.js`.
+- Semicolons: Consistently used.
+- Quotes: Predominantly single quotes `'` for strings.
+- Trailing commas: Used in object and array literals.
 
 **Linting:**
-- No formal linter configuration (`.eslintrc`, `.prettierrc`) found in the root.
-- Style is maintained manually through consistent patterns.
+- No explicit ESLint/Prettier configuration found in the root.
+- Conventions appear to be maintained manually or via editor defaults.
 
 ## Import Organization
 
-**Local Modules:**
-- Handled by Vite in `index.html` via `<script type="module" src="...">` or traditional script tags for non-module files.
-- Service Worker precaches local assets defined in `PRECACHE_URLS` within `public/sw.js`.
+**Order:**
+1. Standard Library / Built-ins (e.g., `import path from 'path'`).
+2. Third-party Libraries (e.g., `import { test, expect } from '@playwright/test'`).
+3. Local Modules (e.g., `import { store } from '../services/store.js'`).
 
-**External Libraries:**
-- Dynamic loading from CDNs (unpkg, cdnjs) for heavy libraries like `mathjs` and `mathlive`.
-- Versions are pinned and integrity hashes are used for security.
-- Configuration found in `services/app.js`:
-```javascript
-const SCI_LIB_URLS = {
-    mathlive: {
-        src: 'https://unpkg.com/mathlive@0.108.3',
-        integrity: 'sha384-JjPSUCAu+59S/H2IC4UecZ4gllGbNCS++kBwHbsk0TKHCp2b6OqkZqsRC9Kch45U'
-    },
-    ...
-};
-```
+**Path Aliases:**
+- Not used. Relative paths are used: `./services/app.js`, `../ui/renderer.js`.
 
 ## Error Handling
 
 **Patterns:**
-- `try-catch` blocks for operations that can fail gracefully, such as:
-    - `JSON.parse` for `localStorage` (`services/app.js`)
-    - Clipboard API interactions (`services/app.js`)
-    - Evaluation of mathematical expressions via `math.evaluate` (`services/app.js`)
-- Validation checks before processing: `if (!saved) return false;`.
+- `try...catch` blocks for risky browser APIs: `localStorage.setItem` in `Store`, layout flushing in `Renderer`.
+- Graceful degradation: `isBrowser` checks to allow logic to run in Node.js environments (for tests).
+- Console logging for errors: `console.error('Renderer layout batched writing error:', err)`.
 
 ## Logging
 
-**Framework:**
-- Native `console` methods.
+**Framework:** `console`
 
 **Patterns:**
-- `console.error` for failed state loads or critical runtime errors.
-- `console.log` for build-time feedback in `scripts/postbuild.js`.
+- Errors are logged with `console.error`.
+- Debugging logs in tests: `console.log('BROWSER CONSOLE:', msg.text())`.
 
 ## Comments
 
 **When to Comment:**
-- High density of comments explaining business logic and UI transitions.
-- Use of structural markers like `(APP-L3)`, `(APP-L5)`, `(UI-M1)` to reference specific logic blocks or fixes.
+- To describe complex logic (e.g., font fitting math, rAF batching).
+- To mark "FIX" or "UAT" related improvements (e.g., `// UI-M4 FIX: Lock body scroll`).
+- Section headers in large files.
 
 **JSDoc/TSDoc:**
-- Basic JSDoc style for functions.
-```javascript
-/**
- * Converts internal operators to display symbols (APP-L4)
- */
-function formatOperator(op) { ... }
-```
+- Used for class methods to describe parameters and return values:
+  ```javascript
+  /**
+   * Batch DOM updates. Call `requestAnimationFrame` only once per frame...
+   * @param {Function} callback 
+   */
+  ```
 
-## Accessibility (Critical Convention)
+## Function Design
 
-**Patterns:**
-- Skip links for keyboard users: `<a href="#main-calc-display" class="skip-link">`.
-- ARIA management: `aria-hidden`, `aria-label`, `role="radiogroup"`.
-- Focus trapping in modals: Implemented in `ui/ui.js` using `getFocusableElements()`.
-- Use of `inert` attribute to disable background elements when modals are open.
+**Size:** Functions are generally small and focused on a single responsibility.
+
+**Parameters:** Prefer positional arguments for few parameters, and options objects for more complex configurations:
+- `fitDisplayText(text, containerWidth, options = {})`
+
+**Return Values:** Methods like `fitDisplayText` return structured objects: `{ text: string, fontSizeRem: number }`.
+
+## Module Design
+
+**Exports:**
+- Named exports for Classes and singletons: `export class Store`, `export const store = new Store()`.
+- ES Modules (`type: module` in `package.json`).
+
+**Barrel Files:**
+- Not observed. Direct imports from file paths are preferred.
 
 ---
 
-*Convention analysis: 2025-03-29*
+*Convention analysis: 2026-03-31*

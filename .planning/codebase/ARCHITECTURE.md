@@ -1,92 +1,100 @@
 # Architecture
 
-**Analysis Date:** 2025-05-13
+**Analysis Date:** 2026-03-31
 
 ## Pattern Overview
 
-**Overall:** 3-Tier Client-Side Architecture (Presentation, Application, Data)
+**Overall:** 3-Tier Client-Side SPA (State, Service, View).
 
 **Key Characteristics:**
-- **Zero-Server Logic:** 100% client-side execution, ensuring privacy and offline capabilities.
-- **Service-Driven Pattern:** Core business logic and state management are isolated in a "Services" layer (`services/app.js`).
-- **Event-Driven Interaction:** DOM events trigger service methods which update internal state and then re-render specific UI parts.
+- **Functional State Store**: Deep-copying and debounced persistence (localStorage).
+- **Service Layer Orchestration**: Centralized `app.js` manages logic, PWA registration, and mode transitions.
+- **Batched UI Rendering**: DOM updates are queued and executed via `requestAnimationFrame` using the `Renderer` utility.
 
 ## Layers
 
-**Presentation Layer:**
-- Purpose: Handles the visual representation, UI components, and layout.
-- Location: `ui/` and `index.html`
-- Contains: `ui/ui.js` (modals, resizers), `ui/styles.css`, `ui/fonts.css`, and the main structure in `index.html`.
-- Depends on: `services/app.js` (for business logic triggers)
-- Used by: End user
+**State (Model) Layer:**
+- Purpose: Manages the global application state and persistence.
+- Location: `services/store.js`
+- Contains: `Store` class, `defaultState`, and localStorage persistence logic.
+- Depends on: None.
+- Used by: `services/app.js`.
 
-**Application/Service Layer:**
-- Purpose: Orchestrates business logic, calculator operations, and cross-cutting concerns (PWA, themes, persistence).
+**Service (Logic) Layer:**
+- Purpose: Orchestrates business logic (calculations, mode transitions, PWA features).
 - Location: `services/app.js`
-- Contains: `calcState`, percentage calculation logic, event bindings, and PWA registration.
-- Depends on: `localStorage` (for persistence), MathLive/Math.js (lazy-loaded via CDN).
-- Used by: `index.html` (via module import), Presentation layer events.
+- Contains: Event handlers, calculation algorithms, PWA registration, and mode-switching logic.
+- Depends on: `services/store.js`, `ui/renderer.js`, `ui/eye-tracker.js`, `mathjs`, `mathlive`.
+- Used by: `index.html`.
 
-**Data Tier (Persistence):**
-- Purpose: Persistent storage of application state and user history across sessions.
-- Location: Browser's `localStorage`
-- Contains: JSON-serialized state including themes, audit history, and calculator values.
-- Depends on: Browser APIs
-- Used by: `services/app.js` (via `saveState` and `loadState` functions)
+**UI (View) Layer:**
+- Purpose: Defines the layout, styling, and independent UI components.
+- Location: `ui/`, `index.html`, `public/`
+- Contains: Layout (HTML), Styling (CSS), Independent UI components (About modal, Eye tracker, Resizer), and batched rendering utility.
+- Depends on: `services/store.js` (via subscriptions in `app.js`), `ui/renderer.js`.
+- Used by: User.
 
 ## Data Flow
 
 **Calculation Flow:**
 
-1. User clicks a button or types (DOM Event).
-2. `services/app.js` event listeners capture the input.
-3. Service logic updates `calcState` or calculates results (e.g., `calculateInternal`, `calculateRowResult`).
-4. `updateDisplay()` or row-specific updaters refresh the DOM elements (`aria-live` regions).
-5. State is debounced and persisted to `localStorage` via `saveState`.
+1. **User Input**: User clicks a digit on the keypad or interacts with a percentage card.
+2. **Event Trigger**: Centralized event delegation in `services/app.js` captures the click.
+3. **Logic Execution**: `app.js` processes the input (e.g., `calcDigit`).
+4. **State Update**: `app.js` calls `store.setState()`.
+5. **Notification**: `Store` notifies all subscribers.
+6. **Batched Render**: `app.js`'s subscriber calls `updateDisplay()`, which schedules a render via `ui/renderer.js`.
+7. **DOM Update**: `Renderer` executes the update in the next `requestAnimationFrame` cycle.
 
 **State Management:**
-- **Ephemeral State:** Managed via `calcState` object and `auditEntries` array in `services/app.js`.
-- **Persistent State:** JSON-serialized version of the above stored in `localStorage` under the key `interactiveCalcState`.
+- Handled by `services/store.js`. Uses a functional approach (similar to Redux) but simplified for a vanilla JS app.
+- Auto-persists to `localStorage` with a 500ms debounce to prevent performance degradation.
 
 ## Key Abstractions
 
-**Row Templates:**
-- Purpose: Encapsulates the structure and logic for different percentage calculation types.
-- Examples: `ROW_TEMPLATES` in `services/app.js`.
-- Pattern: Template literal-based rendering with programmatic binding.
+**Store:**
+- Purpose: Centralized, predictable state container.
+- Examples: `services/store.js`
+- Pattern: Observable Pattern.
 
-**Scientific Mode Bridge:**
-- Purpose: Manages the lazy loading and integration of complex external math libraries.
-- Examples: `ensureSciLibs`, `activateScientificMode` in `services/app.js`.
-- Pattern: Promise-based lazy loader with dynamic script injection.
+**Renderer:**
+- Purpose: Batching DOM updates to prevent layout thrashing and calculating dynamic font sizes.
+- Examples: `ui/renderer.js`
+- Pattern: Batching Pattern (using `requestAnimationFrame`).
+
+**Chameleon Character (Eye Tracker):**
+- Purpose: Interactive SVG animation that follows the mouse pointer.
+- Examples: `ui/eye-tracker.js`
+- Pattern: GPU-accelerated transforms via CSS variables.
 
 ## Entry Points
 
-**Main Entry:**
+**HTML Entry Point:**
 - Location: `index.html`
 - Triggers: Browser page load.
-- Responsibilities: Loads initial HTML structure, critical CSS, and modules (`services/app.js`, `ui/ui.js`).
+- Responsibilities: Loads CSS, provides the DOM structure, and imports ES module scripts.
 
-**PWA Service Worker:**
-- Location: `public/sw.js`
-- Triggers: Browser's service worker lifecycle events (install, activate, fetch).
-- Responsibilities: Caching assets for offline use, handling background sync/pre-fetching.
+**Service Entry Point:**
+- Location: `services/app.js`
+- Triggers: Script load.
+- Responsibilities: Initializes the application, registers the Service Worker, binds event listeners, and loads saved state.
 
 ## Error Handling
 
-**Strategy:** Fail-soft with user notifications and defensive input validation.
+**Strategy:** Defensive programming and visual feedback.
 
 **Patterns:**
-- **User Notifications:** Toast messages via `showToast()` for invalid operations (e.g., divide by zero).
-- **Input Validation:** Range and type checking in `calculateRowResult` and `calcDigit`.
-- **Resilience:** `try/catch` blocks around state restoration (`loadState`) and scientific expression evaluation (`math.evaluate`).
+- **Try/Catch Blocks**: Used in math evaluation (`mathjs`) and state loading.
+- **Visual Feedback**: `showToast()` for errors like "Cannot divide by zero".
+- **Safety Fallbacks**: MathLive fonts fall back to internal versions if local fetch fails.
 
 ## Cross-Cutting Concerns
 
-**Logging:** Minimal console logging for critical failures (e.g., "Failed to load calc state").
-**Validation:** `VALID_THEMES`, `VALID_CARD_TYPES`, and `INPUT_LENGTH_LIMIT` constants enforce application constraints.
-**PWA/Offline:** Service Worker (`sw.js`) and manifest integration for installability and offline resilience.
+**Logging:** Standard `console` methods for errors.
+**Validation:** Regex-based input filtering for keypad and percentage inputs.
+**Persistence:** Debounced `localStorage` synchronization.
+**PWA Support:** `vite-plugin-pwa` handles Service Worker generation and update prompting.
 
 ---
 
-*Architecture analysis: 2025-05-13*
+*Architecture analysis: 2026-03-31*
