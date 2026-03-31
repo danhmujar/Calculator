@@ -33,6 +33,10 @@
 
 <body>
     <a href="#main-calc-display" class="skip-link">Skip to calculator</a>
+    <span class="offline-badge" id="offline-badge" hidden aria-live="polite">
+        <svg width="12" height="12" aria-hidden="true"><use xlink:href="./assets/sprites.svg#icon-offline"></use></svg>
+        Offline
+    </span>
     <noscript>
         <p class="noscript-msg">This application requires JavaScript to run.</p>
     </noscript>
@@ -211,10 +215,6 @@
                     <button class="toggle-btn" id="btn-mode-sci" data-mode="scientific" role="radio"
                         aria-checked="false" aria-label="Switch to scientific mode">SCI</button>
                 </div>
-                <span class="offline-badge" id="offline-badge" hidden aria-live="polite">
-                    <svg width="12" height="12" aria-hidden="true"><use xlink:href="./assets/sprites.svg#icon-offline"></use></svg>
-                    Offline
-                </span>
 
                 <div class="sidebar-controls">
                     <button class="icon-btn" id="history-toggle-btn" title="History"
