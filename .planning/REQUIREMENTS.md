@@ -1,25 +1,70 @@
-# Requirements: Calculator Efficiency Refactor
+# Requirements: Calculator Architectural Hardening & WebGL Migration
 
 ## Objective
-Optimize the calculator for performance, size, and maintainability while preserving all existing logic and visual identity.
+The objective is to refactor the monolithic application layer and optimize state management, followed by a complete migration to a high-performance Raw WebGL 2.0 rendering layer to improve maintainability, performance, and visual fidelity.
 
-## 1. Performance Optimizations
-- **[REQ-P1] Eliminate Layout Thrashing:** Refactor `fitDisplayText` to avoid synchronous read-write cycles (looping `scrollWidth` checks). Explore `ResizeObserver` or pre-calculating character widths.
-- **[REQ-P2] Source-of-Truth State Management:** Replace DOM scraping in `saveState` with a centralized JavaScript state object that updates on input.
-- **[REQ-P3] Efficient DOM Updates:** Implement a batching mechanism (e.g., `requestAnimationFrame`) for UI updates to ensure only one DOM write occurs per frame.
-- **[REQ-P4] Eye-Tracking Optimization:** Offload pupil positioning logic to CSS variables updated via JS, reducing the amount of work done in the `mousemove` event handler.
+## 1. Architectural Refactoring
+- **[REQ-ARCH-01] Monolith Decomposition:** Refactor the 1,200-line `services/app.js` into distinct, single-responsibility services:
+  - `UIManager`: Handles DOM/Canvas coordination.
+  - `CalculatorService`: Core calculation logic and scientific row management.
+  - `PWAManager`: Service worker registration and update logic.
+- **[REQ-ARCH-02] Render-Agnostic Store:** Ensure `services/store.js` is independent of any rendering technology (DOM or WebGL).
+- **[REQ-ARCH-03] Modularized Events:** Refactor event delegation logic out of IIFEs in `ui/ui.js` to be properly exported and testable.
 
-## 2. Asset & Build Optimizations
-- **[REQ-B1] Index.html Size Reduction:** Extract inlined SVGs from `index.html` into an external SVG sprite sheet or separate files to improve parsing speed.
-- **[REQ-B2] Automated PWA Management:** Integrate `vite-plugin-pwa` to replace manual `sw.js` management and the `postbuild.js` script.
-- **[REQ-B3] Asset Hashing:** Enable filename hashing in Vite for better cache-busting, relying on the PWA plugin for service worker updates.
-- **[REQ-B4] Library Optimization:** Switch from CDN scripts to npm-managed packages. Use the `mathjs/number` entry point where possible and refine the lazy-loading of MathLive.
+## 2. State Management Optimization
+- **[REQ-STORE-01] Efficient State Reads:** Optimize `services/store.js` to eliminate O(N) deep-cloning on every state access. Implement shallow cloning or immutable data patterns.
+- **[REQ-STORE-02] Segmented State:** Segment state into "transient" (non-persisted) and "persistent" parts to optimize performance.
 
-## 3. Maintainability & Code Quality
-- **[REQ-M1] Architectural Clean-up:** Ensure strict separation between the Presentation (UI), Business Logic (Services), and Data (State) layers.
-- **[REQ-M2] Build Process Modernization:** Remove redundant scripts and leverage Vite's native capabilities for asset handling.
+## 3. Reliability & Bug Fixes
+- **[REQ-BUG-01] Robust Restoration:** Fix scientific row restoration race conditions by removing `setTimeout` logic and implementing a more reliable, event-driven or promise-based initialization sequence.
+- **[REQ-BUG-02] Mobile Scientific Mode:** Fix the issue where scientific mode is skipped on mobile restoration because the sidebar is closed.
+- **[REQ-BUG-03] LRU Cache:** Implement a Least Recently Used (LRU) cache or clear strategy for any intermediate text measurement caches in `ui/renderer.js`.
 
-## Non-Functional Requirements
-- **Logic Preservation:** Calculation results and edge-case handling must remain identical to the current version.
-- **UI Preservation:** The visual appearance, animations, and layouts must remain unchanged across all supported screen sizes.
-- **Accessibility:** Maintain or improve current ARIA roles and keyboard navigation.
+## 4. Security & Hardening
+- **[REQ-SEC-01] InnerHTML Elimination:** Replace all instances of `innerHTML` with `document.createElement` or safe template literal approaches.
+- **[REQ-SEC-02] MathJS Security:** Configure `math.js` with restrictive security settings and ensure expression evaluation is isolated.
+
+## 5. WebGL 2.0 Foundation
+- **[REQ-WGL-01] WebGL 2.0 Context Initialization:** Initialize a raw WebGL 2.0 canvas and main rendering loop.
+- **[REQ-WGL-02] GLSL Shader Development:** Develop custom vertex and fragment shaders for UI primitives (buttons, rows, background).
+- **[REQ-WGL-03] Dynamic Vertex Buffers:** Implement optimized vertex buffer management for dynamic calculator content.
+
+## 6. WebGL Advanced Rendering
+- **[REQ-WGL-04] Texture Atlas Typography:** Generate a texture atlas for MathLive/KaTeX glyphs to enable hardware-accelerated text rendering.
+- **[REQ-WGL-05] Batch Rendering:** Implement a batch renderer to minimize draw calls for 100+ items.
+- **[REQ-WGL-06] Animation Interpolation:** Move all UI animations (transitions, layout shifts) to GPU-side interpolation.
+
+## 7. Manual Verification & Parity
+- **[REQ-VER-01] Side-by-Side Validation:** Implement a toggle or split-view to compare the WebGL layer against the legacy DOM layer.
+- **[REQ-VER-02] Manual Visual Audit:** Perform a comprehensive manual audit of every calculator screen and interaction to ensure zero visual regressions.
+- **[REQ-VER-03] Touch & Gesture Verification:** Verify touch response and gesture support on physical mobile devices.
+
+## 8. Test Coverage
+- **[REQ-TEST-01] Modular Service Testing:** Update and expand the test suite to verify the functionality of the new modular services in isolation and integration.
+- **[REQ-TEST-02] WebGL Stress Testing:** Implement performance stress tests for 100+ scientific rows in WebGL mode.
+
+## Traceability
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| REQ-ARCH-01 | Phase 6 | Pending |
+| REQ-ARCH-02 | Phase 6 | Pending |
+| REQ-ARCH-03 | Phase 6 | Pending |
+| REQ-STORE-01 | Phase 6 | Pending |
+| REQ-STORE-02 | Phase 6 | Pending |
+| REQ-BUG-01 | Phase 6 | Pending |
+| REQ-BUG-02 | Phase 6 | Pending |
+| REQ-BUG-03 | Phase 6 | Pending |
+| REQ-SEC-01 | Phase 6 | Pending |
+| REQ-SEC-02 | Phase 6 | Pending |
+| REQ-WGL-01 | Phase 7 | Pending |
+| REQ-WGL-02 | Phase 7 | Pending |
+| REQ-WGL-03 | Phase 7 | Pending |
+| REQ-WGL-04 | Phase 8 | Pending |
+| REQ-WGL-05 | Phase 8 | Pending |
+| REQ-WGL-06 | Phase 9 | Pending |
+| REQ-VER-01 | Phase 10 | Pending |
+| REQ-VER-02 | Phase 10 | Pending |
+| REQ-VER-03 | Phase 10 | Pending |
+| REQ-TEST-01 | Phase 6 | Pending |
+| REQ-TEST-02 | Phase 9 | Pending |

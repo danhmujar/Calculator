@@ -1,40 +1,39 @@
-# Project State
+# Project State: Calculator Architectural Hardening & WebGL Migration
 
-## Phase: 0 - Initialization (Complete)
-- [x] Project Context Created
-- [x] Configuration Initialized
-- [x] Research Phase Completed
-- [x] Requirements Definition Completed
-- [x] Roadmap Creation Completed
+## Project Reference
+**Core Value**: A high-performance, feature-rich scientific calculator with PWA support, persistent state, and a Raw WebGL 2.0 rendering layer.
+**Current Focus**: Phase 6: Architectural Hardening
 
-## Phase: 1 - Performance-First Core (COMPLETED ✅)
-- [x] 01-01: Core State & Persistence
-- [x] 01-02: Performance Rendering & Canvas
-- [x] 01-03: App Layer Refactor
+## Current Position
+- **Phase**: 6: Architectural Hardening
+- **Plan**: TBD
+- **Status**: Not started
+- **Progress**: [----------] 0%
 
-## Phase: 2 - Asset & Build Modernization (COMPLETED ✅)
-- [x] 02-01: SVG Asset Consolidation
-- [x] 02-02: Dependency Migration (Math Engine)
-- [x] 02-03: PWA / Vite-Plugin-PWA Integration
+## Performance Metrics
+- **Bundle size**: TBD (Vite optimized)
+- **Lighthouse Score**: TBD
+- **Memory footprint**: O(1) state reads (Target after Phase 6)
+- **Frame Rate**: Target 60 FPS (WebGL migration goal)
 
-## Phase: 3 - Library & Event Optimization (COMPLETED ✅)
-- [x] 03-01: Optimize Math Engines (Custom Build)
-- [x] 03-02: CSS-Variable Eye-Tracking
-- [x] 03-03: Event Delegation Refactor
+## Accumulated Context
+### Decisions
+- Transitions 1-5 completed, establishing the baseline app performance.
+- Full migration to Raw WebGL 2.0 (no external libraries) for the rendering layer.
+- Phase 6 will address all technical debt listed in `CONCERNS.md` to provide a solid foundation for WebGL.
+- Mandatory runnability and verifiability at the end of every phase.
 
-## Phase: 4 - Final Validation & Polish (COMPLETED ✅)
-**Status:** COMPLETED ✅
-- [x] [P4-T1] Performance Audit (Verified in Phase 03)
-- [x] [P4-T2] Regression Testing (Verified in Phase 03)
-- [x] [P4-T3] Accessibility Check (Verified in Phase 03)
+### Todos
+- [ ] Initialize Phase 6 Plan (`/gsd:plan-phase 6`)
+- [ ] Decompose `services/app.js` into modular services.
+- [ ] Implement O(1) state reads and segmented state in `services/store.js`.
+- [ ] Fix scientific row restoration race conditions and mobile sidebar issues.
+- [ ] Eliminate `innerHTML` and harden `math.js` security.
+- [ ] Implement LRU cache in `ui/renderer.js`.
 
-## Phase: 5 - Animation Optimization (PLANNED)
-- [ ] [P5-T1] Refine Eye-Tracking (CSS-Variable Performance)
-- [ ] [P5-T2] Display Rendering Tuning
-- [ ] [P5-T3] Animation Performance Audit
+### Blockers
+- None currently identified.
 
-## Next Step
-Implement Phase 05: Animation Optimization.
-
-## Last Updated
-2026-03-30
+## Session Continuity
+- **Next Step**: Define the detailed plan for Phase 6.
+- **Focus Areas**: Modularity, State Optimization, Reliable Restoration, Security Hardening.
