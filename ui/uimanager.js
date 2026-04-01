@@ -918,16 +918,18 @@ export class UIManager {
             this.showToast('Loading Scientific Engine...');
             try {
                 await import('mathlive');
+                // Set font path immediately after import, before any rendering triggers font loading.
+                // Vite pre-bundles mathlive into node_modules/.vite/deps/, so the default relative
+                // font path resolves to a non-existent directory, causing OTS parsing errors.
+                if (window.MathfieldElement) {
+                    window.MathfieldElement.fontsDirectory = '/Calculator/fonts/';
+                }
                 await customElements.whenDefined('math-field');
             } catch (err) {
                 console.error('Failed to load MathLive', err);
                 this.showToast('Error loading scientific engine');
                 return;
             }
-        }
-
-        if (window.MathfieldElement) {
-            window.MathfieldElement.fontsDirectory = '/Calculator/fonts/';
         }
 
         if (leftPanel) void leftPanel.offsetWidth;
