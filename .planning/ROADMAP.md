@@ -54,7 +54,7 @@
   3. **Input Parity**: Touch and gesture interactions are fully verified on physical mobile devices.
   4. **Final Verification**: App passes all UAT criteria in a fully "Runnable" state.
 **Plans**: 3 plans
-- [ ] 10-01-PLAN.md — Parity Toggle & Overlay Transition (REQ-VER-01)
+- [x] 10-01-PLAN.md — Parity Toggle & Overlay Transition (REQ-VER-01)
 - [ ] 10-02-PLAN.md — Visual Parity & Mobile Audit (REQ-VER-02, REQ-VER-03)
 - [ ] 10-03-PLAN.md — Legacy Removal & Final Sign-off (REQ-TEST-01, REQ-TEST-02)
 **UI hint**: yes
@@ -74,4 +74,4 @@
 | 7. WebGL 2.0 Core & Primitive Rendering | 4/4 | COMPLETED | 2026-04-01 |
 | 8. WebGL Typography | 4/4 | COMPLETED | 2026-04-01 |
 | 9. Performance Batching | 5/5 | COMPLETED | 2026-04-01 |
-| 10. Final Verification | 0/3 | Not started | - |
+| 10. Final Verification | 1/3 | In Progress|  |
