@@ -61,8 +61,8 @@ The objective is to refactor the monolithic application layer and optimize state
 | REQ-WGL-02 | Phase 7 | Complete |
 | REQ-WGL-03 | Phase 7 | Complete |
 | REQ-WGL-04 | Phase 8 | Complete |
-| REQ-WGL-05 | Phase 8 | Pending |
-| REQ-WGL-06 | Phase 9 | Pending |
+| REQ-WGL-05 | Phase 8 | Complete |
+| REQ-WGL-06 | Phase 9 | Complete |
 | REQ-VER-01 | Phase 10 | Pending |
 | REQ-VER-02 | Phase 10 | Pending |
 | REQ-VER-03 | Phase 10 | Pending |

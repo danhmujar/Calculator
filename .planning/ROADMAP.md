@@ -54,9 +54,9 @@
   3. **Input Parity**: Touch and gesture interactions are fully verified on physical mobile devices.
   4. **Final Verification**: App passes all UAT criteria in a fully "Runnable" state.
 **Plans**: 3 plans
-- [ ] 10-01-PLAN.md — Legacy Code Removal & Asset Cleanup
-- [ ] 10-02-PLAN.md — Cross-Platform & Mobile Parity Audit
-- [ ] 10-03-PLAN.md — Final UAT & Project Delivery (VERIFICATION.md)
+- [ ] 10-01-PLAN.md — Parity Toggle & Overlay Transition (REQ-VER-01)
+- [ ] 10-02-PLAN.md — Visual Parity & Mobile Audit (REQ-VER-02, REQ-VER-03)
+- [ ] 10-03-PLAN.md — Legacy Removal & Final Sign-off (REQ-TEST-01, REQ-TEST-02)
 **UI hint**: yes
 
 ---
