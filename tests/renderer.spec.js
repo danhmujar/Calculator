@@ -108,6 +108,41 @@ test.describe('WebGL Rendering Engine', () => {
         await expect(display).toHaveText('7');
     });
 
+    test('WebGL toggle switches rendering mode and persists state', async ({ page }) => {
+        const checkbox = page.locator('#webgl-checkbox');
+        // The input itself is hidden for styling, so we check for presence and use force for actions
+        await expect(checkbox).toBeAttached();
+
+        const slider = page.locator('.webgl-slider');
+        await expect(slider).toBeVisible();
+
+        // Initially check state
+        const initialEnabled = await checkbox.isChecked();
+        
+        // Click the slider or label to toggle
+        await slider.click();
+        const firstToggle = await checkbox.isChecked();
+        expect(firstToggle).not.toBe(initialEnabled);
+        
+        // Check body class
+        const bodyClass = await page.evaluate(() => document.body.className);
+        if (firstToggle) {
+            expect(bodyClass).toContain('webgl-active');
+        } else {
+            expect(bodyClass).not.toContain('webgl-active');
+        }
+
+        // Check localStorage persistence
+        const storageVal = await page.evaluate(() => localStorage.getItem('webgl-enabled'));
+        expect(storageVal).toBe(firstToggle.toString());
+
+        // Reload and verify persistence
+        await page.reload();
+        await page.waitForSelector('.webgl-slider');
+        const reloadedChecked = await page.locator('#webgl-checkbox').isChecked();
+        expect(reloadedChecked).toBe(firstToggle);
+    });
+
     test('BatchRenderer provides expected API (pushRect, pushGlyph, flush)', async ({ page }) => {
         const apiCheck = await page.evaluate(() => {
             const renderer = window.uiManager.webglRenderer;

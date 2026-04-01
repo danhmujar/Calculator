@@ -186,9 +186,16 @@ export class UIManager {
         const layoutContainer = document.querySelector('.layout-container');
         if (layoutContainer && this.webgl.canvas) {
             layoutContainer.prepend(this.webgl.canvas);
-            document.body.classList.add('webgl-active');
-            // Schedule initial render for verification (avoids conflict with syncThemeColors)
-            renderer.schedule(() => this.webglRenderer.render());
+            
+            // Handle WebGL Toggle (REQ-WGL-04)
+            this.setupWebGLToggle();
+            
+            // Initial sync for verification (avoids conflict with syncThemeColors)
+            renderer.schedule(() => {
+                if (document.body.classList.contains('webgl-active')) {
+                    this.webglRenderer.render();
+                }
+            });
         }
 
         this.setupEntranceAnimations();
@@ -199,6 +206,34 @@ export class UIManager {
         this.setupFocusHandling();
         this.setupThemePicker();
         this.syncThemeColors();
+    }
+
+    setupWebGLToggle() {
+        const webglCheckbox = document.getElementById('webgl-checkbox');
+        if (!webglCheckbox) return;
+
+        // Restore from localStorage
+        const webglEnabled = localStorage.getItem('webgl-enabled') === 'true';
+        webglCheckbox.checked = webglEnabled;
+        
+        const updateWebGLState = (enabled) => {
+            if (enabled) {
+                document.body.classList.add('webgl-active');
+                if (this.webgl.canvas) this.webgl.canvas.style.display = 'block';
+                renderer.schedule(() => this.webglRenderer.render());
+            } else {
+                document.body.classList.remove('webgl-active');
+                if (this.webgl.canvas) this.webgl.canvas.style.display = 'none';
+            }
+            localStorage.setItem('webgl-enabled', enabled);
+        };
+
+        webglCheckbox.addEventListener('change', (e) => {
+            updateWebGLState(e.target.checked);
+        });
+
+        // Apply initial state
+        updateWebGLState(webglEnabled);
     }
 
     setupThemePicker() {
