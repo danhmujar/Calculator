@@ -11,8 +11,9 @@ import { layoutManager } from '../../services/layout.js';
 export class WebGLRenderer {
     /**
      * @param {WebGLContext} webglContext - The context manager instance
+     * @param {TypographyManager} typography - Optional typography manager for text extraction
      */
-    constructor(webglContext) {
+    constructor(webglContext, typography = null) {
         if (!webglContext || !webglContext.gl) {
             console.error('WebGLRenderer: A valid WebGLContext is required.');
             return;
@@ -20,6 +21,7 @@ export class WebGLRenderer {
 
         this.context = webglContext;
         this.gl = webglContext.gl;
+        this.typography = typography;
         
         // Pipeline state
         this.batchProgram = null;
@@ -27,7 +29,7 @@ export class WebGLRenderer {
         this.atlas = null;
         
         // Batch configuration
-        this.maxInstances = 2048;
+        this.maxInstances = 4096; // Increased for full coverage
         this.instanceData = new Float32Array(this.maxInstances * 24);
         this.instanceCount = 0;
         
@@ -403,7 +405,6 @@ export class WebGLRenderer {
         const gl = this.gl;
 
         // 1. Update Global UBO once per frame (std140 layout)
-        // [res.x, res.y, time, dpr, scroll.x, scroll.y, pad, pad]
         this.globalData[0] = gl.canvas.width;
         this.globalData[1] = gl.canvas.height;
         this.globalData[2] = performance.now() / 1000.0;
@@ -417,24 +418,69 @@ export class WebGLRenderer {
         this.context.clear([0, 0, 0, 0]);
 
         // Guard: Only render if WebGL mode is active in the DOM
-        if (!document.body.classList.contains('webgl-active')) {
-            console.log('WebGLRenderer: webgl-active class missing');
+        if (!document.body.classList.contains('webgl-active') && 
+            !document.body.classList.contains('parity-webgl-only') &&
+            !document.body.classList.contains('parity-split-view')) {
             this.flush();
             return;
         }
 
+        // Shared full-scene coverage (REQ-VER-01)
+        this._drawAllTrackedElements();
+        this._drawTypography();
+
         const isScientific = document.body.classList.contains('scientific-mode');
-        
         if (isScientific) {
             this.renderScientificMode();
         } else {
             this.renderStandardMode();
         }
 
-        console.log('WebGLRenderer: Pushed instances:', this.instanceCount);
-
         // Single flush for all UI elements
         this.flush();
+    }
+
+    /**
+     * Renders ALL tracked layout elements from the LayoutManager.
+     */
+    _drawAllTrackedElements() {
+        if (document.body.classList.contains('mode-transitioning')) return;
+
+        const viewportHeight = window.innerHeight;
+        
+        for (const [element, id] of layoutManager.elements.entries()) {
+            const rect = layoutManager.getRect(element);
+            
+            // Frustum Culling
+            if (rect.bottom < 0 || rect.top > viewportHeight) continue;
+
+            const computedStyle = getComputedStyle(element);
+            if (computedStyle.display === 'none' || computedStyle.visibility === 'hidden' || computedStyle.opacity === '0') continue;
+
+            if (element.classList.contains('calc-card')) {
+                this.pushRect(rect, [1, 1, 1, 0.05], 8, id);
+            } else if (element.classList.contains('btn') || element.classList.contains('icon-btn') || element.classList.contains('calc-btn')) {
+                const isEq = element.classList.contains('eq');
+                const isOp = element.classList.contains('op');
+                const color = isEq ? this.themeColors.primary : (isOp ? this.themeColors.accent : this.themeColors.primary);
+                this.pushRect(rect, [...color, 0.1], 12, id);
+            } else if (id === 'main-calc-display') {
+                this.pushRect(rect, [...this.themeColors.primary, 0.15], 16, id);
+            } else if (element.classList.contains('math-row') || element.classList.contains('calc-row-instance')) {
+                this.pushRect(rect, [...this.themeColors.primary, 0.05], 8, id);
+            }
+        }
+    }
+
+    /**
+     * Renders all extracted typography glyphs.
+     */
+    _drawTypography() {
+        if (!this.typography) return;
+        const glyphs = this.typography.getVisibleGlyphs();
+        glyphs.forEach((g, i) => {
+            this.pushGlyph(g.char, g.font, g.x, g.y, this.themeColors.text, g.fontSize, `glyph-${i}`);
+        });
     }
 
     /**
@@ -446,49 +492,12 @@ export class WebGLRenderer {
 
         rows.forEach((row, index) => {
             const rect = layoutManager.getRect(row);
-            
-            // CPU-level Frustum Culling (REQ-PERF-01)
-            // Skip rows that are completely off-screen to save draw calls and atlas lookups
-            if (rect.bottom < 0 || rect.top > viewportHeight) {
-                return;
-            }
+            if (rect.bottom < 0 || rect.top > viewportHeight) return;
 
-            // Draw a subtle background highlight for each visible row
-            this.pushRect({
-                x: rect.left + 8,
-                y: rect.top + 4,
-                width: rect.width - 16,
-                height: rect.height - 8
-            }, [
-                this.themeColors.primary[0],
-                this.themeColors.primary[1],
-                this.themeColors.primary[2],
-                0.05 // Very subtle row highlight
-            ], 8, `row-bg-${index}`);
-
-            // Render row decoration (e.g., a "Math" indicator or index)
-            // Positioned at the far left of the row
+            // Render row decoration
             const centerY = rect.top + rect.height / 2;
             const indicatorX = rect.left + 24;
-            
             this.pushGlyph('ƒ', 'italic 48px Inter', indicatorX, centerY, this.themeColors.primary, 18, `row-indicator-${index}`);
-            
-            // If the row contains a result, highlight it
-            const resultEl = row.querySelector('.math-result');
-            if (resultEl && resultEl.textContent.trim() !== '=') {
-                const resRect = layoutManager.getRect(resultEl);
-                this.pushRect({
-                    x: resRect.left - 4,
-                    y: resRect.top - 2,
-                    width: resRect.width + 8,
-                    height: resRect.height + 4
-                }, [
-                    this.themeColors.primary[0],
-                    this.themeColors.primary[1],
-                    this.themeColors.primary[2],
-                    0.12
-                ], 4, `row-result-${index}`);
-            }
         });
     }
 
@@ -496,43 +505,52 @@ export class WebGLRenderer {
      * Renders WebGL elements for the standard calculator display.
      */
     renderStandardMode() {
-        const displayEl = this.getActiveDisplayElement();
-        if (!displayEl) {
-            console.log('WebGLRenderer: No active display element');
-            return;
-        }
+        const sidebar = document.getElementById('sidebar');
+        if (!sidebar) return;
 
-        const rect = layoutManager.getRect(displayEl);
-        
-        // Skip rendering if element is hidden or zero-sized
-        if (rect.width === 0 || rect.height === 0) {
-            console.log('WebGLRenderer: Zero-sized rect');
-            return;
-        }
+        const sidebarRect = layoutManager.getRect(sidebar);
+        if (sidebarRect.width === 0 || sidebarRect.height === 0) return;
 
-        // Skip if element is clearly off-screen (sidebar fully closed)
-        // if (rect.right < -10 || rect.left > window.innerWidth + 10) return;
-        
-        // Draw background highlight (Hugging Pattern)
+        const computedStyle = getComputedStyle(sidebar);
+        if (computedStyle.visibility === 'hidden' || computedStyle.opacity === '0') return;
+
+        // Draw subtle background glow behind the entire sidebar panel.
         this.pushRect({
-            x: rect.left - 12,
-            y: rect.top - 8,
-            width: rect.width + 24,
-            height: rect.height + 16
+            x: sidebarRect.left - 8,
+            y: sidebarRect.top,
+            width: sidebarRect.width + 16,
+            height: sidebarRect.height
         }, [
             this.themeColors.primary[0],
             this.themeColors.primary[1],
             this.themeColors.primary[2],
-            0.15
-        ], 16, 'display-hugging-bg');
-        
-        // Position Sigma and Pi symbols at the vertical center of the detected area
-        const centerY = rect.top + rect.height / 2;
-        const sigmaX = rect.left + 32;
-        const piX = rect.right - 48;
-        
-        this.pushGlyph('Σ', 'bold 48px Inter', sigmaX, centerY, this.themeColors.primary, 24, 'sigma-symbol');
-        this.pushGlyph('π', 'bold 48px Inter', piX, centerY, this.themeColors.primary, 24, 'pi-symbol');
+            0.08
+        ], 0, 'sidebar-glow-bg');
+
+        const displayEl = document.getElementById('main-calc-display');
+        if (displayEl) {
+            const displayRect = layoutManager.getRect(displayEl);
+            const MIN_WIDTH_FOR_SYMBOLS = 200;
+            if (sidebarRect.width >= MIN_WIDTH_FOR_SYMBOLS) {
+                const displayCenterY = displayRect.top + displayRect.height / 2;
+                const sigmaX = displayRect.left + 24;
+                const piX = displayRect.right - 24;
+                
+                this.pushGlyph('Σ', 'bold 48px Inter', sigmaX, displayCenterY, [
+                    this.themeColors.primary[0],
+                    this.themeColors.primary[1],
+                    this.themeColors.primary[2],
+                    0.12
+                ], 28, 'sigma-symbol');
+
+                this.pushGlyph('π', 'bold 48px Inter', piX, displayCenterY, [
+                    this.themeColors.primary[0],
+                    this.themeColors.primary[1],
+                    this.themeColors.primary[2],
+                    0.10
+                ], 28, 'pi-symbol');
+            }
+        }
     }
 }
 
