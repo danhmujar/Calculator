@@ -15,31 +15,36 @@ test.describe('Batch Rendering Unit Tests', () => {
   });
 
   test('Instanced rendering reduces draw calls', async ({ page }) => {
-    const drawCalls = await page.evaluate(async () => {
+    const results = await page.evaluate(async () => {
       const renderer = window.uiManager.webglRenderer;
       const gl = renderer.gl;
+      
+      // 1. Wait for any pending frames to clear
+      await new Promise(r => requestAnimationFrame(r));
+      await new Promise(r => setTimeout(r, 100));
+
       let count = 0;
+      let totalInstances = 0;
       const originalDraw = gl.drawArraysInstanced;
       
-      gl.drawArraysInstanced = (...args) => {
+      gl.drawArraysInstanced = (mode, first, count_per_instance, instanceCount) => {
         count++;
-        return originalDraw.apply(gl, args);
+        totalInstances += instanceCount;
+        return originalDraw.call(gl, mode, first, count_per_instance, instanceCount);
       };
       
-      // Clear and render to trigger flush
+      // 2. Clear and trigger exactly one render
       renderer.render();
       
-      // Restore original
+      // 3. Restore original and return results
       gl.drawArraysInstanced = originalDraw;
       
-      return count;
+      return { count, totalInstances };
     });
     
-    // For a simple UI, we expect very few draw calls (ideally 1 for the whole UI)
-    // The current render() in WebGLRenderer pushes 1 rect and 2 glyphs, then flushes.
-    // That should be exactly 1 draw call.
-    expect(drawCalls).toBeGreaterThan(0);
-    expect(drawCalls).toBeLessThan(5);
+    // We expect exactly 1 draw call for the 3 items pushed in renderer.render()
+    expect(results.count).toBe(1);
+    expect(results.totalInstances).toBe(3);
   });
 
   test('Unified shader handles both Rect and Text types', async ({ page }) => {

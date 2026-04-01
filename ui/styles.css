@@ -511,9 +511,9 @@ body[class*="theme-aurora"] .calc-btn {
 /* WebGL Underlay Transparency (REQ-WGL-03) */
 body.webgl-active .right-panel,
 body.webgl-active .calc-card {
-    background-color: color-mix(in srgb, var(--panel-bg) 85%, transparent);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    background-color: color-mix(in srgb, var(--panel-bg) 65%, transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
 }
 
 /* Ensure mobile drawer is also transparent when WebGL is active */

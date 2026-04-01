@@ -217,7 +217,7 @@ export class WebGLRenderer {
      */
     drawPrimitive(rect, color, radius) {
         this.pushRect(rect, color, radius);
-        this.flush();
+        // Do not flush immediately to allow further batching
     }
 
     /**
@@ -250,6 +250,7 @@ export class WebGLRenderer {
 
     /**
      * Main rendering loop integration. 
+     * Uses a single flush for all queued primitives.
      */
     render() {
         if (!this.initialized) return;
@@ -289,9 +290,14 @@ export class WebGLRenderer {
             
             // Demonstrate text batching (Verification)
             // Position symbols at the vertical center of the detected area
+            // Perfect Glyph Handling: Sigma (Left Anchor) and Pi (Right Anchor)
+            // Added 8px extra offset for better framing without overlapping expressions
             const centerY = rect.top + rect.height / 2;
-            this.pushGlyph('Σ', 'bold 48px Inter', rect.left + 24, centerY, this.themeColors.primary, 24);
-            this.pushGlyph('π', 'bold 48px Inter', rect.right - 40, centerY, this.themeColors.primary, 24);
+            const sigmaX = rect.left + 32;
+            const piX = rect.right - 48;
+            
+            this.pushGlyph('Σ', 'bold 48px Inter', sigmaX, centerY, this.themeColors.primary, 24);
+            this.pushGlyph('π', 'bold 48px Inter', piX, centerY, this.themeColors.primary, 24);
         }
 
         // Single flush for all UI elements

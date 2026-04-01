@@ -145,7 +145,8 @@ export class UIManager {
 
         if (this.webglRenderer) {
             this.webglRenderer.themeColors = this.themeColors;
-            this.webglRenderer.render();
+            // Schedule the render to avoid redundancy during initialization
+            renderer.schedule(() => this.webglRenderer.render());
         }
     }
 
@@ -186,8 +187,8 @@ export class UIManager {
         if (layoutContainer && this.webgl.canvas) {
             layoutContainer.prepend(this.webgl.canvas);
             document.body.classList.add('webgl-active');
-            // Initial clear for verification
-            this.webglRenderer.render();
+            // Schedule initial render for verification (avoids conflict with syncThemeColors)
+            renderer.schedule(() => this.webglRenderer.render());
         }
 
         this.setupEntranceAnimations();
@@ -622,14 +623,14 @@ export class UIManager {
             requestAnimationFrame(() => {
                 sidebar.classList.toggle('open');
                 if (this.webglRenderer) {
-                    this.webglRenderer.render();
+                    renderer.schedule(() => this.webglRenderer.render());
                 }
             });
 
             // Sync after transition
             const cleanup = (e) => {
                 if (e.propertyName === 'transform' || e.propertyName === 'width') {
-                    if (this.webglRenderer) this.webglRenderer.render();
+                    if (this.webglRenderer) renderer.schedule(() => this.webglRenderer.render());
                     sidebar.removeEventListener('transitionend', cleanup);
                 }
             };

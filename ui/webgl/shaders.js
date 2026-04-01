@@ -225,16 +225,18 @@ void main() {
         if (alpha <= 0.0) discard;
         outColor = vec4(v_instColor.rgb, v_instColor.a * alpha);
     } else {
-        // Mode 1: SDF Text
+        // Mode 1: SDF Text (Sigma/Pi Glyphs)
         vec2 uv = v_instUV.xy + v_texCoord * v_instUV.zw;
         float sampleVal = texture(u_atlas, uv).r;
         
-        // Anti-aliasing using screen-space derivatives
-        float width = fwidth(sampleVal);
+        // High-fidelity anti-aliasing + subtle outer glow
+        float width = fwidth(sampleVal) * 1.5;
         float alpha = smoothstep(0.5 - width, 0.5 + width, sampleVal);
+        float glow = smoothstep(0.1, 0.5, sampleVal) * 0.4;
         
-        if (alpha <= 0.0) discard;
-        outColor = vec4(v_instColor.rgb, v_instColor.a * alpha);
+        float finalAlpha = clamp(alpha + glow, 0.0, 1.0);
+        if (finalAlpha <= 0.0) discard;
+        outColor = vec4(v_instColor.rgb, v_instColor.a * finalAlpha);
     }
 }
 `;
