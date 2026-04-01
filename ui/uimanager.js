@@ -77,6 +77,68 @@ export class UIManager {
             minimumFractionDigits: 0,
             maximumFractionDigits: 4
         });
+
+        this.themeColors = {
+            primary: [0, 0.32, 0.8, 1], // Default Financial Blue
+            accent: [0.96, 0.62, 0.04, 1], // Default Warning
+            background: [0.96, 0.96, 0.97, 1] // Default BG
+        };
+    }
+
+    /**
+     * Extracts a CSS variable value and converts it to a normalized RGBA array.
+     * @param {string} variableName - The CSS variable name (e.g., '--primary-blue')
+     * @returns {number[]} Normalized RGBA [0.0 - 1.0]
+     */
+    getThemeColor(variableName) {
+        const value = getComputedStyle(document.body).getPropertyValue(variableName).trim();
+        if (!value) return [0, 0, 0, 1];
+        return this.parseColor(value);
+    }
+
+    /**
+     * Parses CSS color strings (hex, rgb, rgba) into normalized arrays.
+     */
+    parseColor(colorStr) {
+        // Handle hex
+        if (colorStr.startsWith('#')) {
+            let r = 0, g = 0, b = 0;
+            if (colorStr.length === 4) {
+                r = parseInt(colorStr[1] + colorStr[1], 16);
+                g = parseInt(colorStr[2] + colorStr[2], 16);
+                b = parseInt(colorStr[3] + colorStr[3], 16);
+            } else {
+                r = parseInt(colorStr.slice(1, 3), 16);
+                g = parseInt(colorStr.slice(3, 5), 16);
+                b = parseInt(colorStr.slice(5, 7), 16);
+            }
+            return [r / 255, g / 255, b / 255, 1.0];
+        }
+        // Handle rgb/rgba
+        const match = colorStr.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
+        if (match) {
+            return [
+                parseInt(match[1]) / 255,
+                parseInt(match[2]) / 255,
+                parseInt(match[3]) / 255,
+                match[4] ? parseFloat(match[4]) : 1.0
+            ];
+        }
+        return [0, 0, 0, 1];
+    }
+
+    /**
+     * Synchronizes WebGL theme cache with current DOM styles.
+     */
+    syncThemeColors() {
+        this.themeColors.primary = this.getThemeColor('--primary-blue');
+        this.themeColors.accent = this.getThemeColor('--warning');
+        this.themeColors.background = this.getThemeColor('--bg-color');
+
+        if (this.webglRenderer) {
+            this.webglRenderer.themeColors = this.themeColors;
+            this.webglRenderer.render();
+        }
     }
 
     createRowInput(name, placeholder, ariaLabel) {
@@ -126,6 +188,7 @@ export class UIManager {
         this.setupPasteSupport();
         this.setupFocusHandling();
         this.setupThemePicker();
+        this.syncThemeColors();
     }
 
     setupThemePicker() {
@@ -578,6 +641,8 @@ export class UIManager {
         if (checkbox) {
             checkbox.checked = body.classList.contains('dark-theme');
         }
+
+        this.syncThemeColors();
     }
 
     setThemeColor(btnEl, themeClass) {
@@ -607,6 +672,8 @@ export class UIManager {
 
         const dropdown = document.getElementById('theme-dropdown-container');
         if (dropdown) dropdown.classList.remove('active');
+
+        this.syncThemeColors();
     }
 
     updateMemoryIndicator(memoryValue) {

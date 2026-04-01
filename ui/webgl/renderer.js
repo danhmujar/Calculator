@@ -23,6 +23,15 @@ export class WebGLRenderer {
         this.initialized = false;
         
         /**
+         * Cached theme colors from UIManager.
+         */
+        this.themeColors = {
+            primary: [0.0, 0.32, 0.8, 1.0],
+            accent: [0.96, 0.62, 0.04, 1.0],
+            background: [0.96, 0.96, 0.97, 1.0]
+        };
+
+        /**
          * Unit quad data for SDF primitive rendering.
          * Format: [x, y, u, v] - Interleaved for cache efficiency.
          */
@@ -95,9 +104,24 @@ export class WebGLRenderer {
          */
         this.context.clear([0, 0, 0, 0]);
 
-        // Integration Note: 
-        // In this architecture, individual UI components (via UIManager)
-        // or the EyeTracker will call drawPrimitive during the frame.
-        // For debugging, we can draw a test primitive here.
+        // Verification: Draw a subtle highlight under the main display 
+        // to confirm WebGL-to-DOM theme synchronization.
+        const displayEl = document.getElementById('main-calc-display');
+        if (displayEl) {
+            const rect = displayEl.getBoundingClientRect();
+            
+            // Draw a primary-colored glow behind the display
+            this.drawPrimitive({
+                x: rect.left - 8,
+                y: rect.top - 8,
+                width: rect.width + 16,
+                height: rect.height + 16
+            }, [
+                this.themeColors.primary[0],
+                this.themeColors.primary[1],
+                this.themeColors.primary[2],
+                0.15 // Subtle alpha for the underlay
+            ], 16);
+        }
     }
 }
