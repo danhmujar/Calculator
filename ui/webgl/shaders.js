@@ -81,7 +81,12 @@ export class ShaderManager {
                     default: gl.uniform1fv(location, value);
                 }
             } else if (typeof value === 'number') {
-                gl.uniform1f(location, value);
+                // Samplers and specific integer uniforms must use uniform1i
+                if (name === 'u_atlas' || name.toLowerCase().includes('sampler')) {
+                    gl.uniform1i(location, value);
+                } else {
+                    gl.uniform1f(location, value);
+                }
             } else if (typeof value === 'boolean') {
                 gl.uniform1i(location, value ? 1 : 0);
             }

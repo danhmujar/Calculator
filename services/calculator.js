@@ -4,6 +4,9 @@ const math = create(all, {
   predictable: true
 });
 
+// Enable implicit multiplication (e.g., 2x -> 2*x)
+math.config({ implicit: 'multiply' });
+
 // Disable high-risk functions (APP-L8)
 const unsafe = ['import', 'createUnit', 'evaluate', 'parse', 'simplify'];
 // We block these via AST traversal in evaluate() rather than disabling them 

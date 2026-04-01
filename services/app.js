@@ -21,6 +21,8 @@ class AppOrchestrator {
         });
 
         this.calcState = this.initCalcStateProxy();
+        window.uiManager = uiManager;
+        window.app = this;
     }
 
     init() {

@@ -508,6 +508,21 @@ body[class*="theme-aurora"] .calc-btn {
     height: 100%;
 }
 
+/* WebGL Underlay Transparency (REQ-WGL-03) */
+body.webgl-active .right-panel,
+body.webgl-active .calc-card {
+    background-color: color-mix(in srgb, var(--panel-bg) 85%, transparent);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+/* Ensure mobile drawer is also transparent when WebGL is active */
+@media (max-width: 1024px) {
+    body.webgl-active .right-panel {
+        background-color: color-mix(in srgb, var(--panel-bg) 80%, transparent);
+    }
+}
+
 /* Prevent transitions during manual resizing to fix the "rubbery" drag lag */
 body.is-resizing * {
     transition: none !important;
@@ -1085,14 +1100,14 @@ body.scientific-mode .calc-keypad {
     display: none;
 }
 
-/* Go full screen for scientific — uses transitionable properties, no !important */
+/* Go full screen for scientific — correctly hides the left panel regardless of DOM order */
 body.scientific-mode .left-panel {
     opacity: 0;
     flex: 0 0 0px;
     min-width: 0;
     max-width: 0;
-    padding: 0;
-    margin: 0;
+    padding: 0 !important;
+    margin: 0 !important;
     overflow: hidden;
     pointer-events: none;
     transform: translateX(-120px) scale(0.95);
@@ -2282,6 +2297,27 @@ body.dark-theme .about-badge {
     display: none;
 }
 
-.about-install-btn svg {
-    flex-shrink: 0;
-}
+/* --- WEBGL UNDERLAY VISIBILITY (REQ-WGL-02) --- */
+body.webgl-active .main-calc-display,
+body.webgl-active .sci-container {
+    background-color: rgba(255, 255, 255, 0.45) !important;
+    backdrop-filter: blur(8px);
+    transition: background-color 0.3s ease;
+}
+
+body.webgl-active.dark-theme .main-calc-display,
+body.webgl-active.dark-theme .sci-container {
+    background-color: rgba(28, 30, 36, 0.45) !important;
+}
+
+@media (max-width: 1024px) {
+    body.webgl-active .right-panel {
+        background-color: rgba(255, 255, 255, 0.75) !important;
+        backdrop-filter: blur(12px);
+    }
+    
+    body.webgl-active.dark-theme .right-panel {
+        background-color: rgba(28, 30, 36, 0.75) !important;
+    }
+}
+

@@ -4,12 +4,12 @@ test.describe('Typography Layout Extraction', () => {
     test.beforeEach(async ({ page }) => {
         // Go to the main application page
         await page.goto('http://localhost:5173');
+        // Activate scientific mode to ensure math-fields are available
+        await page.click('#btn-mode-sci');
+        await page.waitForSelector('math-field');
     });
 
     test('TypographyManager extracts glyphs from MathLive shadow DOM', async ({ page }) => {
-        // Wait for MathLive to be loaded and a math-field to be present
-        await page.waitForSelector('math-field');
-
         const glyphs = await page.evaluate(async () => {
             const mf = document.querySelector('math-field');
             // We set a simple value to test extraction
@@ -20,12 +20,10 @@ test.describe('Typography Layout Extraction', () => {
             
             // We assume TypographyManager will be available on window or imported
             // For now, we'll check if the module can be loaded and used
-            const { TypographyManager } = await import('/ui/webgl/typography.js');
+            const { TypographyManager } = await import('/Calculator/ui/webgl/typography.js');
             const manager = new TypographyManager();
             return manager.extractGlyphs(mf);
         });
-
-        console.log('Extracted Glyphs:', JSON.stringify(glyphs, null, 2));
         
         expect(Array.isArray(glyphs)).toBe(true);
         expect(glyphs.length).toBeGreaterThan(0);
@@ -55,7 +53,7 @@ test.describe('Typography Layout Extraction', () => {
 
         const syncResult = await page.evaluate(async () => {
             const mf = document.querySelector('math-field');
-            const { TypographyManager } = await import('/ui/webgl/typography.js');
+            const { TypographyManager } = await import('/Calculator/ui/webgl/typography.js');
             const manager = new TypographyManager();
             
             let updateCount = 0;

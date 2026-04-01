@@ -3,6 +3,7 @@ import { renderer } from './renderer.js';
 import { CalculatorService } from '../services/calculator.js';
 import { WebGLContext } from './webgl/context.js';
 import { WebGLRenderer } from './webgl/renderer.js';
+import { TypographyManager } from './webgl/typography.js';
 
 /**
  * UIManager - Coordinates DOM layout, theme management, and UI transitions.
@@ -14,6 +15,13 @@ export class UIManager {
         this.toastTimeout = null;
         this.lastDisplayText = '';
         this.lastContainerWidth = 0;
+
+        this.typography = new TypographyManager();
+        this.typography.onLayoutUpdate((glyphs) => {
+            if (this.webglRenderer) {
+                this.webglRenderer.render();
+            }
+        });
 
         this.VALID_THEMES = [
             'theme-teal', 'theme-terracotta', 'theme-forest', 'theme-slate',
@@ -177,6 +185,7 @@ export class UIManager {
         const layoutContainer = document.querySelector('.layout-container');
         if (layoutContainer && this.webgl.canvas) {
             layoutContainer.prepend(this.webgl.canvas);
+            document.body.classList.add('webgl-active');
             // Initial clear for verification
             this.webglRenderer.render();
         }
@@ -612,7 +621,19 @@ export class UIManager {
             void sidebar.offsetWidth;
             requestAnimationFrame(() => {
                 sidebar.classList.toggle('open');
+                if (this.webglRenderer) {
+                    this.webglRenderer.render();
+                }
             });
+
+            // Sync after transition
+            const cleanup = (e) => {
+                if (e.propertyName === 'transform' || e.propertyName === 'width') {
+                    if (this.webglRenderer) this.webglRenderer.render();
+                    sidebar.removeEventListener('transitionend', cleanup);
+                }
+            };
+            sidebar.addEventListener('transitionend', cleanup);
         }
     }
 
@@ -825,9 +846,14 @@ export class UIManager {
                         if (e && e.propertyName !== 'opacity' && e.propertyName !== 'width' && e.propertyName !== 'flex-basis') return;
                         leftPanel.style.overflow = '';
                         leftPanel.removeEventListener('transitionend', cleanup);
+                        // Final sync after transition ends
+                        if (this.webglRenderer) this.webglRenderer.render();
                     };
                     leftPanel.addEventListener('transitionend', cleanup);
                 }
+
+                // Initial sync for the start of the frame
+                if (this.webglRenderer) this.webglRenderer.render();
             });
         }
     }
@@ -840,7 +866,7 @@ export class UIManager {
             this.showToast('Loading Scientific Engine...');
             try {
                 const { MathfieldElement } = await import('mathlive');
-                MathfieldElement.fontsDirectory = '/Calculator/fonts';
+                MathfieldElement.fontsDirectory = './fonts/';
                 await customElements.whenDefined('math-field');
             } catch (err) {
                 console.error('Failed to load MathLive', err);
@@ -871,7 +897,21 @@ export class UIManager {
             if (wrapper && wrapper.children.length === 0) {
                 this.addScientificRow();
             }
+
+            // Initial sync for scientific mode layout shift
+            if (this.webglRenderer) this.webglRenderer.render();
         });
+
+        // Add final sync after transition
+        if (sidebar) {
+            const cleanup = (e) => {
+                if (e.propertyName === 'transform' || e.propertyName === 'width') {
+                    if (this.webglRenderer) this.webglRenderer.render();
+                    sidebar.removeEventListener('transitionend', cleanup);
+                }
+            };
+            sidebar.addEventListener('transitionend', cleanup);
+        }
     }
 
     addScientificRow(initialValue = '') {

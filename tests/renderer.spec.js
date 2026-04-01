@@ -107,4 +107,21 @@ test.describe('WebGL Rendering Engine', () => {
         const display = page.locator('#main-calc-display');
         await expect(display).toHaveText('7');
     });
+
+    test('BatchRenderer provides expected API (pushRect, pushGlyph, flush)', async ({ page }) => {
+        const apiCheck = await page.evaluate(() => {
+            const renderer = window.uiManager.webglRenderer;
+            return {
+                hasPushRect: typeof renderer.pushRect === 'function',
+                hasPushGlyph: typeof renderer.pushGlyph === 'function',
+                hasFlush: typeof renderer.flush === 'function',
+                maxInstances: renderer.maxInstances
+            };
+        });
+
+        expect(apiCheck.hasPushRect).toBe(true);
+        expect(apiCheck.hasPushGlyph).toBe(true);
+        expect(apiCheck.hasFlush).toBe(true);
+        expect(apiCheck.maxInstances).toBeGreaterThanOrEqual(2048);
+    });
 });
