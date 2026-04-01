@@ -93,4 +93,16 @@ export class WebGLContext {
         this.gl.clearColor(r, g, b, a);
         this.gl.clear(this.gl.COLOR_BUFFER_BIT);
     }
+
+    /**
+     * Executes an instanced draw call.
+     * @param {number} mode - Drawing mode (gl.TRIANGLES, gl.TRIANGLE_STRIP, etc.)
+     * @param {number} first - Starting vertex index
+     * @param {number} count - Number of vertices per instance
+     * @param {number} instanceCount - Number of instances to draw
+     */
+    drawInstanced(mode, first, count, instanceCount) {
+        if (!this.gl || instanceCount <= 0) return;
+        this.gl.drawArraysInstanced(mode, first, count, instanceCount);
+    }
 }

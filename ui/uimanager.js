@@ -92,6 +92,8 @@ export class UIManager {
             accent: [0.96, 0.62, 0.04, 1], // Default Warning
             background: [0.96, 0.96, 0.97, 1] // Default BG
         };
+
+        this.parityMode = 2; // Default to Legacy-Only
     }
 
     /**
@@ -143,6 +145,7 @@ export class UIManager {
         this.themeColors.primary = this.getThemeColor('--primary-blue');
         this.themeColors.accent = this.getThemeColor('--warning');
         this.themeColors.background = this.getThemeColor('--bg-color');
+        this.themeColors.text = this.getThemeColor('--text-primary');
 
         if (this.webglRenderer) {
             this.webglRenderer.themeColors = this.themeColors;
@@ -214,7 +217,7 @@ export class UIManager {
 
         // Initialize WebGL Underlay (REQ-WGL-01)
         this.webgl = new WebGLContext();
-        this.webglRenderer = new WebGLRenderer(this.webgl);
+        this.webglRenderer = new WebGLRenderer(this.webgl, this.typography);
         const layoutContainer = document.querySelector('.layout-container');
         if (layoutContainer && this.webgl.canvas) {
             layoutContainer.prepend(this.webgl.canvas);
@@ -489,12 +492,60 @@ export class UIManager {
             const sidebar = document.getElementById('sidebar');
             if (sidebar && sidebar.classList.contains('scientific-active')) return;
 
-            // These will be handled by app.js through callbacks or custom events if needed, 
-            // but for simplicity we can keep the logic here if it just calls calc functions.
-            // However, the plan says UIManager should coordinate, so maybe app.js should handle shortcuts 
-            // and call UIManager for UI updates? 
-            // Actually, the shortcuts often trigger calculations.
+            // Parity Mode Toggle (REQ-VER-01)
+            if (e.shiftKey && e.key === 'P') {
+                e.preventDefault();
+                this.toggleParityMode();
+            }
         });
+    }
+
+    /**
+     * Toggles between WebGL-Only, Split-View, and Legacy-Only rendering modes (REQ-VER-01).
+     */
+    toggleParityMode() {
+        const body = document.body;
+        const canvas = this.webgl ? this.webgl.canvas : null;
+        if (!canvas) return;
+
+        // Modes:
+        // 0: WebGL-Only (Overlay: z-index 1, Legacy: opacity 0)
+        // 1: Split-View (Canvas width 50%, Legacy visible in other 50%)
+        // 2: Legacy-Only (Canvas hidden, Legacy: opacity 1)
+
+        this.parityMode = (this.parityMode + 1) % 3;
+
+        // Reset state
+        body.classList.remove('parity-split-view', 'ghost-mode');
+        canvas.style.zIndex = '';
+        canvas.style.pointerEvents = '';
+        canvas.style.display = 'block';
+
+        switch (this.parityMode) {
+            case 0: // WebGL-Only (Overlay)
+                canvas.style.zIndex = '1';
+                canvas.style.pointerEvents = 'none';
+                body.classList.add('ghost-mode');
+                this.showToast('Parity Mode: WebGL Overlay');
+                break;
+            case 1: // Split-View
+                body.classList.add('parity-split-view');
+                canvas.style.zIndex = '1';
+                canvas.style.pointerEvents = 'none';
+                this.showToast('Parity Mode: Split View');
+                break;
+            case 2: // Legacy-Only
+                canvas.style.display = 'none';
+                this.showToast('Parity Mode: Legacy Only');
+                break;
+        }
+
+        if (this.webgl) {
+            this.webgl.resize();
+        }
+        if (this.webglRenderer) {
+            this.webglRenderer.render();
+        }
     }
 
     setupPasteSupport() {
@@ -695,9 +746,21 @@ export class UIManager {
     toggleDrawer() {
         const sidebar = document.getElementById('sidebar');
         if (sidebar) {
+            const isClosing = sidebar.classList.contains('open');
+            const isMobile = window.innerWidth <= 1024;
+
             void sidebar.offsetWidth;
             requestAnimationFrame(() => {
                 sidebar.classList.toggle('open');
+
+                // REQ-UI-MOBILE-01: Auto-revert to Standard mode when closing
+                // the drawer on mobile while in Scientific mode. Prevents blank
+                // screen caused by body.scientific-mode hiding .left-panel
+                // when the sidebar is also closed.
+                if (isClosing && isMobile && document.body.classList.contains('scientific-mode')) {
+                    this.setCalcMode('standard');
+                }
+
                 if (this.webglRenderer) {
                     renderer.schedule(() => this.webglRenderer.render());
                 }
@@ -903,6 +966,11 @@ export class UIManager {
             if (leftPanel) void leftPanel.offsetWidth;
 
             requestAnimationFrame(() => {
+                // Guard: block all WebGL standard-mode rendering during the transition.
+                // Other triggers (ResizeObserver, scroll) can fire render() mid-transition
+                // with stale layout data, causing symbols to appear at wrong positions.
+                document.body.classList.add('mode-transitioning');
+
                 document.body.classList.remove('scientific-mode');
                 // Update Store (REQ-ARCH-01) inside the frame to ensure layout has started settling
                 store.state.persistent.mode = mode;
@@ -918,19 +986,37 @@ export class UIManager {
                     btnStd.setAttribute('aria-checked', 'true');
                 }
 
+                const finalize = () => {
+                    if (leftPanel) leftPanel.style.overflow = '';
+                    document.body.classList.remove('mode-transitioning');
+                    layoutManager.refreshAll();
+                    if (this.webglRenderer) {
+                        this.webglRenderer.layoutHistory.clear();
+                        this.webglRenderer.render();
+                    }
+                };
+
                 if (leftPanel) {
+                    let finalized = false;
                     const cleanup = (e) => {
                         if (e && e.propertyName !== 'opacity' && e.propertyName !== 'width' && e.propertyName !== 'flex-basis') return;
-                        leftPanel.style.overflow = '';
+                        if (finalized) return;
+                        finalized = true;
                         leftPanel.removeEventListener('transitionend', cleanup);
-                        // Final sync after transition ends
-                        if (this.webglRenderer) this.webglRenderer.render();
+                        finalize();
                     };
                     leftPanel.addEventListener('transitionend', cleanup);
+                    // Safety: force finalize if transitionend never fires
+                    setTimeout(() => {
+                        if (!finalized) {
+                            finalized = true;
+                            leftPanel.removeEventListener('transitionend', cleanup);
+                            finalize();
+                        }
+                    }, 600);
+                } else {
+                    finalize();
                 }
-
-                // Initial sync for the start of the frame
-                if (this.webglRenderer) this.webglRenderer.render();
             });
         }
     }
@@ -959,6 +1045,9 @@ export class UIManager {
 
         if (leftPanel) void leftPanel.offsetWidth;
         requestAnimationFrame(() => {
+            // Guard: block WebGL rendering during the STD→SCI layout transition
+            document.body.classList.add('mode-transitioning');
+
             document.body.classList.add('scientific-mode');
             // Update Store (REQ-ARCH-01) inside the frame to ensure consistency with layout state
             store.state.persistent.mode = 'scientific';
@@ -980,19 +1069,38 @@ export class UIManager {
                 this.addScientificRow();
             }
 
-            // Initial sync for scientific mode layout shift
-            if (this.webglRenderer) this.webglRenderer.render();
+            // Do NOT render here — layout is mid-transition
         });
 
-        // Add final sync after transition
+        // Finalize after sidebar transition completes
         if (sidebar) {
+            let finalized = false;
             const cleanup = (e) => {
-                if (e.propertyName === 'transform' || e.propertyName === 'width') {
-                    if (this.webglRenderer) this.webglRenderer.render();
-                    sidebar.removeEventListener('transitionend', cleanup);
+                if (e.propertyName !== 'transform' && e.propertyName !== 'width') return;
+                if (finalized) return;
+                finalized = true;
+                sidebar.removeEventListener('transitionend', cleanup);
+                document.body.classList.remove('mode-transitioning');
+                layoutManager.refreshAll();
+                if (this.webglRenderer) {
+                    this.webglRenderer.layoutHistory.clear();
+                    this.webglRenderer.render();
                 }
             };
             sidebar.addEventListener('transitionend', cleanup);
+            // Safety timeout
+            setTimeout(() => {
+                if (!finalized) {
+                    finalized = true;
+                    sidebar.removeEventListener('transitionend', cleanup);
+                    document.body.classList.remove('mode-transitioning');
+                    layoutManager.refreshAll();
+                    if (this.webglRenderer) {
+                        this.webglRenderer.layoutHistory.clear();
+                        this.webglRenderer.render();
+                    }
+                }
+            }, 600);
         }
     }
 

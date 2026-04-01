@@ -587,7 +587,8 @@ body[class*="theme-aurora"] .calc-btn {
 
 /* WebGL Underlay Transparency (REQ-WGL-03) */
 body.webgl-active .right-panel,
-body.webgl-active .calc-card {
+body.webgl-active .calc-card,
+body.webgl-active .calc-display {
     background-color: color-mix(in srgb, var(--panel-bg) 65%, transparent);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
@@ -1183,8 +1184,8 @@ body.scientific-mode .left-panel {
     flex: 0 0 0px;
     min-width: 0;
     max-width: 0;
-    padding: 0 !important;
-    margin: 0 !important;
+    padding: 0;
+    margin: 0;
     overflow: hidden;
     pointer-events: none;
     transform: translateX(-120px) scale(0.95);
@@ -1997,6 +1998,37 @@ body.dark-theme .about-modal-inner::-webkit-scrollbar-thumb {
     background: var(--close-btn-bg);
     color: var(--text-secondary);
     cursor: pointer;
+}
+
+/* --- WebGL Parity Testing Modes (REQ-VER-01) --- */
+.ghost-mode .left-panel,
+.ghost-mode .right-panel,
+.ghost-mode .header-row,
+.ghost-mode .calc-card,
+.ghost-mode .math-row,
+.ghost-mode .calc-display,
+.ghost-mode .calc-keypad,
+.ghost-mode .theme-picker,
+.ghost-mode .mobile-panel-fab,
+.ghost-mode .about-fab {
+    opacity: 0 !important;
+    pointer-events: auto !important;
+}
+
+/* Support for Split-View: Canvas covers left half, DOM covers right half */
+body.parity-split-view #webgl-underlay {
+    width: 50vw !important;
+    clip-path: inset(0 0 0 0);
+}
+
+body.parity-split-view .layout-container {
+    clip-path: inset(0 0 0 50%);
+}
+
+#webgl-underlay {
+    transition: width 0.3s var(--ease), z-index 0.3s var(--ease), opacity 0.3s var(--ease);
+}
+
     display: flex;
     align-items: center;
     justify-content: center;
