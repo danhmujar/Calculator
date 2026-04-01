@@ -55,4 +55,34 @@ test.describe('Shader Infrastructure', () => {
         expect(vertSource).toContain('gl_Position = vec4(clipSpace.x, -clipSpace.y, 0, 1)');
         expect(vertSource).toContain('pixelPos = a_position * u_rectSize + u_offset');
     });
+
+    test('All shaders implement GlobalState UBO block', async ({ page }) => {
+        const result = await page.evaluate(async () => {
+            const { ShaderManager, PRIMITIVE_VERT, PRIMITIVE_FRAG, BATCH_VERT, BATCH_FRAG } = await import('/Calculator/ui/webgl/shaders.js');
+            const canvas = document.createElement('canvas');
+            const gl = canvas.getContext('webgl2');
+            if (!gl) return { error: 'WebGL 2.0 not available' };
+
+            const programs = [
+                ShaderManager.createProgram(gl, PRIMITIVE_VERT, PRIMITIVE_FRAG),
+                ShaderManager.createProgram(gl, BATCH_VERT, BATCH_FRAG)
+            ];
+
+            const blockName = 'GlobalState';
+            return programs.map(prog => {
+                const index = gl.getUniformBlockIndex(prog, blockName);
+                return {
+                    name: prog.label || 'program',
+                    hasBlock: index !== gl.INVALID_INDEX,
+                    index: index
+                };
+            });
+        });
+
+        expect(result).toHaveLength(2);
+        result.forEach(prog => {
+            expect(prog.hasBlock).toBe(true);
+            expect(prog.index).toBeGreaterThanOrEqual(0);
+        });
+    });
 });
