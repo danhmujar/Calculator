@@ -171,13 +171,15 @@ ${GLOBAL_STATE_BLOCK}
 layout(location = 0) in vec2 a_position;
 layout(location = 1) in vec2 a_texCoord;
 
-// Instanced attributes
-layout(location = 2) in vec2 a_instPos;
-layout(location = 3) in vec2 a_instSize;
-layout(location = 4) in vec4 a_instUV;
-layout(location = 5) in vec4 a_instColor;
-layout(location = 6) in float a_instType;
-layout(location = 7) in float a_instRadius;
+// Instanced attributes for GPU-side animation interpolation
+layout(location = 2) in vec4 a_startRect;   // [x, y, w, h] at t=0
+layout(location = 3) in vec4 a_endRect;     // [x, y, w, h] at t=1
+layout(location = 4) in vec4 a_startColor;  // [r, g, b, a] at t=0
+layout(location = 5) in vec4 a_endColor;    // [r, g, b, a] at t=1
+layout(location = 6) in vec4 a_instUV;      // [u, v, tw, th]
+layout(location = 7) in vec2 a_transition;  // [startTime, duration]
+layout(location = 8) in float a_instType;   // 0=Rect, 1=Text
+layout(location = 9) in float a_instRadius; // corner radius
 
 out vec2 v_texCoord;
 out vec2 v_instSize;
@@ -186,8 +188,28 @@ out vec4 v_instColor;
 out float v_instType;
 out float v_instRadius;
 
+float quadraticOut(float t) {
+    return t * (2.0 - t);
+}
+
 void main() {
-    vec2 pixelPos = a_position * a_instSize + a_instPos;
+    float startTime = a_transition.x;
+    float duration = a_transition.y;
+    
+    // Calculate normalized time [0, 1]
+    float t = duration > 0.0 ? clamp((u_time - startTime) / duration, 0.0, 1.0) : 1.0;
+    
+    // Apply easing (Quadratic Out)
+    float easedT = quadraticOut(t);
+    
+    // Interpolate rect and color on the GPU
+    vec4 rect = mix(a_startRect, a_endRect, easedT);
+    vec4 color = mix(a_startColor, a_endColor, easedT);
+    
+    vec2 instPos = rect.xy;
+    vec2 instSize = rect.zw;
+    
+    vec2 pixelPos = a_position * instSize + instPos;
     vec2 zeroToOne = pixelPos / u_resolution;
     vec2 zeroToTwo = zeroToOne * 2.0;
     vec2 clipSpace = zeroToTwo - 1.0;
@@ -196,9 +218,9 @@ void main() {
     gl_Position = vec4(clipSpace.x, -clipSpace.y, 0, 1);
     
     v_texCoord = a_texCoord;
-    v_instSize = a_instSize;
+    v_instSize = instSize;
     v_instUV = a_instUV;
-    v_instColor = a_instColor;
+    v_instColor = color;
     v_instType = a_instType;
     v_instRadius = a_instRadius;
 }

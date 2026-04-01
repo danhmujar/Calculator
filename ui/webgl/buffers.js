@@ -112,10 +112,18 @@ export class BufferManager {
         gl.bindBuffer(gl.ARRAY_BUFFER, instanceVbo);
         
         /**
-         * Instance Interleaved Format (14 floats total):
-         * [pos.x, pos.y, size.w, size.h, uv.u, uv.v, uv.tw, uv.th, col.r, col.g, col.b, col.a, type, radius]
+         * Instance Interleaved Format (24 floats total):
+         * [
+         *   startRect.x, startRect.y, startRect.w, startRect.h, (4)
+         *   endRect.x, endRect.y, endRect.w, endRect.h,         (4)
+         *   startCol.r, startCol.g, startCol.b, startCol.a,     (4)
+         *   endCol.r, endCol.g, endCol.b, endCol.a,             (4)
+         *   uv.u, uv.v, uv.tw, uv.th,                           (4)
+         *   startTime, duration,                                (2)
+         *   type, radius                                        (2)
+         * ]
          */
-        const stride = 14 * 4; 
+        const stride = 24 * 4; 
         gl.bufferData(gl.ARRAY_BUFFER, maxInstances * stride, gl.DYNAMIC_DRAW);
 
         // Helper to setup instanced attributes
@@ -125,12 +133,14 @@ export class BufferManager {
             gl.vertexAttribDivisor(index, 1); // Crucial: advance once per instance
         };
 
-        setupInstancedAttr(2, 2, 0);  // a_instPos
-        setupInstancedAttr(3, 2, 2);  // a_instSize
-        setupInstancedAttr(4, 4, 4);  // a_instUV
-        setupInstancedAttr(5, 4, 8);  // a_instColor
-        setupInstancedAttr(6, 1, 12); // a_instType
-        setupInstancedAttr(7, 1, 13); // a_instRadius
+        setupInstancedAttr(2, 4, 0);  // a_startRect
+        setupInstancedAttr(3, 4, 4);  // a_endRect
+        setupInstancedAttr(4, 4, 8);  // a_startColor
+        setupInstancedAttr(5, 4, 12); // a_endColor
+        setupInstancedAttr(6, 4, 16); // a_instUV
+        setupInstancedAttr(7, 2, 20); // a_transition
+        setupInstancedAttr(8, 1, 22); // a_instType
+        setupInstancedAttr(9, 1, 23); // a_instRadius
 
         gl.bindVertexArray(null);
         gl.bindBuffer(gl.ARRAY_BUFFER, null);
