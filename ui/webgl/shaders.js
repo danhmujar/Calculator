@@ -95,13 +95,26 @@ export class ShaderManager {
 }
 
 /**
+ * Global Uniform Block for shared state (std140 layout)
+ */
+export const GLOBAL_STATE_BLOCK = `
+layout(std140) uniform GlobalState {
+    vec2 u_resolution;
+    float u_time;
+    float u_dpr;
+    vec2 u_scroll;
+};
+`;
+
+/**
  * Standard Primitive Vertex Shader Source (Raw GLSL 3.00 ES)
  */
 export const PRIMITIVE_VERT = `#version 300 es
+${GLOBAL_STATE_BLOCK}
+
 layout(location = 0) in vec2 a_position;
 layout(location = 1) in vec2 a_texCoord;
 
-uniform vec2 u_resolution;
 uniform vec2 u_rectSize;
 uniform vec2 u_offset;
 
@@ -123,6 +136,7 @@ void main() {
  */
 export const PRIMITIVE_FRAG = `#version 300 es
 precision highp float;
+${GLOBAL_STATE_BLOCK}
 
 uniform vec2 u_rectSize;
 uniform float u_radius;
@@ -152,6 +166,8 @@ void main() {
  * Unified Batch Vertex Shader Source (Raw GLSL 3.00 ES)
  */
 export const BATCH_VERT = `#version 300 es
+${GLOBAL_STATE_BLOCK}
+
 layout(location = 0) in vec2 a_position;
 layout(location = 1) in vec2 a_texCoord;
 
@@ -162,8 +178,6 @@ layout(location = 4) in vec4 a_instUV;
 layout(location = 5) in vec4 a_instColor;
 layout(location = 6) in float a_instType;
 layout(location = 7) in float a_instRadius;
-
-uniform vec2 u_resolution;
 
 out vec2 v_texCoord;
 out vec2 v_instSize;
@@ -196,6 +210,7 @@ void main() {
  */
 export const BATCH_FRAG = `#version 300 es
 precision highp float;
+${GLOBAL_STATE_BLOCK}
 
 uniform sampler2D u_atlas;
 
