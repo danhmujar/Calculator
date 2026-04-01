@@ -131,4 +131,57 @@ test.describe('Performance: Eye Tracking Hardware Acceleration', () => {
         expect(result.hasC).toBe(true);
         expect(result.hasD).toBe(true);
     });
+
+    test('Performance 3: WebGL Batch Rendering with 100+ Scientific Rows', async ({ page }) => {
+        test.setTimeout(60000); // Higher timeout for 100-row injection
+
+        // Switch to scientific mode
+        await page.click('#btn-mode-sci');
+        
+        // Enable WebGL mode via evaluate to bypass viewport/visibility checks in test env
+        await page.evaluate(() => {
+            const cb = document.getElementById('webgl-checkbox');
+            if (cb) {
+                cb.checked = true;
+                cb.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        });
+
+        // Inject 100 rows
+        await page.evaluate(async () => {
+            for (let i = 0; i < 100; i++) {
+                const addBtn = document.getElementById('add-math-btn');
+                if (addBtn) addBtn.click();
+            }
+        });
+
+        // Wait for rows to animate in
+        await page.waitForTimeout(3000);
+
+        // Measure frame rate during scroll
+        const fps = await page.evaluate(async () => {
+            let frames = 0;
+            const start = performance.now();
+            const sciContainer = document.getElementById('sci-container');
+            
+            return new Promise((resolve) => {
+                const countFrame = () => {
+                    frames++;
+                    if (performance.now() - start < 1000) {
+                        if (sciContainer) sciContainer.scrollTop += 15;
+                        requestAnimationFrame(countFrame);
+                    } else {
+                        resolve(frames);
+                    }
+                };
+                requestAnimationFrame(countFrame);
+            });
+        });
+
+        console.log('WebGL FPS with 100 rows:', fps);
+        expect(fps).toBeGreaterThan(10); 
+        
+        const isWebGLActive = await page.evaluate(() => document.body.classList.contains('webgl-active'));
+        expect(isWebGLActive).toBe(true);
+    });
 });

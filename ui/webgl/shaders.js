@@ -141,7 +141,7 @@ void main() {
     vec2 b = u_rectSize * 0.5;
     float r = min(u_radius, min(b.x, b.y));
     float d = sdRoundedBox(p, b, r);
-    float edge = fwidth(d);
+    float edge = fwidth(d) * 0.5;
     float alpha = 1.0 - smoothstep(-edge, edge, d);
     if (alpha <= 0.0) discard;
     outColor = vec4(u_color.rgb, u_color.a * alpha);
@@ -220,7 +220,7 @@ void main() {
         vec2 b = v_instSize * 0.5;
         float r = min(v_instRadius, min(b.x, b.y));
         float d = sdRoundedBox(p, b, r);
-        float edge = fwidth(d);
+        float edge = fwidth(d) * 0.5;
         float alpha = 1.0 - smoothstep(-edge, edge, d);
         if (alpha <= 0.0) discard;
         outColor = vec4(v_instColor.rgb, v_instColor.a * alpha);

@@ -255,53 +255,117 @@ export class WebGLRenderer {
     render() {
         if (!this.initialized) return;
 
+        // Clear with transparency for underlay pattern
         this.context.clear([0, 0, 0, 0]);
 
-        // Dynamically detect active UI target
-        const displayEl = this.getActiveDisplayElement();
-        if (displayEl) {
-            const rect = displayEl.getBoundingClientRect();
-            
-            // Skip rendering if element is hidden or zero-sized
-            if (rect.width === 0 || rect.height === 0) {
-                this.flush();
-                return;
-            }
+        // Guard: Only render if WebGL mode is active in the DOM
+        if (!document.body.classList.contains('webgl-active')) {
+            this.flush();
+            return;
+        }
 
-            // Skip if element is clearly off-screen (sidebar fully closed)
-            // Use a small buffer to ensure visibility during the very end of transitions
-            if (rect.right < -10 || rect.left > window.innerWidth + 10) {
-                this.flush();
-                return;
-            }
-            
-            // Draw background highlight using the batch pipeline
-            this.pushRect({
-                x: rect.left - 8,
-                y: rect.top - 8,
-                width: rect.width + 16,
-                height: rect.height + 16
-            }, [
-                this.themeColors.primary[0],
-                this.themeColors.primary[1],
-                this.themeColors.primary[2],
-                0.15
-            ], 16);
-            
-            // Demonstrate text batching (Verification)
-            // Position symbols at the vertical center of the detected area
-            // Perfect Glyph Handling: Sigma (Left Anchor) and Pi (Right Anchor)
-            // Added 8px extra offset for better framing without overlapping expressions
-            const centerY = rect.top + rect.height / 2;
-            const sigmaX = rect.left + 32;
-            const piX = rect.right - 48;
-            
-            this.pushGlyph('Σ', 'bold 48px Inter', sigmaX, centerY, this.themeColors.primary, 24);
-            this.pushGlyph('π', 'bold 48px Inter', piX, centerY, this.themeColors.primary, 24);
+        const isScientific = document.body.classList.contains('scientific-mode');
+        
+        if (isScientific) {
+            this.renderScientificMode();
+        } else {
+            this.renderStandardMode();
         }
 
         // Single flush for all UI elements
         this.flush();
+    }
+
+    /**
+     * Renders WebGL highlights and decorative elements for the scientific rows.
+     */
+    renderScientificMode() {
+        const rows = document.querySelectorAll('.math-row');
+        const viewportHeight = window.innerHeight;
+
+        rows.forEach(row => {
+            const rect = row.getBoundingClientRect();
+            
+            // CPU-level Frustum Culling (REQ-PERF-01)
+            // Skip rows that are completely off-screen to save draw calls and atlas lookups
+            if (rect.bottom < 0 || rect.top > viewportHeight) {
+                return;
+            }
+
+            // Draw a subtle background highlight for each visible row
+            this.pushRect({
+                x: rect.left + 8,
+                y: rect.top + 4,
+                width: rect.width - 16,
+                height: rect.height - 8
+            }, [
+                this.themeColors.primary[0],
+                this.themeColors.primary[1],
+                this.themeColors.primary[2],
+                0.05 // Very subtle row highlight
+            ], 8);
+
+            // Render row decoration (e.g., a "Math" indicator or index)
+            // Positioned at the far left of the row
+            const centerY = rect.top + rect.height / 2;
+            const indicatorX = rect.left + 24;
+            
+            this.pushGlyph('ƒ', 'italic 48px Inter', indicatorX, centerY, this.themeColors.primary, 18);
+            
+            // If the row contains a result, highlight it
+            const resultEl = row.querySelector('.math-result');
+            if (resultEl && resultEl.textContent.trim() !== '=') {
+                const resRect = resultEl.getBoundingClientRect();
+                this.pushRect({
+                    x: resRect.left - 4,
+                    y: resRect.top - 2,
+                    width: resRect.width + 8,
+                    height: resRect.height + 4
+                }, [
+                    this.themeColors.primary[0],
+                    this.themeColors.primary[1],
+                    this.themeColors.primary[2],
+                    0.12
+                ], 4);
+            }
+        });
+    }
+
+    /**
+     * Renders WebGL elements for the standard calculator display.
+     */
+    renderStandardMode() {
+        const displayEl = this.getActiveDisplayElement();
+        if (!displayEl) return;
+
+        const rect = displayEl.getBoundingClientRect();
+        
+        // Skip rendering if element is hidden or zero-sized
+        if (rect.width === 0 || rect.height === 0) return;
+
+        // Skip if element is clearly off-screen (sidebar fully closed)
+        if (rect.right < -10 || rect.left > window.innerWidth + 10) return;
+        
+        // Draw background highlight (Hugging Pattern)
+        this.pushRect({
+            x: rect.left - 12,
+            y: rect.top - 8,
+            width: rect.width + 24,
+            height: rect.height + 16
+        }, [
+            this.themeColors.primary[0],
+            this.themeColors.primary[1],
+            this.themeColors.primary[2],
+            0.15
+        ], 16);
+        
+        // Position Sigma and Pi symbols at the vertical center of the detected area
+        const centerY = rect.top + rect.height / 2;
+        const sigmaX = rect.left + 32;
+        const piX = rect.right - 48;
+        
+        this.pushGlyph('Σ', 'bold 48px Inter', sigmaX, centerY, this.themeColors.primary, 24);
+        this.pushGlyph('π', 'bold 48px Inter', piX, centerY, this.themeColors.primary, 24);
     }
 }
 

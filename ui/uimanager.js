@@ -196,6 +196,14 @@ export class UIManager {
                     this.webglRenderer.render();
                 }
             });
+
+            // Synchronize WebGL with scientific scroll (REQ-WGL-05)
+            const sciContainer = document.getElementById('sci-container');
+            if (sciContainer) {
+                sciContainer.addEventListener('scroll', () => {
+                    if (this.webglRenderer) this.webglRenderer.render();
+                }, { passive: true });
+            }
         }
 
         this.setupEntranceAnimations();
@@ -982,16 +990,20 @@ export class UIManager {
             row.style.maxHeight = row.scrollHeight + 'px';
             row.classList.remove('row-enter');
 
-            row.addEventListener('transitionend', function handler(e) {
+            row.addEventListener('transitionend', (e) => {
                 if (e.propertyName === 'max-height') {
                     row.style.maxHeight = '';
-                    row.removeEventListener('transitionend', handler);
+                    // Final sync after transition ends
+                    if (this.webglRenderer) this.webglRenderer.render();
                 }
             }, { once: true });
 
             if (row.scrollHeight === 0) {
                 row.style.maxHeight = '';
             }
+
+            // Sync during entry animation
+            if (this.webglRenderer) this.webglRenderer.render();
         });
 
         const resEl = document.getElementById(uniqueId);
@@ -1082,6 +1094,10 @@ export class UIManager {
                 resEl.textContent = '= ' + this.proFormatter.format(calculated);
             } else {
                 resEl.textContent = '= ';
+            }
+
+            if (this.webglRenderer) {
+                this.webglRenderer.render();
             }
         });
     }
