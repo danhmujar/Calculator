@@ -1,4 +1,5 @@
 import { store } from '../services/store.js';
+import { layoutManager } from '../services/layout.js';
 import { renderer } from './renderer.js';
 import { CalculatorService } from '../services/calculator.js';
 import { WebGLContext } from './webgl/context.js';
@@ -179,6 +180,19 @@ export class UIManager {
         this.previewEl = document.getElementById('main-calc-prev');
         this.auditList = document.getElementById('audit-list');
         this.memoryIndicatorEl = document.getElementById('memory-indicator');
+
+        // Observe main UI elements for layout changes
+        layoutManager.observe(this.displayEl, 'main-calc-display');
+        layoutManager.observe(this.previewEl, 'main-calc-prev');
+        layoutManager.observe(this.memoryIndicatorEl, 'memory-indicator');
+        
+        // Observe all calculator buttons
+        document.querySelectorAll('.btn, .icon-btn').forEach((btn) => {
+            const id = btn.id || btn.getAttribute('aria-label') || btn.title;
+            if (id) {
+                layoutManager.observe(btn, `btn-${id.replace(/\s+/g, '-').toLowerCase()}`);
+            }
+        });
 
         // Pre-configure MathLive fonts if available or for when it loads
         if (window.MathfieldElement) {
@@ -503,6 +517,7 @@ export class UIManager {
         container.className = 'calc-row-instance';
 
         const uniqueId = 'res-' + crypto.randomUUID().slice(0, 8);
+        layoutManager.observe(container, `row-${uniqueId}`);
 
         const templateContainer = document.createElement('div');
         templateContainer.className = 'row-template-content';
@@ -979,6 +994,7 @@ export class UIManager {
         row.className = 'math-row';
 
         const uniqueId = 'math-res-' + crypto.randomUUID().slice(0, 8);
+        layoutManager.observe(row, `math-row-${uniqueId}`);
         const mf = this.createMathField();
 
         // Use mount event for stable restoration as per Phase 06 Research
