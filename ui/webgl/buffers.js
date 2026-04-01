@@ -165,6 +165,36 @@ export class BufferManager {
         
         gl.bindBuffer(gl.ARRAY_BUFFER, null);
     }
+
+    /**
+     * Creates a Uniform Buffer Object (UBO).
+     * 
+     * @param {WebGL2RenderingContext} gl 
+     * @param {number} size - Size in bytes
+     * @param {number} bindingPoint - The uniform block binding point
+     * @returns {WebGLBuffer}
+     */
+    static createUBO(gl, size, bindingPoint) {
+        const ubo = gl.createBuffer();
+        gl.bindBuffer(gl.UNIFORM_BUFFER, ubo);
+        gl.bufferData(gl.UNIFORM_BUFFER, size, gl.DYNAMIC_DRAW);
+        gl.bindBufferBase(gl.UNIFORM_BUFFER, bindingPoint, ubo);
+        gl.bindBuffer(gl.UNIFORM_BUFFER, null);
+        return ubo;
+    }
+
+    /**
+     * Updates a UBO with new data.
+     * 
+     * @param {WebGL2RenderingContext} gl 
+     * @param {WebGLBuffer} ubo 
+     * @param {Float32Array} data 
+     */
+    static updateUBO(gl, ubo, data) {
+        gl.bindBuffer(gl.UNIFORM_BUFFER, ubo);
+        gl.bufferSubData(gl.UNIFORM_BUFFER, 0, data);
+        gl.bindBuffer(gl.UNIFORM_BUFFER, null);
+    }
     
     /**
      * Releases WebGL resources associated with a buffer object.
