@@ -178,7 +178,8 @@ const defaultState = {
         memoryValue: 0,
         activeRowIndex: -1,
         selection: null,
-        focusState: null
+        focusState: null,
+        layout: {}
     }
 };
 
