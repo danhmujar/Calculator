@@ -71,4 +71,40 @@ test.describe('WebGL Rendering Engine', () => {
         expect(layoutInfo.zIndex).toBe('-1');
         expect(layoutInfo.pointerEvents).toBe('none');
     });
+
+    test('WebGL viewport resizes with the window', async ({ page }) => {
+        const initialSize = await page.evaluate(() => {
+            const canvas = document.getElementById('webgl-underlay');
+            return { width: canvas.width, height: canvas.height, dpr: window.devicePixelRatio };
+        });
+
+        // Resize the viewport
+        const newWidth = 800;
+        const newHeight = 600;
+        await page.setViewportSize({ width: newWidth, height: newHeight });
+
+        // Wait a frame for resize handler to fire
+        await page.evaluate(() => new Promise(requestAnimationFrame));
+
+        const resizedSize = await page.evaluate(() => {
+            const canvas = document.getElementById('webgl-underlay');
+            return { width: canvas.width, height: canvas.height, dpr: window.devicePixelRatio };
+        });
+
+        expect(resizedSize.width).toBe(Math.floor(newWidth * resizedSize.dpr));
+        expect(resizedSize.height).toBe(Math.floor(newHeight * resizedSize.dpr));
+    });
+
+    test('UI interactivity is preserved (pointer-events pass through)', async ({ page }) => {
+        // Find a button, e.g., "7"
+        const button7 = page.locator('button:has-text("7")');
+        await expect(button7).toBeVisible();
+
+        // Click it
+        await button7.click();
+
+        // Verify the display updates
+        const display = page.locator('#main-calc-display');
+        await expect(display).toHaveText('7');
+    });
 });
