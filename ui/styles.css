@@ -2015,20 +2015,13 @@ body.dark-theme .about-modal-inner::-webkit-scrollbar-thumb {
     pointer-events: auto !important;
 }
 
-/* Support for Split-View: Canvas covers left half, DOM covers right half */
-body.parity-split-view #webgl-underlay {
-    width: 50vw !important;
-    clip-path: inset(0 0 0 0);
-}
 
-body.parity-split-view .layout-container {
-    clip-path: inset(0 0 0 50%);
-}
 
 #webgl-underlay {
     transition: width 0.3s var(--ease), z-index 0.3s var(--ease), opacity 0.3s var(--ease);
 }
 
+.about-close-x {
     display: flex;
     align-items: center;
     justify-content: center;
