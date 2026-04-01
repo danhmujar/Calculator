@@ -180,6 +180,14 @@ export class UIManager {
         this.auditList = document.getElementById('audit-list');
         this.memoryIndicatorEl = document.getElementById('memory-indicator');
 
+        // Pre-configure MathLive fonts if available or for when it loads
+        if (window.MathfieldElement) {
+            window.MathfieldElement.fontsDirectory = '/Calculator/fonts/';
+        } else {
+            // Define a placeholder or wait for it if needed, but usually activateScientificMode handles it.
+            // Setting it on the prototype if we can or just ensuring the first load gets it.
+        }
+
         // Initialize WebGL Underlay (REQ-WGL-01)
         this.webgl = new WebGLContext();
         this.webglRenderer = new WebGLRenderer(this.webgl);
@@ -909,14 +917,17 @@ export class UIManager {
         if (!window.MathfieldElement) {
             this.showToast('Loading Scientific Engine...');
             try {
-                const { MathfieldElement } = await import('mathlive');
-                MathfieldElement.fontsDirectory = './fonts/';
+                await import('mathlive');
                 await customElements.whenDefined('math-field');
             } catch (err) {
                 console.error('Failed to load MathLive', err);
                 this.showToast('Error loading scientific engine');
                 return;
             }
+        }
+
+        if (window.MathfieldElement) {
+            window.MathfieldElement.fontsDirectory = '/Calculator/fonts/';
         }
 
         if (leftPanel) void leftPanel.offsetWidth;

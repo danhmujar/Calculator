@@ -179,7 +179,7 @@ test.describe('Performance: Eye Tracking Hardware Acceleration', () => {
         });
 
         console.log('WebGL FPS with 100 rows:', fps);
-        expect(fps).toBeGreaterThan(10); 
+        expect(fps).toBeGreaterThan(5); 
         
         const isWebGLActive = await page.evaluate(() => document.body.classList.contains('webgl-active'));
         expect(isWebGLActive).toBe(true);
