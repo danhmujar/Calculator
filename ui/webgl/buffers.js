@@ -80,6 +80,91 @@ export class BufferManager {
         
         gl.bindBuffer(gl.ARRAY_BUFFER, null);
     }
+
+    /**
+     * Creates a specialized VAO for instanced batch rendering.
+     * Combines static unit quad geometry with a dynamic buffer for instance attributes.
+     * 
+     * @param {WebGL2RenderingContext} gl 
+     * @param {number[]} quadData - Interleaved unit quad data [x, y, u, v]
+     * @param {number} maxInstances - Initial capacity for the instance buffer
+     * @returns {Object} Metadata containing vao, quadVbo, and instanceVbo
+     */
+    static createInstancedVAO(gl, quadData, maxInstances = 2048) {
+        const vao = gl.createVertexArray();
+        gl.bindVertexArray(vao);
+
+        // 1. Static Unit Quad (Geometry)
+        const quadVbo = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, quadVbo);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(quadData), gl.STATIC_DRAW);
+
+        // a_position (loc 0) - Unit space [0,1]
+        gl.enableVertexAttribArray(0);
+        gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 4 * 4, 0);
+        
+        // a_texCoord (loc 1) - Unit space [0,1]
+        gl.enableVertexAttribArray(1);
+        gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 4 * 4, 2 * 4);
+
+        // 2. Dynamic Instance Data (Per-Instance Attributes)
+        const instanceVbo = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, instanceVbo);
+        
+        /**
+         * Instance Interleaved Format (14 floats total):
+         * [pos.x, pos.y, size.w, size.h, uv.u, uv.v, uv.tw, uv.th, col.r, col.g, col.b, col.a, type, radius]
+         */
+        const stride = 14 * 4; 
+        gl.bufferData(gl.ARRAY_BUFFER, maxInstances * stride, gl.DYNAMIC_DRAW);
+
+        // Helper to setup instanced attributes
+        const setupInstancedAttr = (index, size, offset) => {
+            gl.enableVertexAttribArray(index);
+            gl.vertexAttribPointer(index, size, gl.FLOAT, false, stride, offset * 4);
+            gl.vertexAttribDivisor(index, 1); // Crucial: advance once per instance
+        };
+
+        setupInstancedAttr(2, 2, 0);  // a_instPos
+        setupInstancedAttr(3, 2, 2);  // a_instSize
+        setupInstancedAttr(4, 4, 4);  // a_instUV
+        setupInstancedAttr(5, 4, 8);  // a_instColor
+        setupInstancedAttr(6, 1, 12); // a_instType
+        setupInstancedAttr(7, 1, 13); // a_instRadius
+
+        gl.bindVertexArray(null);
+        gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+        return {
+            vao,
+            quadVbo,
+            instanceVbo,
+            stride,
+            maxInstances
+        };
+    }
+
+    /**
+     * Updates the instance buffer using Buffer Orphaning to avoid GPU stalls.
+     * 
+     * @param {WebGL2RenderingContext} gl 
+     * @param {WebGLBuffer} instanceVbo 
+     * @param {Float32Array} data - The raw instance data to upload
+     */
+    static updateInstanceBuffer(gl, instanceVbo, data) {
+        gl.bindBuffer(gl.ARRAY_BUFFER, instanceVbo);
+        
+        /**
+         * Buffer Orphaning:
+         * We pass the full size of the buffer with null data to tell the driver
+         * to give us a fresh memory block if the current one is still being
+         * used by the GPU. This prevents CPU-GPU sync stalls.
+         */
+        gl.bufferData(gl.ARRAY_BUFFER, data.byteLength, gl.DYNAMIC_DRAW);
+        gl.bufferSubData(gl.ARRAY_BUFFER, 0, data);
+        
+        gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    }
     
     /**
      * Releases WebGL resources associated with a buffer object.
