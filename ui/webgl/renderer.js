@@ -33,6 +33,10 @@ export class WebGLRenderer {
         this.instanceData = new Float32Array(this.maxInstances * 14);
         this.instanceCount = 0;
         
+        // Global UBO state
+        this.globalUBO = null;
+        this.globalData = new Float32Array(8); // std140: 32 bytes aligned (8 floats)
+        
         this.initialized = false;
         
         /**
@@ -81,13 +85,25 @@ export class WebGLRenderer {
             this.batchProgram = ShaderManager.createProgram(gl, BATCH_VERT, BATCH_FRAG);
             this.batchVAO = BufferManager.createInstancedVAO(gl, this.quadData, this.maxInstances);
             this.atlas = new TextureAtlas(gl);
+
+            // 1. Setup Global UBO (32 bytes for std140 layout)
+            this.globalUBO = BufferManager.createUBO(gl, 32, 0);
+
+            // 2. Link programs to GlobalState uniform block at binding point 0
+            const blockName = 'GlobalState';
+            [this.program, this.batchProgram].forEach(prog => {
+                const index = gl.getUniformBlockIndex(prog, blockName);
+                if (index !== gl.INVALID_INDEX) {
+                    gl.uniformBlockBinding(prog, index, 0);
+                }
+            });
             
             // Enable alpha blending for the underlay pattern
             gl.enable(gl.BLEND);
             gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
             this.initialized = true;
-            console.info('WebGLRenderer: Batch rendering pipeline initialized.');
+            console.info('WebGLRenderer: Batch rendering pipeline initialized with Global UBO.');
         } catch (error) {
             console.error('WebGLRenderer: Pipeline initialization failed:', error);
             this.initialized = false;
@@ -190,9 +206,8 @@ export class WebGLRenderer {
         const gl = this.gl;
         gl.useProgram(this.batchProgram);
 
-        // Update global uniforms
+        // Update remaining dynamic uniforms
         ShaderManager.setUniforms(gl, this.batchProgram, {
-            u_resolution: [gl.canvas.width, gl.canvas.height],
             u_atlas: 0
         });
 
@@ -255,6 +270,19 @@ export class WebGLRenderer {
      */
     render() {
         if (!this.initialized) return;
+
+        const gl = this.gl;
+
+        // 1. Update Global UBO once per frame (std140 layout)
+        // [res.x, res.y, time, dpr, scroll.x, scroll.y, pad, pad]
+        this.globalData[0] = gl.canvas.width;
+        this.globalData[1] = gl.canvas.height;
+        this.globalData[2] = performance.now() / 1000.0;
+        this.globalData[3] = window.devicePixelRatio || 1;
+        this.globalData[4] = window.scrollX || 0;
+        this.globalData[5] = window.scrollY || 0;
+        
+        BufferManager.updateUBO(gl, this.globalUBO, this.globalData);
 
         // Clear with transparency for underlay pattern
         this.context.clear([0, 0, 0, 0]);
