@@ -6,15 +6,16 @@ export class WebGLContext {
     constructor() {
         this.canvas = document.createElement('canvas');
         this.canvas.id = 'webgl-underlay';
+        this.onRestored = null;
         
         // Attributes optimized for 2D UI underlay rendering
         const attributes = {
-            alpha: false,
+            alpha: true,
             antialias: true,
             depth: false,
             stencil: false,
             premultipliedAlpha: false,
-            preserveDrawingBuffer: false
+            preserveDrawingBuffer: true
         };
 
         this.gl = this.canvas.getContext('webgl2', attributes);
@@ -57,6 +58,7 @@ export class WebGLContext {
         this.canvas.addEventListener('webglcontextrestored', () => {
             console.info('WebGL context restored.');
             this.resize();
+            if (this.onRestored) this.onRestored();
         }, false);
     }
 

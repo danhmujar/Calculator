@@ -42,6 +42,13 @@ export class WebGLRenderer {
             1, 1, 1, 1  // Top-right
         ];
 
+        // Register for context restoration
+        this.context.onRestored = () => {
+            console.info('WebGLRenderer: Context restored, re-initializing pipeline...');
+            this.init();
+            this.render();
+        };
+
         this.init();
     }
 
@@ -52,6 +59,11 @@ export class WebGLRenderer {
         try {
             this.program = ShaderManager.createProgram(this.gl, PRIMITIVE_VERT, PRIMITIVE_FRAG);
             this.unitQuad = BufferManager.createVAO(this.gl, this.quadData, this.gl.STATIC_DRAW);
+            
+            // Enable alpha blending for the underlay pattern
+            this.gl.enable(this.gl.BLEND);
+            this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA);
+
             this.initialized = true;
             console.info('WebGLRenderer: Primitive rendering pipeline initialized.');
         } catch (error) {
