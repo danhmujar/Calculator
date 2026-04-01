@@ -22,20 +22,21 @@ export class WebGLRenderer {
         this.gl = webglContext.gl;
         
         // Pipeline state
-        this.program = null;
-        this.unitQuad = null;
         this.batchProgram = null;
         this.batchVAO = null;
         this.atlas = null;
         
         // Batch configuration
         this.maxInstances = 2048;
-        this.instanceData = new Float32Array(this.maxInstances * 14);
+        this.instanceData = new Float32Array(this.maxInstances * 24);
         this.instanceCount = 0;
         
         // Global UBO state
         this.globalUBO = null;
         this.globalData = new Float32Array(8); // std140: 32 bytes aligned (8 floats)
+        
+        // Layout history for interpolation (id -> { startRect, endRect, startColor, endColor, startTime, duration })
+        this.layoutHistory = new Map();
         
         this.initialized = false;
         
@@ -77,11 +78,7 @@ export class WebGLRenderer {
         try {
             const gl = this.gl;
             
-            // Legacy single-rect pipeline (kept for compatibility)
-            this.program = ShaderManager.createProgram(gl, PRIMITIVE_VERT, PRIMITIVE_FRAG);
-            this.unitQuad = BufferManager.createVAO(gl, this.quadData, gl.STATIC_DRAW);
-            
-            // New Batch pipeline
+            // Batch rendering pipeline (Unified primitives & text)
             this.batchProgram = ShaderManager.createProgram(gl, BATCH_VERT, BATCH_FRAG);
             this.batchVAO = BufferManager.createInstancedVAO(gl, this.quadData, this.maxInstances);
             this.atlas = new TextureAtlas(gl);
@@ -89,25 +86,87 @@ export class WebGLRenderer {
             // 1. Setup Global UBO (32 bytes for std140 layout)
             this.globalUBO = BufferManager.createUBO(gl, 32, 0);
 
-            // 2. Link programs to GlobalState uniform block at binding point 0
+            // 2. Link program to GlobalState uniform block at binding point 0
             const blockName = 'GlobalState';
-            [this.program, this.batchProgram].forEach(prog => {
-                const index = gl.getUniformBlockIndex(prog, blockName);
-                if (index !== gl.INVALID_INDEX) {
-                    gl.uniformBlockBinding(prog, index, 0);
-                }
-            });
+            const index = gl.getUniformBlockIndex(this.batchProgram, blockName);
+            if (index !== gl.INVALID_INDEX) {
+                gl.uniformBlockBinding(this.batchProgram, index, 0);
+            }
             
             // Enable alpha blending for the underlay pattern
             gl.enable(gl.BLEND);
             gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
             this.initialized = true;
-            console.info('WebGLRenderer: Batch rendering pipeline initialized with Global UBO.');
+            console.info('WebGLRenderer: Instanced batch rendering pipeline initialized.');
         } catch (error) {
             console.error('WebGLRenderer: Pipeline initialization failed:', error);
             this.initialized = false;
         }
+    }
+
+    /**
+     * Helper to track and retrieve transition states for an element.
+     * 
+     * @param {string} id - Unique identifier for the layout object
+     * @param {Object} currentRect - Target {x, y, width, height}
+     * @param {number[]} currentColor - Target [r, g, b, a]
+     * @param {number} durationMs - Animation duration in milliseconds
+     * @returns {Object} Start/End states for GPU interpolation
+     */
+    getTransitionData(id, currentRect, currentColor, durationMs = 250) {
+        const now = performance.now() / 1000.0;
+        let history = this.layoutHistory.get(id);
+        
+        if (!history) {
+            history = {
+                startRect: { ...currentRect },
+                endRect: { ...currentRect },
+                startColor: [...currentColor],
+                endColor: [...currentColor],
+                startTime: now,
+                duration: 0.0 // Instant
+            };
+            this.layoutHistory.set(id, history);
+            return history;
+        }
+
+        // Check if target changed significantly
+        const rectChanged = Math.abs(history.endRect.x - currentRect.x) > 0.1 || 
+                           Math.abs(history.endRect.y - currentRect.y) > 0.1 ||
+                           Math.abs(history.endRect.width - currentRect.width) > 0.1 ||
+                           Math.abs(history.endRect.height - currentRect.height) > 0.1;
+        
+        const colorChanged = Math.abs(history.endColor[3] - currentColor[3]) > 0.01;
+
+        if (rectChanged || colorChanged) {
+            // Calculate current interpolated state to use as new start point (Seamless Transition)
+            const t = history.duration > 0 ? Math.min(1.0, (now - history.startTime) / history.duration) : 1.0;
+            const easedT = t * (2.0 - t); // Quadratic out matching shader
+            
+            const currentInterpRect = {
+                x: history.startRect.x + (history.endRect.x - history.startRect.x) * easedT,
+                y: history.startRect.y + (history.endRect.y - history.startRect.y) * easedT,
+                width: history.startRect.width + (history.endRect.width - history.startRect.width) * easedT,
+                height: history.startRect.height + (history.endRect.height - history.startRect.height) * easedT
+            };
+
+            const currentInterpColor = [
+                history.startColor[0] + (history.endColor[0] - history.startColor[0]) * easedT,
+                history.startColor[1] + (history.endColor[1] - history.startColor[1]) * easedT,
+                history.startColor[2] + (history.endColor[2] - history.startColor[2]) * easedT,
+                history.startColor[3] + (history.endColor[3] - history.startColor[3]) * easedT
+            ];
+
+            history.startRect = currentInterpRect;
+            history.endRect = { ...currentRect };
+            history.startColor = currentInterpColor;
+            history.endColor = [...currentColor];
+            history.startTime = now;
+            history.duration = durationMs / 1000.0;
+        }
+
+        return history;
     }
 
     /**
@@ -116,35 +175,66 @@ export class WebGLRenderer {
      * @param {Object} rect - Dimensions {x, y, width, height} in CSS pixels
      * @param {number[]} color - RGBA normalized color [0.0, 1.0]
      * @param {number} radius - Corner radius in CSS pixels
+     * @param {string} id - Optional ID for animation tracking
      */
-    pushRect(rect, color, radius) {
+    pushRect(rect, color, radius, id = null) {
         if (!this.initialized) return;
         if (this.instanceCount >= this.maxInstances) this.flush();
 
-        const offset = this.instanceCount * 14;
+        const offset = this.instanceCount * 24;
         const dpr = window.devicePixelRatio || 1;
-
-        // Attribute layout: [pos.x, pos.y, size.w, size.h, uv.u, uv.v, uv.tw, uv.th, col.r, col.g, col.b, col.a, type, radius]
-        this.instanceData[offset + 0] = rect.x * dpr;
-        this.instanceData[offset + 1] = rect.y * dpr;
-        this.instanceData[offset + 2] = rect.width * dpr;
-        this.instanceData[offset + 3] = rect.height * dpr;
         
-        // UVs are ignored for rects
-        this.instanceData[offset + 4] = 0;
-        this.instanceData[offset + 5] = 0;
-        this.instanceData[offset + 6] = 1;
-        this.instanceData[offset + 7] = 1;
+        let startRect = rect, endRect = rect;
+        let startColor = color, endColor = color;
+        let startTime = 0, duration = 0;
 
-        // Color
-        this.instanceData[offset + 8] = color[0];
-        this.instanceData[offset + 9] = color[1];
-        this.instanceData[offset + 10] = color[2];
-        this.instanceData[offset + 11] = color[3];
+        if (id) {
+            const trans = this.getTransitionData(id, rect, color);
+            startRect = trans.startRect;
+            endRect = trans.endRect;
+            startColor = trans.startColor;
+            endColor = trans.endColor;
+            startTime = trans.startTime;
+            duration = trans.duration;
+        }
 
-        // Metadata
-        this.instanceData[offset + 12] = 0.0; // Type: 0 = Rect
-        this.instanceData[offset + 13] = radius * dpr;
+        // a_startRect (loc 2)
+        this.instanceData[offset + 0] = startRect.x * dpr;
+        this.instanceData[offset + 1] = startRect.y * dpr;
+        this.instanceData[offset + 2] = startRect.width * dpr;
+        this.instanceData[offset + 3] = startRect.height * dpr;
+        
+        // a_endRect (loc 3)
+        this.instanceData[offset + 4] = endRect.x * dpr;
+        this.instanceData[offset + 5] = endRect.y * dpr;
+        this.instanceData[offset + 6] = endRect.width * dpr;
+        this.instanceData[offset + 7] = endRect.height * dpr;
+
+        // a_startColor (loc 4)
+        this.instanceData[offset + 8] = startColor[0];
+        this.instanceData[offset + 9] = startColor[1];
+        this.instanceData[offset + 10] = startColor[2];
+        this.instanceData[offset + 11] = startColor[3];
+
+        // a_endColor (loc 5)
+        this.instanceData[offset + 12] = endColor[0];
+        this.instanceData[offset + 13] = endColor[1];
+        this.instanceData[offset + 14] = endColor[2];
+        this.instanceData[offset + 15] = endColor[3];
+
+        // a_instUV (loc 6)
+        this.instanceData[offset + 16] = 0;
+        this.instanceData[offset + 17] = 0;
+        this.instanceData[offset + 18] = 1;
+        this.instanceData[offset + 19] = 1;
+
+        // a_transition (loc 7)
+        this.instanceData[offset + 20] = startTime;
+        this.instanceData[offset + 21] = duration;
+
+        // a_instType (loc 8) / a_instRadius (loc 9)
+        this.instanceData[offset + 22] = 0.0; // Type: 0 = Rect
+        this.instanceData[offset + 23] = radius * dpr;
 
         this.instanceCount++;
     }
@@ -158,41 +248,80 @@ export class WebGLRenderer {
      * @param {number} y - Y position in CSS pixels
      * @param {number[]} color - RGBA normalized color
      * @param {number} size - Font size in CSS pixels (used for scaling)
+     * @param {string} id - Optional ID for animation tracking
      */
-    pushGlyph(char, font, x, y, color, size = 16) {
+    pushGlyph(char, font, x, y, color, size = 16, id = null) {
         if (!this.initialized) return;
         if (this.instanceCount >= this.maxInstances) this.flush();
 
         const glyph = this.atlas.getGlyph(char, font);
         if (!glyph) return;
 
-        const offset = this.instanceCount * 14;
+        const offset = this.instanceCount * 24;
         const dpr = window.devicePixelRatio || 1;
         
         // Scale factor: glyphs are generated at 48px base
         const baseSize = 48;
         const scale = (size / baseSize);
 
-        this.instanceData[offset + 0] = (x - (glyph.pixelWidth * scale / 2)) * dpr;
-        this.instanceData[offset + 1] = (y - (glyph.pixelHeight * scale / 2)) * dpr;
-        this.instanceData[offset + 2] = glyph.pixelWidth * scale * dpr;
-        this.instanceData[offset + 3] = glyph.pixelHeight * scale * dpr;
+        const rect = {
+            x: x - (glyph.pixelWidth * scale / 2),
+            y: y - (glyph.pixelHeight * scale / 2),
+            width: glyph.pixelWidth * scale,
+            height: glyph.pixelHeight * scale
+        };
 
-        // UVs from atlas
-        this.instanceData[offset + 4] = glyph.u;
-        this.instanceData[offset + 5] = glyph.v;
-        this.instanceData[offset + 6] = glyph.width;
-        this.instanceData[offset + 7] = glyph.height;
+        let startRect = rect, endRect = rect;
+        let startColor = color, endColor = color;
+        let startTime = 0, duration = 0;
 
-        // Color
-        this.instanceData[offset + 8] = color[0];
-        this.instanceData[offset + 9] = color[1];
-        this.instanceData[offset + 10] = color[2];
-        this.instanceData[offset + 11] = color[3];
+        if (id) {
+            const trans = this.getTransitionData(id, rect, color);
+            startRect = trans.startRect;
+            endRect = trans.endRect;
+            startColor = trans.startColor;
+            endColor = trans.endColor;
+            startTime = trans.startTime;
+            duration = trans.duration;
+        }
 
-        // Metadata
-        this.instanceData[offset + 12] = 1.0; // Type: 1 = SDF Text
-        this.instanceData[offset + 13] = 0.0; // Radius (unused for text)
+        // a_startRect (loc 2)
+        this.instanceData[offset + 0] = startRect.x * dpr;
+        this.instanceData[offset + 1] = startRect.y * dpr;
+        this.instanceData[offset + 2] = startRect.width * dpr;
+        this.instanceData[offset + 3] = startRect.height * dpr;
+        
+        // a_endRect (loc 3)
+        this.instanceData[offset + 4] = endRect.x * dpr;
+        this.instanceData[offset + 5] = endRect.y * dpr;
+        this.instanceData[offset + 6] = endRect.width * dpr;
+        this.instanceData[offset + 7] = endRect.height * dpr;
+
+        // a_startColor (loc 4)
+        this.instanceData[offset + 8] = startColor[0];
+        this.instanceData[offset + 9] = startColor[1];
+        this.instanceData[offset + 10] = startColor[2];
+        this.instanceData[offset + 11] = startColor[3];
+
+        // a_endColor (loc 5)
+        this.instanceData[offset + 12] = endColor[0];
+        this.instanceData[offset + 13] = endColor[1];
+        this.instanceData[offset + 14] = endColor[2];
+        this.instanceData[offset + 15] = endColor[3];
+
+        // a_instUV (loc 6)
+        this.instanceData[offset + 16] = glyph.u;
+        this.instanceData[offset + 17] = glyph.v;
+        this.instanceData[offset + 18] = glyph.width;
+        this.instanceData[offset + 19] = glyph.height;
+
+        // a_transition (loc 7)
+        this.instanceData[offset + 20] = startTime;
+        this.instanceData[offset + 21] = duration;
+
+        // a_instType (loc 8) / a_instRadius (loc 9)
+        this.instanceData[offset + 22] = 1.0; // Type: 1 = SDF Text
+        this.instanceData[offset + 23] = 0.0; // Radius (unused for text)
 
         this.instanceCount++;
     }
@@ -216,12 +345,12 @@ export class WebGLRenderer {
         gl.bindTexture(gl.TEXTURE_2D, this.atlas.texture);
 
         // Upload instance data with orphaning
-        const view = this.instanceData.subarray(0, this.instanceCount * 14);
+        const view = this.instanceData.subarray(0, this.instanceCount * 24);
         BufferManager.updateInstanceBuffer(gl, this.batchVAO.instanceVbo, view);
 
         // Execute instanced draw
         gl.bindVertexArray(this.batchVAO.vao);
-        gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, this.instanceCount);
+        this.context.drawInstanced(gl.TRIANGLE_STRIP, 0, 4, this.instanceCount);
         
         gl.bindVertexArray(null);
         this.instanceCount = 0;
@@ -289,6 +418,7 @@ export class WebGLRenderer {
 
         // Guard: Only render if WebGL mode is active in the DOM
         if (!document.body.classList.contains('webgl-active')) {
+            console.log('WebGLRenderer: webgl-active class missing');
             this.flush();
             return;
         }
@@ -301,6 +431,8 @@ export class WebGLRenderer {
             this.renderStandardMode();
         }
 
+        console.log('WebGLRenderer: Pushed instances:', this.instanceCount);
+
         // Single flush for all UI elements
         this.flush();
     }
@@ -312,7 +444,7 @@ export class WebGLRenderer {
         const rows = document.querySelectorAll('.math-row');
         const viewportHeight = window.innerHeight;
 
-        rows.forEach(row => {
+        rows.forEach((row, index) => {
             const rect = layoutManager.getRect(row);
             
             // CPU-level Frustum Culling (REQ-PERF-01)
@@ -332,14 +464,14 @@ export class WebGLRenderer {
                 this.themeColors.primary[1],
                 this.themeColors.primary[2],
                 0.05 // Very subtle row highlight
-            ], 8);
+            ], 8, `row-bg-${index}`);
 
             // Render row decoration (e.g., a "Math" indicator or index)
             // Positioned at the far left of the row
             const centerY = rect.top + rect.height / 2;
             const indicatorX = rect.left + 24;
             
-            this.pushGlyph('ƒ', 'italic 48px Inter', indicatorX, centerY, this.themeColors.primary, 18);
+            this.pushGlyph('ƒ', 'italic 48px Inter', indicatorX, centerY, this.themeColors.primary, 18, `row-indicator-${index}`);
             
             // If the row contains a result, highlight it
             const resultEl = row.querySelector('.math-result');
@@ -355,7 +487,7 @@ export class WebGLRenderer {
                     this.themeColors.primary[1],
                     this.themeColors.primary[2],
                     0.12
-                ], 4);
+                ], 4, `row-result-${index}`);
             }
         });
     }
@@ -365,15 +497,21 @@ export class WebGLRenderer {
      */
     renderStandardMode() {
         const displayEl = this.getActiveDisplayElement();
-        if (!displayEl) return;
+        if (!displayEl) {
+            console.log('WebGLRenderer: No active display element');
+            return;
+        }
 
         const rect = layoutManager.getRect(displayEl);
         
         // Skip rendering if element is hidden or zero-sized
-        if (rect.width === 0 || rect.height === 0) return;
+        if (rect.width === 0 || rect.height === 0) {
+            console.log('WebGLRenderer: Zero-sized rect');
+            return;
+        }
 
         // Skip if element is clearly off-screen (sidebar fully closed)
-        if (rect.right < -10 || rect.left > window.innerWidth + 10) return;
+        // if (rect.right < -10 || rect.left > window.innerWidth + 10) return;
         
         // Draw background highlight (Hugging Pattern)
         this.pushRect({
@@ -386,15 +524,15 @@ export class WebGLRenderer {
             this.themeColors.primary[1],
             this.themeColors.primary[2],
             0.15
-        ], 16);
+        ], 16, 'display-hugging-bg');
         
         // Position Sigma and Pi symbols at the vertical center of the detected area
         const centerY = rect.top + rect.height / 2;
         const sigmaX = rect.left + 32;
         const piX = rect.right - 48;
         
-        this.pushGlyph('Σ', 'bold 48px Inter', sigmaX, centerY, this.themeColors.primary, 24);
-        this.pushGlyph('π', 'bold 48px Inter', piX, centerY, this.themeColors.primary, 24);
+        this.pushGlyph('Σ', 'bold 48px Inter', sigmaX, centerY, this.themeColors.primary, 24, 'sigma-symbol');
+        this.pushGlyph('π', 'bold 48px Inter', piX, centerY, this.themeColors.primary, 24, 'pi-symbol');
     }
 }
 
