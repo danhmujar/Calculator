@@ -51,6 +51,28 @@ class LayoutManager {
         this.elements.delete(element);
     }
 
+    /**
+     * Get the cached rect for an element.
+     * @param {HTMLElement} element 
+     * @returns {Object} {x, y, w, h}
+     */
+    getRect(element) {
+        const id = this.elements.get(element);
+        if (id && store.state.layout && store.state.layout[id]) {
+            const cached = store.state.layout[id];
+            // Return in same format as getBoundingClientRect for compatibility
+            return {
+                left: cached.x,
+                top: cached.y,
+                width: cached.w,
+                height: cached.h,
+                right: cached.x + cached.w,
+                bottom: cached.y + cached.h
+            };
+        }
+        return element.getBoundingClientRect();
+    }
+
     _handleResize(entries) {
         store.batch(() => {
             for (const entry of entries) {

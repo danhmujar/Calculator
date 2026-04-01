@@ -1,3 +1,5 @@
+import { layoutManager } from '../../services/layout.js';
+
 /**
  * TypographyManager - Bridges MathLive's DOM layout with the WebGL rendering layer.
  * 
@@ -65,12 +67,12 @@ export class TypographyManager {
         const sciContainer = document.querySelector('.scientific-container');
         
         // We need the container rect to filter glyphs that are scrolled out of view
-        const containerRect = sciContainer ? sciContainer.getBoundingClientRect() : null;
+        const containerRect = sciContainer ? layoutManager.getRect(sciContainer) : null;
         
         const allGlyphs = [];
         
         mathFields.forEach(mf => {
-            const rect = mf.getBoundingClientRect();
+            const rect = layoutManager.getRect(mf);
             
             // Basic optimization: only extract if the math-field is at least partially in the viewport
             // and has dimensions (not display: none)

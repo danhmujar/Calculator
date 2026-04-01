@@ -1,6 +1,7 @@
 import { ShaderManager, PRIMITIVE_VERT, PRIMITIVE_FRAG, BATCH_VERT, BATCH_FRAG } from './shaders.js';
 import { BufferManager } from './buffers.js';
 import { TextureAtlas } from './atlas.js';
+import { layoutManager } from '../../services/layout.js';
 
 /**
  * WebGLRenderer - Main rendering engine for high-performance UI primitives.
@@ -284,7 +285,7 @@ export class WebGLRenderer {
         const viewportHeight = window.innerHeight;
 
         rows.forEach(row => {
-            const rect = row.getBoundingClientRect();
+            const rect = layoutManager.getRect(row);
             
             // CPU-level Frustum Culling (REQ-PERF-01)
             // Skip rows that are completely off-screen to save draw calls and atlas lookups
@@ -315,7 +316,7 @@ export class WebGLRenderer {
             // If the row contains a result, highlight it
             const resultEl = row.querySelector('.math-result');
             if (resultEl && resultEl.textContent.trim() !== '=') {
-                const resRect = resultEl.getBoundingClientRect();
+                const resRect = layoutManager.getRect(resultEl);
                 this.pushRect({
                     x: resRect.left - 4,
                     y: resRect.top - 2,
@@ -338,7 +339,7 @@ export class WebGLRenderer {
         const displayEl = this.getActiveDisplayElement();
         if (!displayEl) return;
 
-        const rect = displayEl.getBoundingClientRect();
+        const rect = layoutManager.getRect(displayEl);
         
         // Skip rendering if element is hidden or zero-sized
         if (rect.width === 0 || rect.height === 0) return;

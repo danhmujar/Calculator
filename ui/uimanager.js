@@ -185,6 +185,11 @@ export class UIManager {
         layoutManager.observe(this.displayEl, 'main-calc-display');
         layoutManager.observe(this.previewEl, 'main-calc-prev');
         layoutManager.observe(this.memoryIndicatorEl, 'memory-indicator');
+
+        const sciContainer = document.getElementById('sci-container');
+        if (sciContainer) {
+            layoutManager.observe(sciContainer, 'sci-container');
+        }
         
         // Observe all calculator buttons
         document.querySelectorAll('.btn, .icon-btn').forEach((btn) => {
@@ -192,6 +197,11 @@ export class UIManager {
             if (id) {
                 layoutManager.observe(btn, `btn-${id.replace(/\s+/g, '-').toLowerCase()}`);
             }
+        });
+
+        // Observe existing math-fields
+        document.querySelectorAll('math-field').forEach((mf, i) => {
+            layoutManager.observe(mf, `math-field-${i}`);
         });
 
         // Pre-configure MathLive fonts if available or for when it loads
@@ -1060,6 +1070,7 @@ export class UIManager {
         resEl.id = uniqueId;
         resEl.setAttribute('aria-live', 'polite');
         resEl.textContent = '= ';
+        layoutManager.observe(resEl, uniqueId);
 
         const copyBtn = document.createElement('button');
         copyBtn.className = 'icon-btn';
