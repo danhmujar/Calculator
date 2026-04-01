@@ -75,7 +75,12 @@
   2. **Sync**: WebGL state is synchronized in real-time with the modular `CalculatorService` and `Store`.
   3. **Animations**: UI transitions and layout shifts are interpolated on the GPU.
   4. **Stress Tested**: Performance stress tests confirm stability under heavy load.
-**Plans**: TBD
+**Plans**: 5 plans
+- [ ] 09-01-PLAN.md — Layout Tracking & State Sync (ResizeObserver)
+- [ ] 09-02-PLAN.md — WebGL 2.0 UBO & Global Uniforms
+- [ ] 09-03-PLAN.md — Instanced Batch Rendering
+- [ ] 09-04-PLAN.md — GPU-Side Animation Interpolation
+- [ ] 09-05-PLAN.md — Stress Testing & Performance Validation (VALIDATION.md)
 **UI hint**: yes
 
 ### Phase 10: Full Migration & Final Verification
@@ -87,7 +92,10 @@
   2. **Visual Parity**: Manual audit confirms zero visual regressions across all calculator modes.
   3. **Input Parity**: Touch and gesture interactions are fully verified on physical mobile devices.
   4. **Final Verification**: App passes all UAT criteria in a fully "Runnable" state.
-**Plans**: TBD
+**Plans**: 3 plans
+- [ ] 10-01-PLAN.md — Legacy Code Removal & Asset Cleanup
+- [ ] 10-02-PLAN.md — Cross-Platform & Mobile Parity Audit
+- [ ] 10-03-PLAN.md — Final UAT & Project Delivery (VERIFICATION.md)
 **UI hint**: yes
 
 ---
