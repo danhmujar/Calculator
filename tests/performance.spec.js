@@ -138,14 +138,7 @@ test.describe('Performance: Eye Tracking Hardware Acceleration', () => {
         // Switch to scientific mode
         await page.click('#btn-mode-sci');
         
-        // Enable WebGL mode via evaluate to bypass viewport/visibility checks in test env
-        await page.evaluate(() => {
-            const cb = document.getElementById('webgl-checkbox');
-            if (cb) {
-                cb.checked = true;
-                cb.dispatchEvent(new Event('change', { bubbles: true }));
-            }
-        });
+        // WebGL is now permanent, so no need to enable via checkbox
 
         // Inject 100 rows
         await page.evaluate(async () => {
@@ -179,7 +172,7 @@ test.describe('Performance: Eye Tracking Hardware Acceleration', () => {
         });
 
         console.log('WebGL FPS with 100 rows:', fps);
-        expect(fps).toBeGreaterThan(5); 
+        expect(fps).toBeGreaterThan(30); // Expect decent FPS in test environment
         
         const isWebGLActive = await page.evaluate(() => document.body.classList.contains('webgl-active'));
         expect(isWebGLActive).toBe(true);

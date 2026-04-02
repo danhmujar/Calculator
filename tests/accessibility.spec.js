@@ -3,7 +3,7 @@ import AxeBuilder from '@axe-core/playwright';
 
 test.describe('Accessibility Audit', () => {
   test('Should pass accessibility audits (Axe)', async ({ page }) => {
-    await page.goto('http://localhost:4173/Calculator/');
+    await page.goto('http://localhost:5173/Calculator/');
     
     // Wait for the main UI to be settled
     await page.waitForSelector('#main-calc-display');
@@ -18,7 +18,7 @@ test.describe('Accessibility Audit', () => {
   });
 
   test('About Modal accessibility', async ({ page }) => {
-    await page.goto('http://localhost:4173/Calculator/');
+    await page.goto('http://localhost:5173/Calculator/');
     
     // Open About Modal
     await page.click('#about-fab-btn');
@@ -32,7 +32,7 @@ test.describe('Accessibility Audit', () => {
   });
 
   test('Keyboard navigation: Tab cycle in Standard Mode', async ({ page }) => {
-    await page.goto('http://localhost:4173/Calculator/');
+    await page.goto('http://localhost:5173/Calculator/');
     
     // Start by focusing the skip link or body
     await page.keyboard.press('Tab');

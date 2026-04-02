@@ -92,8 +92,6 @@ export class UIManager {
             accent: [0.96, 0.62, 0.04, 1], // Default Warning
             background: [0.96, 0.96, 0.97, 1] // Default BG
         };
-
-        this.parityMode = 2; // Default to Legacy-Only
     }
 
     /**
@@ -222,14 +220,14 @@ export class UIManager {
         if (layoutContainer && this.webgl.canvas) {
             layoutContainer.prepend(this.webgl.canvas);
             
-            // Handle WebGL Toggle (REQ-WGL-04)
-            this.setupWebGLToggle();
+            // Permanent Ghost DOM + WebGL Overlay Mode
+            document.body.classList.add('webgl-active');
+            this.webgl.canvas.style.display = 'block';
+            this.webgl.canvas.style.zIndex = '1';
+            this.webgl.canvas.style.pointerEvents = 'none';
             
-            // Initial sync for verification (avoids conflict with syncThemeColors)
             renderer.schedule(() => {
-                if (document.body.classList.contains('webgl-active')) {
-                    this.webglRenderer.render();
-                }
+                this.webglRenderer.render();
             });
 
             // Synchronize WebGL with scientific scroll (REQ-WGL-05)
@@ -249,34 +247,6 @@ export class UIManager {
         this.setupFocusHandling();
         this.setupThemePicker();
         this.syncThemeColors();
-    }
-
-    setupWebGLToggle() {
-        const webglCheckbox = document.getElementById('webgl-checkbox');
-        if (!webglCheckbox) return;
-
-        // Restore from localStorage
-        const webglEnabled = localStorage.getItem('webgl-enabled') === 'true';
-        webglCheckbox.checked = webglEnabled;
-        
-        const updateWebGLState = (enabled) => {
-            if (enabled) {
-                document.body.classList.add('webgl-active');
-                if (this.webgl.canvas) this.webgl.canvas.style.display = 'block';
-                renderer.schedule(() => this.webglRenderer.render());
-            } else {
-                document.body.classList.remove('webgl-active');
-                if (this.webgl.canvas) this.webgl.canvas.style.display = 'none';
-            }
-            localStorage.setItem('webgl-enabled', enabled);
-        };
-
-        webglCheckbox.addEventListener('change', (e) => {
-            updateWebGLState(e.target.checked);
-        });
-
-        // Apply initial state
-        updateWebGLState(webglEnabled);
     }
 
     setupThemePicker() {
@@ -463,20 +433,6 @@ export class UIManager {
                 this.webglRenderer.render();
             }
         });
-
-        // REQ-UI-06: Robust text fitting via ResizeObserver to handle side-panel transitions and resizer handle.
-        if (typeof ResizeObserver !== 'undefined' && this.displayEl) {
-            const displayContainer = this.displayEl.parentElement;
-            if (displayContainer) {
-                const ro = new ResizeObserver(() => {
-                    // Re-calculate fit whenever the container size changes (e.g., mode toggle, window resize, or sidebar drag)
-                    if (this.lastDisplayText) {
-                        this.fitDisplayText(this.lastDisplayText);
-                    }
-                });
-                ro.observe(displayContainer);
-            }
-        }
     }
 
     setupA11y() {
@@ -491,61 +447,7 @@ export class UIManager {
 
             const sidebar = document.getElementById('sidebar');
             if (sidebar && sidebar.classList.contains('scientific-active')) return;
-
-            // Parity Mode Toggle (REQ-VER-01)
-            if (e.shiftKey && e.key === 'P') {
-                e.preventDefault();
-                this.toggleParityMode();
-            }
         });
-    }
-
-    /**
-     * Toggles between WebGL-Only, Split-View, and Legacy-Only rendering modes (REQ-VER-01).
-     */
-    toggleParityMode() {
-        const body = document.body;
-        const canvas = this.webgl ? this.webgl.canvas : null;
-        if (!canvas) return;
-
-        // Modes:
-        // 0: WebGL-Only (Overlay: z-index 1, Legacy: opacity 0)
-        // 1: Split-View (Canvas width 50%, Legacy visible in other 50%)
-        // 2: Legacy-Only (Canvas hidden, Legacy: opacity 1)
-
-        this.parityMode = (this.parityMode + 1) % 3;
-
-        // Reset state
-        body.classList.remove('parity-split-view', 'ghost-mode');
-        canvas.style.zIndex = '';
-        canvas.style.pointerEvents = '';
-        canvas.style.display = 'block';
-
-        switch (this.parityMode) {
-            case 0: // WebGL-Only (Overlay)
-                canvas.style.zIndex = '1';
-                canvas.style.pointerEvents = 'none';
-                body.classList.add('ghost-mode');
-                this.showToast('Parity Mode: WebGL Overlay');
-                break;
-            case 1: // Split-View
-                body.classList.add('parity-split-view');
-                canvas.style.zIndex = '1';
-                canvas.style.pointerEvents = 'none';
-                this.showToast('Parity Mode: Split View');
-                break;
-            case 2: // Legacy-Only
-                canvas.style.display = 'none';
-                this.showToast('Parity Mode: Legacy Only');
-                break;
-        }
-
-        if (this.webgl) {
-            this.webgl.resize();
-        }
-        if (this.webglRenderer) {
-            this.webglRenderer.render();
-        }
     }
 
     setupPasteSupport() {
@@ -842,28 +744,6 @@ export class UIManager {
         this.memoryIndicatorEl.hidden = memoryValue === 0;
     }
 
-    fitDisplayText(text) {
-        if (!this.displayEl) return;
-        const container = this.displayEl.parentElement;
-        const containerWidth = container.clientWidth - 48;
-
-        if (text === this.lastDisplayText && containerWidth === this.lastContainerWidth) {
-            return;
-        }
-
-        this.lastDisplayText = text;
-        this.lastContainerWidth = containerWidth;
-
-        const res = renderer.fitDisplayText(text, containerWidth, {
-            minRem: 1.0,
-            maxRem: 2.5,
-            remToPx: 16
-        });
-
-        this.displayEl.textContent = res.text;
-        this.displayEl.style.fontSize = res.fontSizeRem + 'rem';
-    }
-
     updateDisplay(calcState, formatOperator) {
         renderer.schedule(() => {
             if (!this.displayEl || !this.previewEl) return;
@@ -875,7 +755,12 @@ export class UIManager {
             let formatted = this.proFormatter.format(targetVal);
             if (hasDot) formatted += '.';
 
-            this.fitDisplayText(formatted);
+            // Fallback for huge numbers if needed, but WebGL scales text to fit.
+            if (formatted.length > 15 && targetVal > 0) {
+               formatted = targetVal.toExponential(4);
+            }
+
+            this.displayEl.textContent = formatted;
 
             if (calcState.previousValue !== null && calcState.operator) {
                 const opStr = formatOperator(calcState.operator);

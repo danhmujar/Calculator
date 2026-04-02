@@ -487,6 +487,8 @@ export class WebGLRenderer {
      * Renders WebGL highlights and decorative elements for the scientific rows.
      */
     renderScientificMode() {
+        if (document.body.classList.contains('mode-transitioning')) return;
+
         const rows = document.querySelectorAll('.math-row');
         const viewportHeight = window.innerHeight;
 
@@ -505,6 +507,8 @@ export class WebGLRenderer {
      * Renders WebGL elements for the standard calculator display.
      */
     renderStandardMode() {
+        if (document.body.classList.contains('mode-transitioning')) return;
+
         const sidebar = document.getElementById('sidebar');
         if (!sidebar) return;
 

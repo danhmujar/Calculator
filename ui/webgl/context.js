@@ -68,7 +68,7 @@ export class WebGLContext {
     resize() {
         if (!this.gl) return;
 
-        const dpr = window.devicePixelRatio || 1;
+        const dpr = Math.min(window.devicePixelRatio || 1, 2.0); // Cap at 2.0 for performance/thermal (REQ-VER-03)
         const width = window.innerWidth;
         const height = window.innerHeight;
 
