@@ -465,8 +465,6 @@ body[class*="theme-aurora"]::before {
 body[class*="theme-aurora"] .right-panel,
 body[class*="theme-aurora"] .calc-card,
 body[class*="theme-aurora"] .left-panel header {
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
     contain: layout style;
 }
 
@@ -495,7 +493,6 @@ body[class*="theme-aurora"] .left-panel header {
     min-width: 44px;
 }
 
-/* Buttons use opaque background instead of costly backdrop-filter */
 body[class*="theme-aurora"] .calc-btn {
     background-color: var(--calc-btn-bg);
 }
@@ -506,6 +503,8 @@ body[class*="theme-aurora"] .calc-btn {
     justify-content: flex-end;
     width: 100%;
     height: 100%;
+    position: relative;
+    z-index: 1;
 }
 
 /* WebGL Underlay Transparency (REQ-WGL-03) */
@@ -513,8 +512,6 @@ body.webgl-active .right-panel,
 body.webgl-active .calc-card,
 body.webgl-active .calc-display {
     background-color: color-mix(in srgb, var(--panel-bg) 65%, transparent);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
 }
 
 /* Ensure mobile drawer is also transparent when WebGL is active */
@@ -1000,8 +997,6 @@ input:checked+.slider .slider-bg {
     background: var(--panel-bg);
     /* Fallback */
     background: color-mix(in srgb, var(--panel-bg) 80%, transparent);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -1372,8 +1367,6 @@ body[class*="theme-aurora"] .audit-tape-container {
     background: var(--bg-color);
     /* Fallback */
     background: color-mix(in srgb, var(--bg-color) 80%, transparent);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
     position: sticky;
     top: 0;
     z-index: 2;
@@ -1536,8 +1529,6 @@ body[class*="theme-aurora"] .audit-tape-container {
     border-radius: 50%;
     border: 1px solid var(--glass-border);
     background: var(--glass-bg);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
     color: var(--text-secondary);
     cursor: pointer;
     box-shadow: var(--glass-shadow);
@@ -1846,8 +1837,6 @@ button:focus-visible {
     inset: 0;
     z-index: 2000;
     background: var(--overlay-backdrop);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1865,8 +1854,6 @@ button:focus-visible {
 .about-modal {
     position: relative;
     background: var(--modal-glass-bg);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--modal-glass-border);
     border-radius: 20px;
     max-width: 36rem;
@@ -1949,8 +1936,13 @@ body.dark-theme .about-modal-inner::-webkit-scrollbar-thumb {
 }
 
 #webgl-underlay {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
+    pointer-events: none;
     transition: width 0.3s var(--ease), z-index 0.3s var(--ease), opacity 0.3s var(--ease);
-    z-index: 1;
 }
 
 /* Header */
@@ -2140,8 +2132,6 @@ body.dark-theme .about-badge {
     box-shadow: var(--shadow-md);
     padding: 0.5rem;
     min-width: 120px;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
     transform-origin: top left;
     animation: contextMenuFadeIn 0.15s ease-out;
 }
@@ -2230,8 +2220,6 @@ body.dark-theme .about-badge {
     background: var(--panel-bg);
     border: 1px solid var(--border-color);
     box-shadow: var(--shadow-lg);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
     font-size: 0.85rem;
     font-weight: 500;
     color: var(--text-primary);
@@ -2322,7 +2310,6 @@ body.dark-theme .about-badge {
 body.webgl-active .main-calc-display,
 body.webgl-active .sci-container {
     background-color: rgba(255, 255, 255, 0.45) !important;
-    backdrop-filter: blur(8px);
     transition: background-color 0.3s ease;
 }
 
@@ -2334,7 +2321,6 @@ body.webgl-active.dark-theme .sci-container {
 @media (max-width: 1024px) {
     body.webgl-active .right-panel {
         background-color: rgba(255, 255, 255, 0.75) !important;
-        backdrop-filter: blur(12px);
     }
     
     body.webgl-active.dark-theme .right-panel {

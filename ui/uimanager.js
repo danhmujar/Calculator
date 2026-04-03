@@ -215,15 +215,15 @@ export class UIManager {
 
         // Initialize WebGL Underlay (REQ-WGL-01)
         this.webgl = new WebGLContext();
+        this.webgl.canvas.setAttribute('aria-hidden', 'true');
         this.webglRenderer = new WebGLRenderer(this.webgl, this.typography);
-        const layoutContainer = document.querySelector('.layout-container');
-        if (layoutContainer && this.webgl.canvas) {
-            layoutContainer.prepend(this.webgl.canvas);
+        if (this.webgl.canvas) {
+            document.body.prepend(this.webgl.canvas);
             
             // Permanent Ghost DOM + WebGL Overlay Mode
             document.body.classList.add('webgl-active');
             this.webgl.canvas.style.display = 'block';
-            this.webgl.canvas.style.zIndex = '1';
+            this.webgl.canvas.style.zIndex = '-1';
             this.webgl.canvas.style.pointerEvents = 'none';
             
             renderer.schedule(() => {
