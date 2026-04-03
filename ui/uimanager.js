@@ -205,13 +205,7 @@ export class UIManager {
             layoutManager.observe(mf, `math-field-${i}`);
         });
 
-        // Pre-configure MathLive fonts if available or for when it loads
-        if (window.MathfieldElement) {
-            window.MathfieldElement.fontsDirectory = '/Calculator/fonts/';
-        } else {
-            // Define a placeholder or wait for it if needed, but usually activateScientificMode handles it.
-            // Setting it on the prototype if we can or just ensuring the first load gets it.
-        }
+        // Pre-configure MathLive placeholder removed. We will configure it safely in activateScientificMode.
 
         // Initialize WebGL Underlay (REQ-WGL-01)
         this.webgl = new WebGLContext();
@@ -310,7 +304,9 @@ export class UIManager {
         // 2. Audit Tape
         if (state.auditData && Array.isArray(state.auditData) && callbacks.addAuditEntry) {
             state.auditData.slice().reverse().forEach(entry => {
-                if (typeof entry.a === 'number' && typeof entry.b === 'number' &&
+                if (entry.expr && typeof entry.expr === 'string' && typeof entry.res === 'number' && isFinite(entry.res)) {
+                    callbacks.addAuditEntry(null, null, null, entry.res, entry.expr);
+                } else if (typeof entry.a === 'number' && typeof entry.b === 'number' &&
                     typeof entry.op === 'string' && typeof entry.res === 'number' &&
                     isFinite(entry.a) && isFinite(entry.b) && isFinite(entry.res)) {
                     callbacks.addAuditEntry(entry.a, entry.b, entry.op, entry.res);
@@ -375,12 +371,18 @@ export class UIManager {
 
     restoreScientificRows(state) {
         if (state.sciRows && state.sciRows.length > 0) {
-            const sciWrapper = document.querySelector('.sci-rows-wrapper');
-            if (sciWrapper) {
-                sciWrapper.replaceChildren();
-                state.sciRows.forEach((val, index) => {
-                    this.addScientificRow(val); // Pass val to handle restoration internally
-                });
+            this._pendingSciRows = state.sciRows;
+            
+            // If MathLive is already fully loaded and configured, we can append them now.
+            // Otherwise, we defer to activateScientificMode which will append them safely
+            // AFTER setting the fontsDirectory.
+            if (window.customElements.get('math-field')) {
+                const sciWrapper = document.querySelector('.sci-rows-wrapper');
+                if (sciWrapper) {
+                    sciWrapper.replaceChildren();
+                    this._pendingSciRows.forEach(val => this.addScientificRow(val));
+                    this._pendingSciRows = null;
+                }
             }
         }
     }
@@ -775,9 +777,14 @@ export class UIManager {
         });
     }
 
-    addAuditEntry(a, b, op, res, formatOperator, useAuditValueCallback) {
-        const opStr = formatOperator(op);
-        const equation = this.proFormatter.format(a) + ' ' + opStr + ' ' + this.proFormatter.format(b);
+    addAuditEntry(a, b, op, res, formatOperator, useAuditValueCallback, expr = null) {
+        let equation = '';
+        if (expr) {
+            equation = expr;
+        } else {
+            const opStr = formatOperator(op);
+            equation = this.proFormatter.format(a) + ' ' + opStr + ' ' + this.proFormatter.format(b);
+        }
         const resultFormat = this.proFormatter.format(res);
 
         const li = document.createElement('li');
@@ -910,15 +917,13 @@ export class UIManager {
         const leftPanel = document.querySelector('.left-panel');
         if (leftPanel) leftPanel.style.overflow = 'hidden';
 
-        if (!window.MathfieldElement) {
+        if (!window.customElements.get('math-field')) {
             this.showToast('Loading Scientific Engine...');
             try {
-                await import('mathlive');
-                // Set font path immediately after import, before any rendering triggers font loading.
-                // Vite pre-bundles mathlive into node_modules/.vite/deps/, so the default relative
-                // font path resolves to a non-existent directory, causing OTS parsing errors.
-                if (window.MathfieldElement) {
-                    window.MathfieldElement.fontsDirectory = '/Calculator/fonts/';
+                const ml = await import('mathlive');
+                // Set font path immediately after import using the resolved module, before any elements enter the DOM.
+                if (ml && ml.MathfieldElement) {
+                    ml.MathfieldElement.fontsDirectory = '/Calculator/fonts/';
                 }
                 await customElements.whenDefined('math-field');
             } catch (err) {
@@ -948,10 +953,17 @@ export class UIManager {
             }
             if (sciContainer) sciContainer.classList.add('active');
 
-            // Add a default row if none exist
             const wrapper = document.querySelector('.sci-rows-wrapper');
-            if (wrapper && wrapper.children.length === 0) {
-                this.addScientificRow();
+            if (wrapper) {
+                // Restore pending rows if any were delayed during state loading
+                if (this._pendingSciRows) {
+                    wrapper.replaceChildren();
+                    this._pendingSciRows.forEach(val => this.addScientificRow(val));
+                    this._pendingSciRows = null;
+                } else if (wrapper.children.length === 0) {
+                    // Add a default row if none exist
+                    this.addScientificRow();
+                }
             }
 
             // Do NOT render here — layout is mid-transition
@@ -1131,6 +1143,18 @@ export class UIManager {
 
             if (this.webglRenderer) {
                 this.webglRenderer.render();
+            }
+        });
+
+        mf.addEventListener('change', () => {
+            const expr = mf.getValue('ascii-math');
+            if (expr && expr.trim() !== '') {
+                const calculated = CalculatorService.evaluate(expr);
+                if (calculated !== null) {
+                    if (window.app && window.app.addAuditEntry) {
+                        window.app.addAuditEntry(null, null, null, calculated, true, expr);
+                    }
+                }
             }
         });
     }

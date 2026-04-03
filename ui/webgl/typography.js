@@ -63,6 +63,15 @@ export class TypographyManager {
     update() {
         this._rafId = null;
         
+        // STRICT GUARD: Prevent WebGL 'Ghost Text' leaks
+        // If we are not in scientific mode, purge all glyphs so the renderer doesn't draw them
+        // under the transparent panels of Standard Mode.
+        if (!document.body.classList.contains('scientific-mode')) {
+            this.glyphs = [];
+            this.callbacks.forEach(cb => cb(this.glyphs));
+            return;
+        }
+        
         const mathFields = document.querySelectorAll('math-field');
         const sciContainer = document.querySelector('.scientific-container');
         

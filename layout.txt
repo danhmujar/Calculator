@@ -1,0 +1,12 @@
+.layout-container {
+    display: flex;
+    justify-content: flex-end;
+    width: 100%;
+    height: 100%;
+}
+
+/* WebGL Underlay Transparency (REQ-WGL-03) */
+body.webgl-active .right-panel,
+body.webgl-active .calc-card,
+body.webgl-active .calc-display {
+    background-color: color-mix(in srg

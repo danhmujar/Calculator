@@ -38,5 +38,15 @@ No manual gaps found. Phase 1 requirements are fully testable via Playwright.
 - Created `tests/phase-01.spec.js` to verify DOM hierarchy and CSS properties.
 - Verified that `uimanager.js` correctly initializes the canvas sibling relationship.
 
+## Stabilization Audit (UAT Carry-over)
+
+The following UI/UX defects identified during Phase 1 UAT have been resolved and verified:
+
+| Feature | Defect Description | Resolution | Status |
+|---------|--------------------|------------|--------|
+| **MathLive Font** | 404 font load regression on initial SCI load | Deferred DOM injection until `fontsDirectory` configuration | [x] FIXED |
+| **Audit Tape** | SCI mode results not captured in history | Hooked `math-field` execute events to `AppOrchestrator` | [x] FIXED |
+| **Ghost Text** | SCI expressions leaking into STD mode glass | Implemented strict visibility guard in `TypographyManager` | [x] FIXED |
+
 ## Sign-Off
 - [x] Compliance Certified (Automated Tests Passing)

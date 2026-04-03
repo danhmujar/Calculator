@@ -98,7 +98,7 @@ class AppOrchestrator {
             store.setState({ persistent: effectiveState });
             
             uiManager.restoreState(effectiveState, {
-                addAuditEntry: (a, b, op, res) => this.addAuditEntry(a, b, op, res, false)
+                addAuditEntry: (a, b, op, res, expr) => this.addAuditEntry(a, b, op, res, false, expr)
             });
             
             return true;
@@ -244,12 +244,12 @@ class AppOrchestrator {
         }
     }
 
-    addAuditEntry(a, b, op, res, shouldSave = true) {
+    addAuditEntry(a, b, op, res, shouldSave = true, expr = null) {
         if (shouldSave) {
-            this.auditEntries.unshift({ a: a, b: b, op: op, res: res });
+            this.auditEntries.unshift(expr ? { expr, res } : { a, b, op, res });
             if (this.auditEntries.length > this.MAX_AUDIT_ENTRIES) this.auditEntries.length = this.MAX_AUDIT_ENTRIES;
         }
-        uiManager.addAuditEntry(a, b, op, res, uiManager.formatOperator.bind(uiManager), (val) => this.useAuditValue(val));
+        uiManager.addAuditEntry(a, b, op, res, uiManager.formatOperator.bind(uiManager), (val) => this.useAuditValue(val), expr);
     }
 
     useAuditValue(val) {

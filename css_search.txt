@@ -1,0 +1,22 @@
+468:     backdrop-filter: blur(16px);
+469:     -webkit-backdrop-filter: blur(16px);
+498: /* Buttons use opaque background instead of costly backdrop-filter */
+516:     backdrop-filter: blur(12px);
+517:     -webkit-backdrop-filter: blur(12px);
+1003:     backdrop-filter: blur(12px);
+1004:     -webkit-backdrop-filter: blur(12px);
+1375:     backdrop-filter: blur(12px);
+1376:     -webkit-backdrop-filter: blur(12px);
+1539:     backdrop-filter: blur(12px);
+1540:     -webkit-backdrop-filter: blur(12px);
+1849:     backdrop-filter: blur(8px);
+1850:     -webkit-backdrop-filter: blur(8px);
+1868:     backdrop-filter: blur(20px);
+1869:     -webkit-backdrop-filter: blur(20px);
+2143:     backdrop-filter: blur(12px);
+2144:     -webkit-backdrop-filter: blur(12px);
+2233:     backdrop-filter: blur(12px);
+2234:     -webkit-backdrop-filter: blur(12px);
+2325:     backdrop-filter: blur(8px);
+2337:         backdrop-filter: blur(12px);
+21 matches
