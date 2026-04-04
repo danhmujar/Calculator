@@ -82,12 +82,14 @@ export class ShaderManager {
                 }
             } else if (typeof value === 'number') {
                 // Samplers and specific integer uniforms must use uniform1i
-                if (name === 'u_atlas' || name.toLowerCase().includes('sampler')) {
+                const lowerName = name.toLowerCase();
+                if (lowerName === 'u_atlas' || lowerName.includes('sampler') || lowerName.includes('texture')) {
                     gl.uniform1i(location, value);
                 } else {
                     gl.uniform1f(location, value);
                 }
-            } else if (typeof value === 'boolean') {
+            }
+ else if (typeof value === 'boolean') {
                 gl.uniform1i(location, value ? 1 : 0);
             }
         }
@@ -126,7 +128,7 @@ void main() {
 
 /**
  * Standard Primitive Fragment Shader Source (Raw GLSL 3.00 ES)
- * Multi-pass Kawase blur implementation.
+ * Multi-pass Kawase blur implementation with theme colorization.
  */
 export const PRIMITIVE_FRAG = `#version 300 es
 precision highp float;
@@ -135,16 +137,37 @@ uniform sampler2D uTexture;
 uniform vec2 uResolution;
 uniform float uOffset;
 
+// Theme color uniforms (D-06)
+uniform vec3 uAuroraColor1;
+uniform vec3 uAuroraColor2;
+uniform vec3 uAuroraColor3;
+
 in vec2 v_texCoord;
 out vec4 outColor;
 
 void main() {
     vec2 pixelSize = 1.0 / uResolution;
+    
+    // Kawase Blur Sampling
     vec4 color = texture(uTexture, v_texCoord + (vec2(uOffset, uOffset) + 0.5) * pixelSize);
     color += texture(uTexture, v_texCoord + (vec2(-uOffset, uOffset) + 0.5) * pixelSize);
     color += texture(uTexture, v_texCoord + (vec2(-uOffset, -uOffset) + 0.5) * pixelSize);
     color += texture(uTexture, v_texCoord + (vec2(uOffset, -uOffset) + 0.5) * pixelSize);
-    outColor = color * 0.25;
+    vec4 blurred = color * 0.25;
+
+    // Apply theme colorization based on UV position (Simulated Aurora)
+    float mask1 = smoothstep(0.2, 0.8, v_texCoord.x * v_texCoord.y);
+    float mask2 = smoothstep(0.8, 0.2, v_texCoord.x * (1.0 - v_texCoord.y));
+    
+    vec3 aurora = mix(uAuroraColor1, uAuroraColor2, mask1);
+    aurora = mix(aurora, uAuroraColor3, mask2);
+
+    // Blend blurred content with aurora colors
+    // We boost the aurora where the blurred content is bright
+    float brightness = dot(blurred.rgb, vec3(0.299, 0.587, 0.114));
+    vec3 finalColor = mix(blurred.rgb, aurora, 0.4 + brightness * 0.2);
+
+    outColor = vec4(finalColor, blurred.a);
 }
 `;
 

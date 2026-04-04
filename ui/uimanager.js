@@ -5,6 +5,7 @@ import { CalculatorService } from '../services/calculator.js';
 import { WebGLContext } from './webgl/context.js';
 import { WebGLRenderer } from './webgl/renderer.js';
 import { TypographyManager } from './webgl/typography.js';
+import { getThemeUniforms } from '../services/theme.js';
 
 /**
  * UIManager - Coordinates DOM layout, theme management, and UI transitions.
@@ -92,6 +93,13 @@ export class UIManager {
             accent: [0.96, 0.62, 0.04, 1], // Default Warning
             background: [0.96, 0.96, 0.97, 1] // Default BG
         };
+    }
+
+    /**
+     * Exposes getThemeUniforms for testing and external access.
+     */
+    getThemeUniforms() {
+        return getThemeUniforms();
     }
 
     /**
