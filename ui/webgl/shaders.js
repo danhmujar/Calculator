@@ -108,57 +108,43 @@ layout(std140) uniform GlobalState {
 
 /**
  * Standard Primitive Vertex Shader Source (Raw GLSL 3.00 ES)
+ * Fullscreen quad pass-through for multi-pass effects.
  */
 export const PRIMITIVE_VERT = `#version 300 es
-${GLOBAL_STATE_BLOCK}
+precision highp float;
 
 layout(location = 0) in vec2 a_position;
 layout(location = 1) in vec2 a_texCoord;
 
-uniform vec2 u_rectSize;
-uniform vec2 u_offset;
-
 out vec2 v_texCoord;
 
 void main() {
-    vec2 pixelPos = a_position * u_rectSize + u_offset;
-    vec2 zeroToOne = pixelPos / u_resolution;
-    vec2 zeroToTwo = zeroToOne * 2.0;
-    vec2 clipSpace = zeroToTwo - 1.0;
-    gl_Position = vec4(clipSpace.x, -clipSpace.y, 0, 1);
     v_texCoord = a_texCoord;
+    gl_Position = vec4(a_position, 0.0, 1.0);
 }
 `;
 
 /**
  * Standard Primitive Fragment Shader Source (Raw GLSL 3.00 ES)
- * Implements SDF-based rounded rectangles with anti-aliasing.
+ * Multi-pass Kawase blur implementation.
  */
 export const PRIMITIVE_FRAG = `#version 300 es
 precision highp float;
-${GLOBAL_STATE_BLOCK}
 
-uniform vec2 u_rectSize;
-uniform float u_radius;
-uniform vec4 u_color;
+uniform sampler2D uTexture;
+uniform vec2 uResolution;
+uniform float uOffset;
 
 in vec2 v_texCoord;
 out vec4 outColor;
 
-float sdRoundedBox(vec2 p, vec2 b, float r) {
-    vec2 q = abs(p) - b + r;
-    return min(max(q.x, q.y), 0.0) + length(max(q, 0.0)) - r;
-}
-
 void main() {
-    vec2 p = (v_texCoord - 0.5) * u_rectSize;
-    vec2 b = u_rectSize * 0.5;
-    float r = min(u_radius, min(b.x, b.y));
-    float d = sdRoundedBox(p, b, r);
-    float edge = fwidth(d) * 0.5;
-    float alpha = 1.0 - smoothstep(-edge, edge, d);
-    if (alpha <= 0.0) discard;
-    outColor = vec4(u_color.rgb, u_color.a * alpha);
+    vec2 pixelSize = 1.0 / uResolution;
+    vec4 color = texture(uTexture, v_texCoord + (vec2(uOffset, uOffset) + 0.5) * pixelSize);
+    color += texture(uTexture, v_texCoord + (vec2(-uOffset, uOffset) + 0.5) * pixelSize);
+    color += texture(uTexture, v_texCoord + (vec2(-uOffset, -uOffset) + 0.5) * pixelSize);
+    color += texture(uTexture, v_texCoord + (vec2(uOffset, -uOffset) + 0.5) * pixelSize);
+    outColor = color * 0.25;
 }
 `;
 

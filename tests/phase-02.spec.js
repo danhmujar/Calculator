@@ -7,7 +7,7 @@ test.describe('Phase 2: Underlay Blur Integration and UI Synchronization', () =>
     await page.waitForSelector('#webgl-underlay', { state: 'attached' });
   });
 
-  test.fixme('Shader Compilation', async ({ page }) => {
+  test('Shader Compilation', async ({ page }) => {
     // Check for shader compilation errors in the console
     const logs = [];
     page.on('console', msg => {
