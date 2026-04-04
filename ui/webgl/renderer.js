@@ -2,6 +2,7 @@ import { ShaderManager, PRIMITIVE_VERT, PRIMITIVE_FRAG, BATCH_VERT, BATCH_FRAG }
 import { BufferManager } from './buffers.js';
 import { TextureAtlas } from './atlas.js';
 import { layoutManager } from '../../services/layout.js';
+import { getThemeUniforms } from '../../services/theme.js';
 
 /**
  * WebGLRenderer - Main rendering engine for high-performance UI primitives.
@@ -42,6 +43,12 @@ export class WebGLRenderer {
         
         this.initialized = false;
         
+        // FBO state
+        this.fboA = null;
+        this.fboB = null;
+        this.primitiveProgram = null;
+        this.primitiveVAO = null;
+
         /**
          * Cached theme colors from UIManager.
          */
@@ -85,6 +92,18 @@ export class WebGLRenderer {
             this.batchVAO = BufferManager.createInstancedVAO(gl, this.quadData, this.maxInstances);
             this.atlas = new TextureAtlas(gl);
 
+            // Blur rendering pipeline (Kawase Blur)
+            this.primitiveProgram = ShaderManager.createProgram(gl, PRIMITIVE_VERT, PRIMITIVE_FRAG);
+            this.primitiveVAO = BufferManager.createVAO(gl, [
+                -1, -1, 0, 0, // Bottom-left
+                 1, -1, 1, 0, // Bottom-right
+                -1,  1, 0, 1, // Top-left
+                 1,  1, 1, 1  // Top-right
+            ]);
+
+            // Initialize FBOs for ping-pong blur
+            this.resizeFBOs();
+
             // 1. Setup Global UBO (32 bytes for std140 layout)
             this.globalUBO = BufferManager.createUBO(gl, 32, 0);
 
@@ -105,6 +124,31 @@ export class WebGLRenderer {
             console.error('WebGLRenderer: Pipeline initialization failed:', error);
             this.initialized = false;
         }
+    }
+
+    /**
+     * Resizes or initializes the FBOs to match the current canvas dimensions.
+     * Uses a 1/4 resolution for the blur passes to optimize performance (Pitfall 3).
+     */
+    resizeFBOs() {
+        const gl = this.gl;
+        const width = gl.canvas.width;
+        const height = gl.canvas.height;
+        
+        const blurWidth = Math.max(1, Math.floor(width / 4));
+        const blurHeight = Math.max(1, Math.floor(height / 4));
+
+        if (this.fboA) {
+            gl.deleteFramebuffer(this.fboA.framebuffer);
+            gl.deleteTexture(this.fboA.texture);
+        }
+        if (this.fboB) {
+            gl.deleteFramebuffer(this.fboB.framebuffer);
+            gl.deleteTexture(this.fboB.texture);
+        }
+
+        this.fboA = this.context.createFramebuffer(blurWidth, blurHeight);
+        this.fboB = this.context.createFramebuffer(blurWidth, blurHeight);
     }
 
     /**
@@ -403,6 +447,13 @@ export class WebGLRenderer {
         if (!this.initialized) return;
 
         const gl = this.gl;
+        const theme = getThemeUniforms();
+
+        // Ensure FBOs match current canvas dimensions (Pitfall 3)
+        if (this.fboA && (this.fboA.width !== Math.max(1, Math.floor(gl.canvas.width / 4)) || 
+                          this.fboA.height !== Math.max(1, Math.floor(gl.canvas.height / 4)))) {
+            this.resizeFBOs();
+        }
 
         // 1. Update Global UBO once per frame (std140 layout)
         this.globalData[0] = gl.canvas.width;
@@ -414,44 +465,88 @@ export class WebGLRenderer {
         
         BufferManager.updateUBO(gl, this.globalUBO, this.globalData);
 
-        // Clear with transparency for underlay pattern
-        this.context.clear([0, 0, 0, 0]);
-
         // Guard: Only render if WebGL mode is active in the DOM
         if (!document.body.classList.contains('webgl-active') && 
             !document.body.classList.contains('parity-webgl-only') &&
             !document.body.classList.contains('parity-split-view')) {
-            this.flush();
+            this.context.clear([0, 0, 0, 0]);
+            this.instanceCount = 0;
             return;
         }
 
-        // Shared full-scene coverage (REQ-VER-01)
-        this._drawAllTrackedElements();
-        this._drawTypography();
+        // --- STAGE 1: BLURRED BACKGROUND ---
+        // Render background highlights to FBO A
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.fboA.framebuffer);
+        gl.viewport(0, 0, this.fboA.width, this.fboA.height);
+        this.context.clear([0, 0, 0, 0]);
 
-        const isScientific = document.body.classList.contains('scientific-mode');
-        if (isScientific) {
-            this.renderScientificMode();
-        } else {
-            this.renderStandardMode();
+        this._drawBlurredStage();
+        this.flush();
+
+        // --- STAGE 2: KAWASE BLUR PING-PONG ---
+        gl.useProgram(this.primitiveProgram);
+        gl.bindVertexArray(this.primitiveVAO.vao);
+        gl.activeTexture(gl.TEXTURE0);
+
+        let currentSrc = this.fboA;
+        let currentDest = this.fboB;
+
+        const passes = [0.0, 1.0, 2.0, 3.0];
+        for (const offset of passes) {
+            gl.bindFramebuffer(gl.FRAMEBUFFER, currentDest.framebuffer);
+            gl.bindTexture(gl.TEXTURE_2D, currentSrc.texture);
+            
+            ShaderManager.setUniforms(gl, this.primitiveProgram, {
+                uTexture: 0,
+                uResolution: [currentDest.width, currentDest.height],
+                uOffset: offset,
+                uAuroraColor1: theme.uAuroraColor1,
+                uAuroraColor2: theme.uAuroraColor2,
+                uAuroraColor3: theme.uAuroraColor3
+            });
+
+            gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+            // Swap FBOs for next pass
+            [currentSrc, currentDest] = [currentDest, currentSrc];
         }
 
-        // Single flush for all UI elements
+        // --- STAGE 3: FINAL COMPOSITION & SHARP UI ---
+        // Back to screen
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+        this.context.clear([0, 0, 0, 0]);
+
+        // Draw the final blurred texture as background
+        gl.useProgram(this.primitiveProgram);
+        gl.bindVertexArray(this.primitiveVAO.vao);
+        gl.bindTexture(gl.TEXTURE_2D, currentSrc.texture);
+        
+        ShaderManager.setUniforms(gl, this.primitiveProgram, {
+            uTexture: 0,
+            uResolution: [gl.canvas.width, gl.canvas.height],
+            uOffset: 0.0, // Pass-through for final composition & coloring
+            uAuroraColor1: theme.uAuroraColor1,
+            uAuroraColor2: theme.uAuroraColor2,
+            uAuroraColor3: theme.uAuroraColor3
+        });
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+        // Draw sharp UI elements on top
+        this._drawSharpStage();
         this.flush();
     }
 
     /**
-     * Renders ALL tracked layout elements from the LayoutManager.
+     * Renders elements that should be blurred (Background highlights).
      */
-    _drawAllTrackedElements() {
+    _drawBlurredStage() {
         if (document.body.classList.contains('mode-transitioning')) return;
 
         const viewportHeight = window.innerHeight;
         
         for (const [element, id] of layoutManager.elements.entries()) {
             const rect = layoutManager.getRect(element);
-            
-            // Frustum Culling
             if (rect.bottom < 0 || rect.top > viewportHeight) continue;
 
             const computedStyle = getComputedStyle(element);
@@ -470,6 +565,41 @@ export class WebGLRenderer {
                 this.pushRect(rect, [...this.themeColors.primary, 0.05], 8, id);
             }
         }
+
+        // Render standard mode sidebar glow to blurred stage
+        if (!document.body.classList.contains('scientific-mode')) {
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar) {
+                const sidebarRect = layoutManager.getRect(sidebar);
+                if (sidebarRect.width > 0 && sidebarRect.height > 0) {
+                    this.pushRect({
+                        x: sidebarRect.left - 8,
+                        y: sidebarRect.top,
+                        width: sidebarRect.width + 16,
+                        height: sidebarRect.height
+                    }, [
+                        this.themeColors.primary[0],
+                        this.themeColors.primary[1],
+                        this.themeColors.primary[2],
+                        0.08
+                    ], 0, 'sidebar-glow-bg');
+                }
+            }
+        }
+    }
+
+    /**
+     * Renders elements that should remain sharp (Text, symbols, specific outlines).
+     */
+    _drawSharpStage() {
+        this._drawTypography();
+
+        const isScientific = document.body.classList.contains('scientific-mode');
+        if (isScientific) {
+            this._renderScientificSymbols();
+        } else {
+            this._renderStandardSymbols();
+        }
     }
 
     /**
@@ -486,7 +616,7 @@ export class WebGLRenderer {
     /**
      * Renders WebGL highlights and decorative elements for the scientific rows.
      */
-    renderScientificMode() {
+    _renderScientificSymbols() {
         if (document.body.classList.contains('mode-transitioning')) return;
 
         const rows = document.querySelectorAll('.math-row');
@@ -506,34 +636,15 @@ export class WebGLRenderer {
     /**
      * Renders WebGL elements for the standard calculator display.
      */
-    renderStandardMode() {
+    _renderStandardSymbols() {
         if (document.body.classList.contains('mode-transitioning')) return;
-
-        const sidebar = document.getElementById('sidebar');
-        if (!sidebar) return;
-
-        const sidebarRect = layoutManager.getRect(sidebar);
-        if (sidebarRect.width === 0 || sidebarRect.height === 0) return;
-
-        const computedStyle = getComputedStyle(sidebar);
-        if (computedStyle.visibility === 'hidden' || computedStyle.opacity === '0') return;
-
-        // Draw subtle background glow behind the entire sidebar panel.
-        this.pushRect({
-            x: sidebarRect.left - 8,
-            y: sidebarRect.top,
-            width: sidebarRect.width + 16,
-            height: sidebarRect.height
-        }, [
-            this.themeColors.primary[0],
-            this.themeColors.primary[1],
-            this.themeColors.primary[2],
-            0.08
-        ], 0, 'sidebar-glow-bg');
 
         const displayEl = document.getElementById('main-calc-display');
         if (displayEl) {
             const displayRect = layoutManager.getRect(displayEl);
+            const sidebar = document.getElementById('sidebar');
+            const sidebarRect = sidebar ? layoutManager.getRect(sidebar) : { width: 0 };
+            
             const MIN_WIDTH_FOR_SYMBOLS = 200;
             if (sidebarRect.width >= MIN_WIDTH_FOR_SYMBOLS) {
                 const displayCenterY = displayRect.top + displayRect.height / 2;
