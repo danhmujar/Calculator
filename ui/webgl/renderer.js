@@ -2,7 +2,7 @@ import { ShaderManager, PRIMITIVE_VERT, PRIMITIVE_FRAG, BATCH_VERT, BATCH_FRAG }
 import { BufferManager } from './buffers.js';
 import { TextureAtlas } from './atlas.js';
 import { layoutManager } from '../../services/layout.js';
-import { getThemeUniforms } from '../../services/theme.js';
+import { themeManager } from '../../services/theme.js';
 
 /**
  * WebGLRenderer - Main rendering engine for high-performance UI primitives.
@@ -79,6 +79,7 @@ export class WebGLRenderer {
 
         this.init();
         this.setupResizeObserver();
+        this.setupThemeObserver();
     }
 
     /**
@@ -89,6 +90,22 @@ export class WebGLRenderer {
             this.handleResize();
         });
         this.resizeObserver.observe(document.body);
+    }
+
+    /**
+     * Observes class changes on the body element to trigger theme transitions.
+     */
+    setupThemeObserver() {
+        this.themeObserver = new MutationObserver((mutations) => {
+            for (const mutation of mutations) {
+                if (mutation.attributeName === 'class') {
+                    themeManager.updateTargetTheme();
+                    break;
+                }
+            }
+        });
+
+        this.themeObserver.observe(document.body, { attributes: true });
     }
 
     /**
@@ -114,6 +131,9 @@ export class WebGLRenderer {
         try {
             const gl = this.gl;
             
+            // Initialize theme manager state from current DOM
+            themeManager.init();
+
             // Batch rendering pipeline (Unified primitives & text)
             this.batchProgram = ShaderManager.createProgram(gl, BATCH_VERT, BATCH_FRAG);
             this.batchVAO = BufferManager.createInstancedVAO(gl, this.quadData, this.maxInstances);
@@ -474,7 +494,7 @@ export class WebGLRenderer {
         if (!this.initialized) return;
 
         const gl = this.gl;
-        const theme = getThemeUniforms();
+        const theme = themeManager.getInterpolatedTheme(performance.now());
 
         // Ensure FBOs match current canvas dimensions (Pitfall 3)
         if (this.fboA && (this.fboA.width !== Math.max(1, Math.floor(gl.canvas.width / 4)) || 
