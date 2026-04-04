@@ -43,6 +43,15 @@ Exceptions: none
 
 ---
 
+## Visuals Contract
+
+- **Primary Focal Point:** The main calculator display screen, utilizing the largest typography and highest contrast to immediately draw the eye.
+- **Secondary Focal Point:** The primary action key (Equal `=`) and operation keys, highlighted with the accent color.
+- **Modal Focal Point:** The About Modal content box, elevated above the main UI using a distinct backdrop blur (underlay) and a solid, translucent background.
+- **Visual Hierarchy:** Display > Primary Actions (=) > Secondary Actions (Operators) > Tertiary (Numbers) > Background/Underlay.
+
+---
+
 ## Typography
 
 | Role | Size | Weight | Line Height |
@@ -72,10 +81,10 @@ Accent reserved for: Active keycaps, primary CTAs.
 | Element | Copy |
 |---------|------|
 | Primary CTA | Close Modal |
-| Empty state heading | N/A |
-| Empty state body | N/A |
-| Error state | N/A |
-| Destructive confirmation | N/A |
+| Empty state heading | No calculation history (Global Fallback) |
+| Empty state body | Enter a number or operation to start calculating. (Global Fallback) |
+| Error state | Calculation Error - Please press AC to reset. (Global Fallback) |
+| Destructive confirmation | Are you sure you want to clear all data? (Global Fallback) |
 
 ---
 
