@@ -864,6 +864,12 @@ export class UIManager {
                 document.body.classList.add('mode-transitioning');
 
                 document.body.classList.remove('scientific-mode');
+                // Immediately flush stale scientific glyphs from the WebGL typography cache.
+                // Without this, cached glyph positions from the SCI layout persist and render
+                // as phantom text behind the standard-mode left panel.
+                if (this.typography) {
+                    this.typography.glyphs = [];
+                }
                 // Update Store (REQ-ARCH-01) inside the frame to ensure layout has started settling
                 store.state.persistent.mode = mode;
 

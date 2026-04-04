@@ -202,9 +202,14 @@ export class TypographyManager {
 
     /**
      * Returns all currently visible glyphs in the viewport.
+     * Enforces a strict mode guard to prevent stale scientific glyphs
+     * from leaking into Standard Mode renders.
      * @returns {Array} Array of glyph metadata.
      */
     getVisibleGlyphs() {
+        if (!document.body.classList.contains('scientific-mode')) {
+            return [];
+        }
         return this.glyphs;
     }
 }

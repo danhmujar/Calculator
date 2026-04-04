@@ -10,8 +10,8 @@
 ## Phase 2: Underlay Blur Integration and UI Synchronization
 - **Objective:** Establish the multi-pass blur and coordinate visual state syncing between the DOM and the WebGL renderer.
 - **Outcomes:**
-  - Connect the `ResizeObserver` correctly so that expanding the scientific mode explicitly triggers shader resize passes without destroying the z-index.
-  - Achieve 100% Visual Parity: The dual-FBO rendering pass closely matches the original CSS Aurora configurations.
+  - [UI-SYNC-01] Connect the `ResizeObserver` correctly so that expanding the scientific mode explicitly triggers shader resize passes without destroying the z-index.
+  - [UI-SYNC-02] Achieve 100% Visual Parity: The dual-FBO rendering pass closely matches the original CSS Aurora configurations.
 
 ## Phase 3: Verification & Parity Artifact Purge
 - **Objective:** Strip dead code related to historical transitions and validate end-state against requirements.
