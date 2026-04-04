@@ -493,9 +493,7 @@ export class WebGLRenderer {
         BufferManager.updateUBO(gl, this.globalUBO, this.globalData);
 
         // Guard: Only render if WebGL mode is active in the DOM
-        if (!document.body.classList.contains('webgl-active') && 
-            !document.body.classList.contains('parity-webgl-only') &&
-            !document.body.classList.contains('parity-split-view')) {
+        if (!document.body.classList.contains('webgl-active')) {
             this.context.clear([0, 0, 0, 0]);
             this.instanceCount = 0;
             return;
