@@ -31,5 +31,5 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 04-01-PLAN.md — Theme Transition and WebGL Rendering Polish
+- [x] 04-01-PLAN.md — Theme Transition and WebGL Rendering Polish
 - [ ] 04-02-PLAN.md — Glass Opacity and UI Character Polish
