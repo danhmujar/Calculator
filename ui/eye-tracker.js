@@ -28,7 +28,7 @@ export function initEyeTracking() {
         }
     });
 
-    const eyeContainers = document.querySelectorAll('.calculator-wrapper svg');
+    const eyeContainers = document.querySelectorAll('.calculator-svg');
     eyeContainers.forEach(svg => {
         observer.observe(svg);
         boundsCache.set(svg, svg.getBoundingClientRect());

@@ -61,10 +61,10 @@ class ThemeTransitionManager {
      * Only call this when the theme actually changes to avoid layout thrashing.
      */
     _fetchThemeColors() {
-        const style = getComputedStyle(document.documentElement);
-        const color1 = style.getPropertyValue('--aurora-color-1') || '#1a0b2e';
-        const color2 = style.getPropertyValue('--aurora-color-2') || '#4b1d52';
-        const color3 = style.getPropertyValue('--aurora-color-3') || '#0d2847';
+        const style = getComputedStyle(document.body);
+        const color1 = style.getPropertyValue('--aurora-color-1').trim() || '#1a0b2e';
+        const color2 = style.getPropertyValue('--aurora-color-2').trim() || '#4b1d52';
+        const color3 = style.getPropertyValue('--aurora-color-3').trim() || '#0d2847';
         
         return {
             uAuroraColor1: parseHexToRgb(color1),

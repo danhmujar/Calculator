@@ -5,7 +5,8 @@ import { CalculatorService } from '../services/calculator.js';
 import { WebGLContext } from './webgl/context.js';
 import { WebGLRenderer } from './webgl/renderer.js';
 import { TypographyManager } from './webgl/typography.js';
-import { getThemeUniforms } from '../services/theme.js';
+import { themeManager } from '../services/theme.js';
+import { initEyeTracking } from './eye-tracker.js';
 
 /**
  * UIManager - Coordinates DOM layout, theme management, and UI transitions.
@@ -18,6 +19,7 @@ export class UIManager {
         this.lastDisplayText = '';
         this.lastContainerWidth = 0;
 
+        this.themeManager = themeManager;
         this.typography = new TypographyManager();
         this.typography.onLayoutUpdate((glyphs) => {
             if (this.webglRenderer) {
@@ -87,75 +89,15 @@ export class UIManager {
             minimumFractionDigits: 0,
             maximumFractionDigits: 4
         });
-
-        this.themeColors = {
-            primary: [0, 0.32, 0.8, 1], // Default Financial Blue
-            accent: [0.96, 0.62, 0.04, 1], // Default Warning
-            background: [0.96, 0.96, 0.97, 1] // Default BG
-        };
     }
 
-    /**
-     * Exposes getThemeUniforms for testing and external access.
-     */
     getThemeUniforms() {
-        return getThemeUniforms();
+        return this.themeManager.getInterpolatedTheme(performance.now());
     }
 
-    /**
-     * Extracts a CSS variable value and converts it to a normalized RGBA array.
-     * @param {string} variableName - The CSS variable name (e.g., '--primary-blue')
-     * @returns {number[]} Normalized RGBA [0.0 - 1.0]
-     */
-    getThemeColor(variableName) {
-        const value = getComputedStyle(document.body).getPropertyValue(variableName).trim();
-        if (!value) return [0, 0, 0, 1];
-        return this.parseColor(value);
-    }
-
-    /**
-     * Parses CSS color strings (hex, rgb, rgba) into normalized arrays.
-     */
-    parseColor(colorStr) {
-        // Handle hex
-        if (colorStr.startsWith('#')) {
-            let r = 0, g = 0, b = 0;
-            if (colorStr.length === 4) {
-                r = parseInt(colorStr[1] + colorStr[1], 16);
-                g = parseInt(colorStr[2] + colorStr[2], 16);
-                b = parseInt(colorStr[3] + colorStr[3], 16);
-            } else {
-                r = parseInt(colorStr.slice(1, 3), 16);
-                g = parseInt(colorStr.slice(3, 5), 16);
-                b = parseInt(colorStr.slice(5, 7), 16);
-            }
-            return [r / 255, g / 255, b / 255, 1.0];
-        }
-        // Handle rgb/rgba
-        const match = colorStr.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
-        if (match) {
-            return [
-                parseInt(match[1]) / 255,
-                parseInt(match[2]) / 255,
-                parseInt(match[3]) / 255,
-                match[4] ? parseFloat(match[4]) : 1.0
-            ];
-        }
-        return [0, 0, 0, 1];
-    }
-
-    /**
-     * Synchronizes WebGL theme cache with current DOM styles.
-     */
     syncThemeColors() {
-        this.themeColors.primary = this.getThemeColor('--primary-blue');
-        this.themeColors.accent = this.getThemeColor('--warning');
-        this.themeColors.background = this.getThemeColor('--bg-color');
-        this.themeColors.text = this.getThemeColor('--text-primary');
-
+        this.themeManager.updateTargetTheme();
         if (this.webglRenderer) {
-            this.webglRenderer.themeColors = this.themeColors;
-            // Schedule the render to avoid redundancy during initialization
             renderer.schedule(() => this.webglRenderer.render());
         }
     }
@@ -172,9 +114,6 @@ export class UIManager {
         return input;
     }
 
-    /**
-     * Converts internal operators to display symbols (REQ-UI-01)
-     */
     formatOperator(op) {
         switch (op) {
             case '*': return '×';
@@ -190,7 +129,6 @@ export class UIManager {
         this.auditList = document.getElementById('audit-list');
         this.memoryIndicatorEl = document.getElementById('memory-indicator');
 
-        // Observe main UI elements for layout changes
         layoutManager.observe(this.displayEl, 'main-calc-display');
         layoutManager.observe(this.previewEl, 'main-calc-prev');
         layoutManager.observe(this.memoryIndicatorEl, 'memory-indicator');
@@ -200,7 +138,6 @@ export class UIManager {
             layoutManager.observe(sciContainer, 'sci-container');
         }
         
-        // Observe all calculator buttons
         document.querySelectorAll('.btn, .icon-btn').forEach((btn) => {
             const id = btn.id || btn.getAttribute('aria-label') || btn.title;
             if (id) {
@@ -208,21 +145,15 @@ export class UIManager {
             }
         });
 
-        // Observe existing math-fields
         document.querySelectorAll('math-field').forEach((mf, i) => {
             layoutManager.observe(mf, `math-field-${i}`);
         });
 
-        // Pre-configure MathLive placeholder removed. We will configure it safely in activateScientificMode.
-
-        // Initialize WebGL Underlay (REQ-WGL-01)
         this.webgl = new WebGLContext();
         this.webgl.canvas.setAttribute('aria-hidden', 'true');
         this.webglRenderer = new WebGLRenderer(this.webgl, this.typography);
         if (this.webgl.canvas) {
             document.body.prepend(this.webgl.canvas);
-            
-            // Permanent Ghost DOM + WebGL Overlay Mode
             document.body.classList.add('webgl-active');
             this.webgl.canvas.style.display = 'block';
             this.webgl.canvas.style.zIndex = '-1';
@@ -232,8 +163,6 @@ export class UIManager {
                 this.webglRenderer.render();
             });
 
-            // Synchronize WebGL with scientific scroll (REQ-WGL-05)
-            const sciContainer = document.getElementById('sci-container');
             if (sciContainer) {
                 sciContainer.addEventListener('scroll', () => {
                     if (this.webglRenderer) this.webglRenderer.render();
@@ -248,6 +177,9 @@ export class UIManager {
         this.setupPasteSupport();
         this.setupFocusHandling();
         this.setupThemePicker();
+        
+        this.themeManager.init();
+        initEyeTracking();
         this.syncThemeColors();
     }
 
@@ -288,7 +220,6 @@ export class UIManager {
     }
 
     setupFocusHandling() {
-        // Handle MathLive virtual keyboard focus restoration (REQ-UI-05)
         setTimeout(() => {
             if (window.mathVirtualKeyboard) {
                 window.mathVirtualKeyboard.addEventListener('virtual-keyboard-toggle', () => {
@@ -305,11 +236,7 @@ export class UIManager {
 
     restoreState(state, callbacks = {}) {
         if (!state) return;
-
-        // 1. Theme and Mode
         this.restoreThemeAndMode(state);
-
-        // 2. Audit Tape
         if (state.auditData && Array.isArray(state.auditData) && callbacks.addAuditEntry) {
             state.auditData.slice().reverse().forEach(entry => {
                 if (entry.expr && typeof entry.expr === 'string' && typeof entry.res === 'number' && isFinite(entry.res)) {
@@ -321,11 +248,7 @@ export class UIManager {
                 }
             });
         }
-
-        // 3. Percentage Cards
         this.restorePercentageCards(state);
-
-        // 4. Scientific Rows
         this.restoreScientificRows(state);
     }
 
@@ -380,10 +303,6 @@ export class UIManager {
     restoreScientificRows(state) {
         if (state.sciRows && state.sciRows.length > 0) {
             this._pendingSciRows = state.sciRows;
-            
-            // If MathLive is already fully loaded and configured, we can append them now.
-            // Otherwise, we defer to activateScientificMode which will append them safely
-            // AFTER setting the fontsDirectory.
             if (window.customElements.get('math-field')) {
                 const sciWrapper = document.querySelector('.sci-rows-wrapper');
                 if (sciWrapper) {
@@ -409,11 +328,9 @@ export class UIManager {
         if (rightPanel) {
             rightPanel.classList.add('anim-slide-right');
             rightPanel.style.animationDelay = '0.1s';
-
             rightPanel.addEventListener('animationend', () => {
                 rightPanel.classList.remove('anim-slide-right');
             }, { once: true });
-
             if (window.innerWidth > 1024) {
                 rightPanel.addEventListener('animationend', () => {
                     rightPanel.classList.add('open');
@@ -434,14 +351,8 @@ export class UIManager {
                 });
             }
             wasMobile = !isDesktop;
-
-            // Synchronize WebGL viewport (REQ-WGL-01)
-            if (this.webgl) {
-                this.webgl.resize();
-            }
-            if (this.webglRenderer) {
-                this.webglRenderer.render();
-            }
+            if (this.webgl) this.webgl.resize();
+            if (this.webglRenderer) this.webglRenderer.render();
         });
     }
 
@@ -454,130 +365,84 @@ export class UIManager {
     setupKeyboardShortcuts() {
         document.addEventListener('keydown', (e) => {
             if (e.target.tagName.toLowerCase() === 'input' || e.target.tagName.toLowerCase() === 'math-field') return;
-
             const sidebar = document.getElementById('sidebar');
             if (sidebar && sidebar.classList.contains('scientific-active')) return;
         });
     }
 
-    setupPasteSupport() {
-        // ... (Logic from app.js bindEvents)
-    }
+    setupPasteSupport() {}
 
     calculateRowResult(type, x, y) {
         const result = CalculatorService.calculatePercentage(type, x, y);
-        
-        if (result === null) {
-            return (type === 'type1' || type === 'type3') ? '0.00%' : '0.00';
-        }
-        if (result === 'Error') {
-            return 'Error';
-        }
-
-        if (type === 'type1') {
-            return this.proFormatter.format(result) + '%';
-        }
-        if (type === 'type3') {
-            const sign = result > 0 ? '+' : '';
-            return sign + this.proFormatter.format(result) + '%';
-        }
-        
+        if (result === null) return (type === 'type1' || type === 'type3') ? '0.00%' : '0.00';
+        if (result === 'Error') return 'Error';
+        if (type === 'type1') return this.proFormatter.format(result) + '%';
+        if (type === 'type3') return (result > 0 ? '+' : '') + this.proFormatter.format(result) + '%';
         return this.proFormatter.format(result);
     }
 
     createRow(type) {
         const container = document.createElement('div');
         container.className = 'calc-row-instance';
-
         const uniqueId = 'res-' + crypto.randomUUID().slice(0, 8);
         layoutManager.observe(container, `row-${uniqueId}`);
-
         const templateContainer = document.createElement('div');
         templateContainer.className = 'row-template-content';
-        if (this.ROW_BUILDERS[type]) {
-            this.ROW_BUILDERS[type](templateContainer);
-        }
+        if (this.ROW_BUILDERS[type]) this.ROW_BUILDERS[type](templateContainer);
         container.appendChild(templateContainer);
-
         const resultGroup = document.createElement('div');
         resultGroup.className = 'result-group';
-
         const resultLabel = document.createElement('span');
         resultLabel.textContent = 'Result:';
         resultGroup.appendChild(resultLabel);
-
         const resultValue = document.createElement('span');
         resultValue.className = 'result-value';
         resultValue.id = uniqueId;
         resultValue.setAttribute('aria-live', 'polite');
         resultValue.textContent = (type === 'type1' || type === 'type3') ? '0.00%' : '0.00';
         resultGroup.appendChild(resultValue);
-
         const copyBtn = document.createElement('button');
         copyBtn.className = 'icon-btn copy-row-btn';
-        copyBtn.title = 'Copy to clipboard';
-        copyBtn.setAttribute('aria-label', 'Copy result');
+        copyBtn.title = 'Copy result';
         copyBtn.appendChild(this.createCopySvg(18));
         resultGroup.appendChild(copyBtn);
-
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'icon-btn delete-row-btn';
         deleteBtn.title = 'Delete Row';
-        deleteBtn.setAttribute('aria-label', 'Delete row');
-
         const deleteSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         deleteSvg.setAttribute('width', '18');
         deleteSvg.setAttribute('height', '18');
-        deleteSvg.setAttribute('aria-hidden', 'true');
-        
         const useEl = document.createElementNS('http://www.w3.org/2000/svg', 'use');
         useEl.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', './assets/sprites.svg#icon-delete');
         deleteSvg.appendChild(useEl);
-        
         deleteBtn.appendChild(deleteSvg);
         resultGroup.appendChild(deleteBtn);
-
         container.appendChild(resultGroup);
-
         copyBtn.addEventListener('click', () => this.copyResult(uniqueId));
         deleteBtn.addEventListener('click', () => this.deleteRow(deleteBtn));
-
         const xInput = container.querySelector('.val-x');
         const yInput = container.querySelector('.val-y');
-        const resEl = resultValue;
-
         const updater = () => {
             const xVal = parseFloat(xInput.value);
             const yVal = parseFloat(yInput.value);
-            resEl.textContent = this.calculateRowResult(type,
-                isNaN(xVal) ? null : xVal,
-                isNaN(yVal) ? null : yVal
-            );
+            resultValue.textContent = this.calculateRowResult(type, isNaN(xVal) ? null : xVal, isNaN(yVal) ? null : yVal);
         };
-
         xInput.addEventListener('input', updater);
         yInput.addEventListener('input', updater);
-
         return container;
     }
 
     addRow(btnEl, type) {
         const container = btnEl.closest('.calc-card').querySelector('.calc-rows-container');
         const newRow = this.createRow(type);
-
         newRow.classList.add('row-enter');
         container.appendChild(newRow);
-
         void newRow.offsetWidth;
         requestAnimationFrame(() => {
             newRow.style.maxHeight = newRow.scrollHeight + 'px';
             newRow.classList.remove('row-enter');
-
-            newRow.addEventListener('transitionend', function handler(e) {
-                if (e.propertyName === 'max-height') {
-                    newRow.style.maxHeight = '';
-                    newRow.removeEventListener('transitionend', handler);
-                }
+            newRow.addEventListener('transitionend', (e) => {
+                if (e.propertyName === 'max-height') newRow.style.maxHeight = '';
             }, { once: true });
         });
     }
@@ -585,24 +450,14 @@ export class UIManager {
     deleteRow(btnEl) {
         const rowInstance = btnEl.closest('.calc-row-instance');
         if (!rowInstance) return;
-
         rowInstance.style.maxHeight = rowInstance.scrollHeight + 'px';
         void rowInstance.offsetWidth;
-
         requestAnimationFrame(() => {
             rowInstance.classList.add('row-exit');
-
-            const cleanup = () => {
-                rowInstance.remove();
-            };
-
-            rowInstance.addEventListener('transitionend', function handler(e) {
-                if (e.propertyName === 'max-height') {
-                    cleanup();
-                    rowInstance.removeEventListener('transitionend', handler);
-                }
+            const cleanup = () => rowInstance.remove();
+            rowInstance.addEventListener('transitionend', (e) => {
+                if (e.propertyName === 'max-height') cleanup();
             }, { once: true });
-
             setTimeout(cleanup, 400);
         });
     }
@@ -610,25 +465,19 @@ export class UIManager {
     showToast(msg = "Copied to clipboard!") {
         const toast = document.getElementById('toast');
         if (!toast) return;
-
         clearTimeout(this.toastTimeout);
         toast.textContent = msg;
         toast.classList.add('show');
-        this.toastTimeout = setTimeout(() => {
-            toast.classList.remove('show');
-        }, this.TOAST_DURATION_MS);
+        this.toastTimeout = setTimeout(() => toast.classList.remove('show'), this.TOAST_DURATION_MS);
     }
 
     createCopySvg(size = 14) {
         const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         svg.setAttribute('width', size);
         svg.setAttribute('height', size);
-        svg.setAttribute('aria-hidden', 'true');
-
         const useEl = document.createElementNS('http://www.w3.org/2000/svg', 'use');
         useEl.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', './assets/sprites.svg#icon-copy');
         svg.appendChild(useEl);
-        
         return svg;
     }
 
@@ -636,57 +485,36 @@ export class UIManager {
         let textToCopy;
         if (isMathRow) {
             const el = document.getElementById(elementId);
-            if (el) {
-                textToCopy = el.textContent.replace('=', '').trim().replace(/[%,]/g, '');
-            }
+            if (el) textToCopy = el.textContent.replace('=', '').trim().replace(/[%,]/g, '');
         } else if (hardcodedValue) {
             textToCopy = hardcodedValue.replace(/[%,]/g, '');
         } else {
             const el = document.getElementById(elementId);
             if (el) textToCopy = el.textContent.replace(/[%,]/g, '');
         }
-
         if (textToCopy) {
-            navigator.clipboard.writeText(textToCopy).then(() => {
-                this.showToast('Copied to clipboard!');
-            }).catch(() => {
-                this.showToast('Copy failed');
-            });
+            navigator.clipboard.writeText(textToCopy).then(() => this.showToast('Copied to clipboard!')).catch(() => this.showToast('Copy failed'));
         }
     }
 
     toggleDrawer() {
         const sidebar = document.getElementById('sidebar');
-        if (sidebar) {
-            const isClosing = sidebar.classList.contains('open');
-            const isMobile = window.innerWidth <= 1024;
-
-            void sidebar.offsetWidth;
-            requestAnimationFrame(() => {
-                sidebar.classList.toggle('open');
-
-                // REQ-UI-MOBILE-01: Auto-revert to Standard mode when closing
-                // the drawer on mobile while in Scientific mode. Prevents blank
-                // screen caused by body.scientific-mode hiding .left-panel
-                // when the sidebar is also closed.
-                if (isClosing && isMobile && document.body.classList.contains('scientific-mode')) {
-                    this.setCalcMode('standard');
-                }
-
-                if (this.webglRenderer) {
-                    renderer.schedule(() => this.webglRenderer.render());
-                }
-            });
-
-            // Sync after transition
-            const cleanup = (e) => {
-                if (e.propertyName === 'transform' || e.propertyName === 'width') {
-                    if (this.webglRenderer) renderer.schedule(() => this.webglRenderer.render());
-                    sidebar.removeEventListener('transitionend', cleanup);
-                }
-            };
-            sidebar.addEventListener('transitionend', cleanup);
-        }
+        if (!sidebar) return;
+        const isClosing = sidebar.classList.contains('open');
+        const isMobile = window.innerWidth <= 1024;
+        void sidebar.offsetWidth;
+        requestAnimationFrame(() => {
+            sidebar.classList.toggle('open');
+            if (isClosing && isMobile && document.body.classList.contains('scientific-mode')) this.setCalcMode('standard');
+            if (this.webglRenderer) renderer.schedule(() => this.webglRenderer.render());
+        });
+        const cleanup = (e) => {
+            if (e.propertyName === 'transform' || e.propertyName === 'width') {
+                if (this.webglRenderer) renderer.schedule(() => this.webglRenderer.render());
+                sidebar.removeEventListener('transitionend', cleanup);
+            }
+        };
+        sidebar.addEventListener('transitionend', cleanup);
     }
 
     toggleHistory() {
@@ -699,7 +527,6 @@ export class UIManager {
         const isAurora = Array.from(body.classList).some(c => c.startsWith('theme-aurora'));
         if (isAurora && body.classList.contains('dark-theme')) {
             body.classList.remove('theme-aurora', 'theme-aurora-ocean', 'theme-aurora-cyber', 'theme-aurora-sunset');
-
             const picker = document.querySelector('.theme-picker');
             if (picker) {
                 picker.querySelectorAll('.theme-swatch').forEach(btn => btn.classList.remove('active'));
@@ -707,20 +534,14 @@ export class UIManager {
                 if (defaultSwatch) defaultSwatch.classList.add('active');
             }
         }
-
         body.classList.toggle('dark-theme');
-
         const checkbox = document.getElementById('checkbox');
-        if (checkbox) {
-            checkbox.checked = body.classList.contains('dark-theme');
-        }
-
+        if (checkbox) checkbox.checked = body.classList.contains('dark-theme');
         this.syncThemeColors();
     }
 
     setThemeColor(btnEl, themeClass) {
         if (themeClass && !this.VALID_THEMES.includes(themeClass)) return;
-
         const picker = document.querySelector('.theme-picker');
         if (picker) {
             picker.querySelectorAll('.theme-swatch').forEach(btn => {
@@ -730,86 +551,57 @@ export class UIManager {
         }
         btnEl.classList.add('active');
         btnEl.setAttribute('aria-checked', 'true');
-
         document.body.classList.remove('theme-teal', 'theme-terracotta', 'theme-forest', 'theme-slate', 'theme-rosewood', 'theme-pistachio', 'theme-purple', 'theme-aurora', 'theme-aurora-ocean', 'theme-aurora-cyber', 'theme-aurora-sunset');
-
         if (themeClass) {
             document.body.classList.add(themeClass);
-
             if (themeClass.startsWith('theme-aurora')) {
                 document.body.classList.add('dark-theme');
                 const checkbox = document.getElementById('checkbox');
                 if (checkbox) checkbox.checked = true;
             }
         }
-
         const dropdown = document.getElementById('theme-dropdown-container');
         if (dropdown) dropdown.classList.remove('active');
-
         this.syncThemeColors();
     }
 
     updateMemoryIndicator(memoryValue) {
-        if (!this.memoryIndicatorEl) return;
-        this.memoryIndicatorEl.hidden = memoryValue === 0;
+        if (this.memoryIndicatorEl) this.memoryIndicatorEl.hidden = memoryValue === 0;
     }
 
     updateDisplay(calcState, formatOperator) {
         renderer.schedule(() => {
             if (!this.displayEl || !this.previewEl) return;
-
             let hasDot = calcState.currentValue.endsWith('.');
             let targetVal = parseFloat(calcState.currentValue);
             if (isNaN(targetVal)) targetVal = 0;
-
             let formatted = this.proFormatter.format(targetVal);
             if (hasDot) formatted += '.';
-
-            // Fallback for huge numbers if needed, but WebGL scales text to fit.
-            if (formatted.length > 15 && targetVal > 0) {
-               formatted = targetVal.toExponential(4);
-            }
-
+            if (formatted.length > 15 && targetVal > 0) formatted = targetVal.toExponential(4);
             this.displayEl.textContent = formatted;
-
             if (calcState.previousValue !== null && calcState.operator) {
-                const opStr = formatOperator(calcState.operator);
-                this.previewEl.textContent = `${this.proFormatter.format(calcState.previousValue)} ${opStr}`;
+                this.previewEl.textContent = `${this.proFormatter.format(calcState.previousValue)} ${formatOperator(calcState.operator)}`;
             } else {
                 this.previewEl.textContent = '';
             }
-
-            if (this.webglRenderer) {
-                this.webglRenderer.render();
-            }
+            if (this.webglRenderer) this.webglRenderer.render();
         });
     }
 
     addAuditEntry(a, b, op, res, formatOperator, useAuditValueCallback, expr = null) {
-        let equation = '';
-        if (expr) {
-            equation = expr;
-        } else {
-            const opStr = formatOperator(op);
-            equation = this.proFormatter.format(a) + ' ' + opStr + ' ' + this.proFormatter.format(b);
-        }
+        let equation = expr || (this.proFormatter.format(a) + ' ' + formatOperator(op) + ' ' + this.proFormatter.format(b));
         const resultFormat = this.proFormatter.format(res);
-
         const li = document.createElement('li');
         li.className = 'audit-item';
-
         const eqDiv = document.createElement('div');
         eqDiv.className = 'audit-equation';
         eqDiv.textContent = equation + ' =';
-
         const resultRow = document.createElement('div');
         resultRow.className = 'audit-result-row';
-
         const actionsDiv = this.createAuditActions(res, resultFormat, useAuditValueCallback);
         const resDiv = document.createElement('div');
         resDiv.className = 'audit-result';
         resDiv.textContent = resultFormat;
-
         resultRow.appendChild(actionsDiv);
         resultRow.appendChild(resDiv);
         li.appendChild(eqDiv);
@@ -820,29 +612,18 @@ export class UIManager {
     createAuditActions(res, resultFormat, useAuditValueCallback) {
         const actionsDiv = document.createElement('div');
         actionsDiv.className = 'audit-actions';
-
         const useBtn = document.createElement('button');
         useBtn.className = 'btn-use';
         useBtn.textContent = 'Use';
         useBtn.addEventListener('click', () => useAuditValueCallback(res));
-
         const copyBtn = document.createElement('button');
         copyBtn.className = 'icon-btn';
         copyBtn.title = 'Copy';
-        copyBtn.setAttribute('aria-label', 'Copy result');
         copyBtn.appendChild(this.createCopySvg(14));
-
         copyBtn.addEventListener('click', () => {
             const rawValue = resultFormat.replace(/[%,]/g, '');
-            if (rawValue) {
-                navigator.clipboard.writeText(rawValue).then(() => {
-                    this.showToast('Copied to clipboard!');
-                }).catch(() => {
-                    this.showToast('Copy failed');
-                });
-            }
+            if (rawValue) navigator.clipboard.writeText(rawValue).then(() => this.showToast('Copied to clipboard!')).catch(() => this.showToast('Copy failed'));
         });
-
         actionsDiv.appendChild(useBtn);
         actionsDiv.appendChild(copyBtn);
         return actionsDiv;
@@ -857,30 +638,16 @@ export class UIManager {
         const btnStd = document.getElementById('btn-mode-std');
         const btnSci = document.getElementById('btn-mode-sci');
         const sciContainer = document.getElementById('sci-container');
-
         if (mode === 'scientific') {
             this.activateScientificMode(sidebar, btnStd, btnSci, sciContainer);
         } else {
             const leftPanel = document.querySelector('.left-panel');
             if (leftPanel) leftPanel.style.overflow = 'hidden';
-            if (leftPanel) void leftPanel.offsetWidth;
-
             requestAnimationFrame(() => {
-                // Guard: block all WebGL standard-mode rendering during the transition.
-                // Other triggers (ResizeObserver, scroll) can fire render() mid-transition
-                // with stale layout data, causing symbols to appear at wrong positions.
                 document.body.classList.add('mode-transitioning');
-
                 document.body.classList.remove('scientific-mode');
-                // Immediately flush stale scientific glyphs from the WebGL typography cache.
-                // Without this, cached glyph positions from the SCI layout persist and render
-                // as phantom text behind the standard-mode left panel.
-                if (this.typography) {
-                    this.typography.glyphs = [];
-                }
-                // Update Store (REQ-ARCH-01) inside the frame to ensure layout has started settling
+                if (this.typography) this.typography.glyphs = [];
                 store.state.persistent.mode = mode;
-
                 if (sciContainer) sciContainer.classList.remove('active');
                 if (sidebar) sidebar.classList.remove('scientific-active');
                 if (btnSci) {
@@ -891,7 +658,6 @@ export class UIManager {
                     btnStd.classList.add('active');
                     btnStd.setAttribute('aria-checked', 'true');
                 }
-
                 const finalize = () => {
                     if (leftPanel) leftPanel.style.overflow = '';
                     document.body.classList.remove('mode-transitioning');
@@ -901,25 +667,19 @@ export class UIManager {
                         this.webglRenderer.render();
                     }
                 };
-
                 if (leftPanel) {
                     let finalized = false;
                     const cleanup = (e) => {
-                        if (e && e.propertyName !== 'opacity' && e.propertyName !== 'width' && e.propertyName !== 'flex-basis') return;
-                        if (finalized) return;
-                        finalized = true;
-                        leftPanel.removeEventListener('transitionend', cleanup);
-                        finalize();
+                        if (e && (e.propertyName === 'opacity' || e.propertyName === 'width' || e.propertyName === 'flex-basis')) {
+                            if (!finalized) {
+                                finalized = true;
+                                leftPanel.removeEventListener('transitionend', cleanup);
+                                finalize();
+                            }
+                        }
                     };
                     leftPanel.addEventListener('transitionend', cleanup);
-                    // Safety: force finalize if transitionend never fires
-                    setTimeout(() => {
-                        if (!finalized) {
-                            finalized = true;
-                            leftPanel.removeEventListener('transitionend', cleanup);
-                            finalize();
-                        }
-                    }, 600);
+                    setTimeout(() => { if (!finalized) { finalized = true; finalize(); } }, 600);
                 } else {
                     finalize();
                 }
@@ -930,32 +690,21 @@ export class UIManager {
     async activateScientificMode(sidebar, btnStd, btnSci, sciContainer) {
         const leftPanel = document.querySelector('.left-panel');
         if (leftPanel) leftPanel.style.overflow = 'hidden';
-
         if (!window.customElements.get('math-field')) {
             this.showToast('Loading Scientific Engine...');
             try {
                 const ml = await import('mathlive');
-                // Set font path immediately after import using the resolved module, before any elements enter the DOM.
-                if (ml && ml.MathfieldElement) {
-                    ml.MathfieldElement.fontsDirectory = '/Calculator/fonts/';
-                }
+                if (ml && ml.MathfieldElement) ml.MathfieldElement.fontsDirectory = '/Calculator/fonts/';
                 await customElements.whenDefined('math-field');
             } catch (err) {
-                console.error('Failed to load MathLive', err);
                 this.showToast('Error loading scientific engine');
                 return;
             }
         }
-
-        if (leftPanel) void leftPanel.offsetWidth;
         requestAnimationFrame(() => {
-            // Guard: block WebGL rendering during the STD→SCI layout transition
             document.body.classList.add('mode-transitioning');
-
             document.body.classList.add('scientific-mode');
-            // Update Store (REQ-ARCH-01) inside the frame to ensure consistency with layout state
             store.state.persistent.mode = 'scientific';
-
             if (sidebar) sidebar.classList.add('scientific-active');
             if (btnStd) {
                 btnStd.classList.remove('active');
@@ -966,104 +715,70 @@ export class UIManager {
                 btnSci.setAttribute('aria-checked', 'true');
             }
             if (sciContainer) sciContainer.classList.add('active');
-
             const wrapper = document.querySelector('.sci-rows-wrapper');
             if (wrapper) {
-                // Restore pending rows if any were delayed during state loading
                 if (this._pendingSciRows) {
                     wrapper.replaceChildren();
                     this._pendingSciRows.forEach(val => this.addScientificRow(val));
                     this._pendingSciRows = null;
                 } else if (wrapper.children.length === 0) {
-                    // Add a default row if none exist
                     this.addScientificRow();
                 }
             }
-
-            // Do NOT render here — layout is mid-transition
         });
-
-        // Finalize after sidebar transition completes
         if (sidebar) {
             let finalized = false;
             const cleanup = (e) => {
-                if (e.propertyName !== 'transform' && e.propertyName !== 'width') return;
-                if (finalized) return;
-                finalized = true;
-                sidebar.removeEventListener('transitionend', cleanup);
-                document.body.classList.remove('mode-transitioning');
-                layoutManager.refreshAll();
-                if (this.webglRenderer) {
-                    this.webglRenderer.layoutHistory.clear();
-                    this.webglRenderer.render();
+                if (e.propertyName === 'transform' || e.propertyName === 'width') {
+                    if (!finalized) {
+                        finalized = true;
+                        sidebar.removeEventListener('transitionend', cleanup);
+                        document.body.classList.remove('mode-transitioning');
+                        layoutManager.refreshAll();
+                        if (this.webglRenderer) {
+                            this.webglRenderer.layoutHistory.clear();
+                            this.webglRenderer.render();
+                        }
+                    }
                 }
             };
             sidebar.addEventListener('transitionend', cleanup);
-            // Safety timeout
-            setTimeout(() => {
-                if (!finalized) {
-                    finalized = true;
-                    sidebar.removeEventListener('transitionend', cleanup);
-                    document.body.classList.remove('mode-transitioning');
-                    layoutManager.refreshAll();
-                    if (this.webglRenderer) {
-                        this.webglRenderer.layoutHistory.clear();
-                        this.webglRenderer.render();
-                    }
-                }
-            }, 600);
+            setTimeout(() => { if (!finalized) { finalized = true; document.body.classList.remove('mode-transitioning'); layoutManager.refreshAll(); } }, 600);
         }
     }
 
     addScientificRow(initialValue = '') {
         const wrapper = document.querySelector('.sci-rows-wrapper');
         if (!wrapper) return;
-
         const row = document.createElement('div');
         row.className = 'math-row';
-
         const uniqueId = 'math-res-' + crypto.randomUUID().slice(0, 8);
         layoutManager.observe(row, `math-row-${uniqueId}`);
         const mf = this.createMathField();
-
-        // Use mount event for stable restoration as per Phase 06 Research
         if (initialValue) {
             mf.addEventListener('mount', () => {
                 mf.setValue(initialValue);
-                // Trigger input to update result
                 mf.dispatchEvent(new Event('input', { bubbles: true }));
             }, { once: true });
         }
-
         const actionsDiv = this.createMathActions(uniqueId, row);
-
         row.appendChild(mf);
         row.appendChild(actionsDiv);
-
         row.classList.add('row-enter');
         wrapper.appendChild(row);
-
         void row.offsetWidth;
         requestAnimationFrame(() => {
             row.style.maxHeight = row.scrollHeight + 'px';
             row.classList.remove('row-enter');
-
             row.addEventListener('transitionend', (e) => {
                 if (e.propertyName === 'max-height') {
                     row.style.maxHeight = '';
-                    // Final sync after transition ends
                     if (this.webglRenderer) this.webglRenderer.render();
                 }
             }, { once: true });
-
-            if (row.scrollHeight === 0) {
-                row.style.maxHeight = '';
-            }
-
-            // Sync during entry animation
+            if (row.scrollHeight === 0) row.style.maxHeight = '';
             if (this.webglRenderer) this.webglRenderer.render();
         });
-
         const resEl = document.getElementById(uniqueId);
         if (resEl) this.setupMathFieldListeners(mf, resEl);
         mf.focus();
@@ -1072,7 +787,6 @@ export class UIManager {
     createMathField() {
         const mf = document.createElement('math-field');
         mf.setAttribute('virtual-keyboard-mode', 'manual');
-        mf.setAttribute('aria-label', 'Mathematical expression');
         mf.addEventListener('focus', () => {
             document.querySelectorAll('math-field').forEach(f => f.classList.remove('last-focused'));
             mf.classList.add('last-focused');
@@ -1083,52 +797,36 @@ export class UIManager {
     createMathActions(uniqueId, rowEl) {
         const actionsDiv = document.createElement('div');
         actionsDiv.className = 'math-actions';
-
         const resEl = document.createElement('span');
         resEl.className = 'math-result';
         resEl.id = uniqueId;
-        resEl.setAttribute('aria-live', 'polite');
         resEl.textContent = '= ';
         layoutManager.observe(resEl, uniqueId);
-
         const copyBtn = document.createElement('button');
         copyBtn.className = 'icon-btn';
-        copyBtn.title = 'Copy Result';
-        copyBtn.setAttribute('aria-label', 'Copy result');
         copyBtn.appendChild(this.createCopySvg(16));
         copyBtn.addEventListener('click', () => this.copyResult(uniqueId, null, true));
-
         const delBtn = document.createElement('button');
         delBtn.className = 'icon-btn delete-row-btn';
-        delBtn.title = 'Delete';
-        delBtn.setAttribute('aria-label', 'Delete row');
-
         const delSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         delSvg.setAttribute('width', '16');
         delSvg.setAttribute('height', '16');
-        delSvg.setAttribute('aria-hidden', 'true');
-        
         const useEl = document.createElementNS('http://www.w3.org/2000/svg', 'use');
         useEl.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', './assets/sprites.svg#icon-delete');
         delSvg.appendChild(useEl);
-        
         delBtn.appendChild(delSvg);
         delBtn.addEventListener('click', () => {
             rowEl.style.maxHeight = rowEl.scrollHeight + 'px';
             void rowEl.offsetWidth;
-
             requestAnimationFrame(() => {
                 rowEl.classList.add('row-exit');
                 const cleanup = () => rowEl.remove();
                 rowEl.addEventListener('transitionend', (e) => {
-                    if (e.propertyName === 'max-height') {
-                        cleanup();
-                    }
+                    if (e.propertyName === 'max-height') cleanup();
                 }, { once: true });
                 setTimeout(cleanup, 400);
             });
         });
-
         actionsDiv.appendChild(resEl);
         actionsDiv.appendChild(copyBtn);
         actionsDiv.appendChild(delBtn);
@@ -1138,36 +836,18 @@ export class UIManager {
     setupMathFieldListeners(mf, resEl) {
         mf.addEventListener('input', () => {
             const expr = mf.getValue('ascii-math');
-            if (!expr || expr.trim() === '') {
-                resEl.textContent = '= ';
-                return;
-            }
-
-            if (expr.length > this.MATH_EXPR_LIMIT) {
-                resEl.textContent = '= ERR: TOO LONG';
-                return;
-            }
-
+            if (!expr || expr.trim() === '') { resEl.textContent = '= '; return; }
+            if (expr.length > this.MATH_EXPR_LIMIT) { resEl.textContent = '= ERR: TOO LONG'; return; }
             const calculated = CalculatorService.evaluate(expr);
-            if (calculated !== null) {
-                resEl.textContent = '= ' + this.proFormatter.format(calculated);
-            } else {
-                resEl.textContent = '= ';
-            }
-
-            if (this.webglRenderer) {
-                this.webglRenderer.render();
-            }
+            resEl.textContent = (calculated !== null) ? '= ' + this.proFormatter.format(calculated) : '= ';
+            if (this.webglRenderer) this.webglRenderer.render();
         });
-
         mf.addEventListener('change', () => {
             const expr = mf.getValue('ascii-math');
             if (expr && expr.trim() !== '') {
                 const calculated = CalculatorService.evaluate(expr);
-                if (calculated !== null) {
-                    if (window.app && window.app.addAuditEntry) {
-                        window.app.addAuditEntry(null, null, null, calculated, true, expr);
-                    }
+                if (calculated !== null && window.app && window.app.addAuditEntry) {
+                    window.app.addAuditEntry(null, null, null, calculated, true, expr);
                 }
             }
         });
