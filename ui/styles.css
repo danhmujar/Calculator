@@ -377,7 +377,10 @@ body.theme-aurora.dark-theme {
     --calc-btn-bg: rgba(26, 18, 40, 0.5);
     --calc-btn-border: rgba(45, 30, 70, 0.4);
     --calc-btn-hover: rgba(50, 30, 80, 0.6);
-    --aurora-bg: conic-gradient(from 0deg at 50% 50%, #1a0b2e, #4b1d52, #1a0b2e, #0d2847, #1a0b2e);
+    --aurora-color-1: #1a0b2e;
+    --aurora-color-2: #4b1d52;
+    --aurora-color-3: #0d2847;
+    --aurora-bg: conic-gradient(from 0deg at 50% 50%, var(--aurora-color-1), var(--aurora-color-2), var(--aurora-color-1), var(--aurora-color-3), var(--aurora-color-1));
 }
 
 /* 8.2 Oceanic Aurora (Blue/Teal - Masculine) */
@@ -391,7 +394,10 @@ body.theme-aurora-ocean.dark-theme {
     --calc-btn-bg: rgba(12, 30, 50, 0.5);
     --calc-btn-border: rgba(20, 50, 80, 0.4);
     --calc-btn-hover: rgba(25, 60, 95, 0.6);
-    --aurora-bg: conic-gradient(from 0deg at 50% 50%, #031525, #084c61, #031525, #0a3a5c, #031525);
+    --aurora-color-1: #031525;
+    --aurora-color-2: #084c61;
+    --aurora-color-3: #0a3a5c;
+    --aurora-bg: conic-gradient(from 0deg at 50% 50%, var(--aurora-color-1), var(--aurora-color-2), var(--aurora-color-1), var(--aurora-color-3), var(--aurora-color-1));
 }
 
 /* 8.3 Cyber Neon (Dark Green/Blue - Masculine) */
@@ -405,7 +411,10 @@ body.theme-aurora-cyber.dark-theme {
     --calc-btn-bg: rgba(12, 35, 25, 0.5);
     --calc-btn-border: rgba(20, 60, 40, 0.4);
     --calc-btn-hover: rgba(25, 75, 50, 0.6);
-    --aurora-bg: conic-gradient(from 0deg at 50% 50%, #021a14, #064e3b, #021a14, #0f172a, #021a14);
+    --aurora-color-1: #021a14;
+    --aurora-color-2: #064e3b;
+    --aurora-color-3: #0f172a;
+    --aurora-bg: conic-gradient(from 0deg at 50% 50%, var(--aurora-color-1), var(--aurora-color-2), var(--aurora-color-1), var(--aurora-color-3), var(--aurora-color-1));
 }
 
 /* 8.4 Sunset Aurora (Peach/Orange - Feminine) */
@@ -419,7 +428,10 @@ body.theme-aurora-sunset.dark-theme {
     --calc-btn-bg: rgba(50, 20, 20, 0.5);
     --calc-btn-border: rgba(80, 30, 30, 0.4);
     --calc-btn-hover: rgba(95, 40, 40, 0.6);
-    --aurora-bg: conic-gradient(from 0deg at 50% 50%, #2a0b0b, #7c2d12, #2a0b0b, #831843, #2a0b0b);
+    --aurora-color-1: #2a0b0b;
+    --aurora-color-2: #7c2d12;
+    --aurora-color-3: #831843;
+    --aurora-bg: conic-gradient(from 0deg at 50% 50%, var(--aurora-color-1), var(--aurora-color-2), var(--aurora-color-1), var(--aurora-color-3), var(--aurora-color-1));
 }
 
 /* Aurora Shared Animated Background */
