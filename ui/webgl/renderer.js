@@ -78,6 +78,33 @@ export class WebGLRenderer {
         };
 
         this.init();
+        this.setupResizeObserver();
+    }
+
+    /**
+     * Attaches a ResizeObserver to the document body to handle layout changes.
+     */
+    setupResizeObserver() {
+        this.resizeObserver = new ResizeObserver(() => {
+            this.handleResize();
+        });
+        this.resizeObserver.observe(document.body);
+    }
+
+    /**
+     * Coordinates the resize sequence: canvas -> viewport -> FBOs.
+     */
+    handleResize() {
+        if (!this.initialized) return;
+        
+        // 1. Update the main WebGL context (Canvas size & Viewport)
+        this.context.resize();
+        
+        // 2. Recreate FBOs at the new resolution
+        this.resizeFBOs();
+        
+        // 3. Force a re-render to prevent flickering
+        this.render();
     }
 
     /**
