@@ -57,9 +57,9 @@
     --slider-night-bg: #1e1b4b;
     --btn-eq-text: #ffffff;
     --glass-border: rgba(255, 255, 255, 0.35);
-    --glass-bg: rgba(255, 255, 255, 0.55);
+    --glass-bg: rgba(255, 255, 255, 0.82);
     --glass-bg-hover: rgba(255, 255, 255, 0.70);
-    --modal-glass-bg: rgba(255, 255, 255, 0.72);
+    --modal-glass-bg: rgba(255, 255, 255, 0.85);
     --modal-glass-border: rgba(255, 255, 255, 0.45);
     --overlay-backdrop: rgba(0, 0, 0, 0.35);
     --glass-shadow: 0 4px 16px rgba(0, 0, 0, 0.10), 0 1px 3px rgba(0, 0, 0, 0.06);
@@ -114,9 +114,9 @@ body.dark-theme {
 
     /* Dark Mode Glass variables */
     --glass-border: rgba(255, 255, 255, 0.12);
-    --glass-bg: rgba(30, 32, 40, 0.65);
+    --glass-bg: rgba(30, 32, 40, 0.82);
     --glass-bg-hover: rgba(40, 42, 52, 0.80);
-    --modal-glass-bg: rgba(28, 30, 36, 0.82);
+    --modal-glass-bg: rgba(28, 30, 36, 0.85);
     --modal-glass-border: rgba(255, 255, 255, 0.08);
     --glass-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.2);
     --glass-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.4), 0 2px 6px rgba(0, 0, 0, 0.3);
@@ -523,13 +523,13 @@ body[class*="theme-aurora"] .calc-btn {
 body.webgl-active .right-panel,
 body.webgl-active .calc-card,
 body.webgl-active .calc-display {
-    background-color: color-mix(in srgb, var(--panel-bg) 65%, transparent);
+    background-color: color-mix(in srgb, var(--panel-bg) 85%, transparent);
 }
 
 /* Ensure mobile drawer is also transparent when WebGL is active */
 @media (max-width: 1024px) {
     body.webgl-active .right-panel {
-        background-color: color-mix(in srgb, var(--panel-bg) 80%, transparent);
+        background-color: color-mix(in srgb, var(--panel-bg) 85%, transparent);
     }
 }
 
@@ -1008,7 +1008,7 @@ input:checked+.slider .slider-bg {
     border-bottom: 1px solid var(--border-color);
     background: var(--panel-bg);
     /* Fallback */
-    background: color-mix(in srgb, var(--panel-bg) 80%, transparent);
+    background: color-mix(in srgb, var(--panel-bg) 85%, transparent);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -1378,7 +1378,7 @@ body[class*="theme-aurora"] .audit-tape-container {
     border-bottom: 1px dashed var(--border-color);
     background: var(--bg-color);
     /* Fallback */
-    background: color-mix(in srgb, var(--bg-color) 80%, transparent);
+    background: color-mix(in srgb, var(--bg-color) 85%, transparent);
     position: sticky;
     top: 0;
     z-index: 2;
