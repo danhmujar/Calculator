@@ -18,3 +18,7 @@
 - **Outcomes:**
   - Removal of side-by-side parity rendering hacks remaining in the codebase.
   - Automated suite validation: The specific "Underlay Pattern" regressions documented in Playwright resolve cleanly against the finalized z-index structures.
+**Plans:** 1 plans (COMPLETED)
+
+Plans:
+- [x] 03-01-PLAN.md — Purge legacy parity checks, ensure backdrop-filter removal, and validate Playwright test suites.
