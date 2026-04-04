@@ -22,3 +22,14 @@
 
 Plans:
 - [x] 03-01-PLAN.md — Purge legacy parity checks, ensure backdrop-filter removal, and validate Playwright test suites.
+
+### Phase 4: Optimization and UI Refinement
+
+**Goal:** Optimize the WebGL rendering pipeline for better performance, refine the visual language of the "Glass" UI elements for better legibility, and implement smooth transitions for theme state changes.
+**Requirements**: UI-REF-01, UI-REF-02, UI-REF-03
+**Depends on:** Phase 3
+**Plans:** 2 plans
+
+Plans:
+- [ ] 04-01-PLAN.md — Theme Transition and WebGL Rendering Polish
+- [ ] 04-02-PLAN.md — Glass Opacity and UI Character Polish
