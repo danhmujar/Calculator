@@ -17,7 +17,7 @@ Implement a new visual theme inspired by BTS (K-pop group) into the existing cal
 - **D-01:** Implement as an Aurora Theme (WebGL animated gradients). This ensures the BTS theme has the premium visual parity with the existing cosmic themes.
 
 ### Asset Integration
-- **D-02:** The `bts-chibi.gif` animation will run when the user clicks the theme. The `bts_chibi_bg...png` asset will be integrated directly into the background of the calculator.
+- **D-02:** The `bts-chibi.gif` animation will run when the user clicks the theme. The `bts_chibi_bg...png` asset will be integrated directly into the background of the calculator, overlaid with an animated "shining stars" effect across the background to enhance the cosmic BTS aesthetic.
 
 ### Color Palette
 - **D-03:** The primary color base is Deep Purple (Signature BTS color, e.g., `#8A2BE2` / `#9D00FF`).

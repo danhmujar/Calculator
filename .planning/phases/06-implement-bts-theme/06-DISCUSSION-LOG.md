@@ -31,8 +31,8 @@
 | Easter Egg | A clickable easter egg that triggers a visual effect. | |
 | Other | Custom integration approach | ✓ |
 
-**User's choice:** "the bts chibi will run when the user clicks the theme. the png will be integrated to the background"
-**Notes:** User specified that the GIF animation should trigger upon selecting the theme, and the PNG will serve as an integrated background element.
+**User's choice:** "the bts chibi will run when the user clicks the theme. the png will be integrated to the background" + added shining stars effect.
+**Notes:** User specified that the GIF animation should trigger upon selecting the theme, the PNG will serve as an integrated background element, and the background must feature animated shining stars to complement the purple Aurora.
 
 ---
 
