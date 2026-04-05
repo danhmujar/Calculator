@@ -571,6 +571,9 @@ export class UIManager {
             }
         }
         body.classList.toggle('dark-theme');
+        const isDark = body.classList.contains('dark-theme');
+        store.state.persistent.darkMode = isDark;
+        
         const checkbox = document.getElementById('checkbox');
         if (checkbox) checkbox.checked = body.classList.contains('dark-theme');
         this.syncThemeColors();
@@ -590,11 +593,16 @@ export class UIManager {
         document.body.classList.remove('theme-teal', 'theme-terracotta', 'theme-forest', 'theme-slate', 'theme-rosewood', 'theme-pistachio', 'theme-purple', 'theme-aurora', 'theme-aurora-ocean', 'theme-aurora-cyber', 'theme-aurora-sunset');
         if (themeClass) {
             document.body.classList.add(themeClass);
+            store.state.persistent.theme = themeClass;
+            
             if (themeClass.startsWith('theme-aurora')) {
                 document.body.classList.add('dark-theme');
+                store.state.persistent.darkMode = true;
                 const checkbox = document.getElementById('checkbox');
                 if (checkbox) checkbox.checked = true;
             }
+        } else {
+            store.state.persistent.theme = '';
         }
         const dropdown = document.getElementById('theme-dropdown-container');
         if (dropdown) dropdown.classList.remove('active');

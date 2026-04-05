@@ -30,36 +30,28 @@ test.describe('Phase 5', () => {
     const bodyClasses = await page.evaluate(() => document.body.className);
     console.log('Body classes:', bodyClasses);
 
-    // Wait for the background color to match one of the allowed values (accounting for transition)
-    const allowedColors = [
-        'rgba(255, 255, 255, 0.45)',
-        'rgba(28, 30, 36, 0.45)'
-    ];
-
-    await page.waitForFunction((colors) => {
-        const style = window.getComputedStyle(document.getElementById('main-calc-display'));
-        return colors.includes(style.backgroundColor);
-    }, allowedColors);
+    // Wait for the background color to become semi-transparent
+    await page.waitForFunction(() => {
+        const el = document.querySelector('.calc-display');
+        const color = window.getComputedStyle(el).backgroundColor;
+        const parts = color.match(/[\d.]+/g);
+        if (parts && parts.length === 4) {
+            const alpha = parseFloat(parts[3]);
+            return alpha >= 0.4 && alpha <= 0.6;
+        }
+        return false;
+    }, { timeout: 10000 });
 
     const backgroundColor = await page.evaluate(() => {
-        const style = window.getComputedStyle(document.getElementById('main-calc-display'));
-        return style.backgroundColor;
-    });
-
-    const calcDisplayColor = await page.evaluate(() => {
         const el = document.querySelector('.calc-display');
-        return el ? window.getComputedStyle(el).backgroundColor : 'NOT FOUND';
+        return window.getComputedStyle(el).backgroundColor;
     });
 
-    const sciColor = await page.evaluate(() => {
-        const el = document.getElementById('sci-container');
-        return el ? window.getComputedStyle(el).backgroundColor : 'NOT FOUND';
-    });
-
-    console.log('Detected background color:', backgroundColor);
-    console.log('Calc display container color:', calcDisplayColor);
-    console.log('Sci container color:', sciColor);
-
-    expect(allowedColors).toContain(backgroundColor);
+    console.log('Background:', backgroundColor);
+    const parts = backgroundColor.match(/[\d.]+/g);
+    const alpha = (parts && parts.length === 4) ? parseFloat(parts[3]) : 1;
+    
+    expect(alpha).toBeGreaterThanOrEqual(0.4);
+    expect(alpha).toBeLessThanOrEqual(0.6);
   });
 });
