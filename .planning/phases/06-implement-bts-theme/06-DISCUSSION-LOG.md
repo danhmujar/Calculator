@@ -26,11 +26,13 @@
 | Option | Description | Selected |
 |--------|-------------|----------|
 | Background Watermark | Subtle background watermark beneath the calculator. | |
+| Always-on Character | Display the chibi prominently outside or beside the calculator permanently. | |
 | About Modal Only | Display the chibi only in the About modal. | |
-| Easter Egg | A clickable easter egg that triggers a visual effect. | ✓ |
+| Easter Egg | A clickable easter egg that triggers a visual effect. | |
+| Other | Custom integration approach | ✓ |
 
-**User's choice:** Easter Egg
-**Notes:** User preferred an interactive easter egg feature.
+**User's choice:** "the bts chibi will run when the user clicks the theme. the png will be integrated to the background"
+**Notes:** User specified that the GIF animation should trigger upon selecting the theme, and the PNG will serve as an integrated background element.
 
 ---
 

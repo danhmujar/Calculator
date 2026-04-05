@@ -17,7 +17,7 @@ Implement a new visual theme inspired by BTS (K-pop group) into the existing cal
 - **D-01:** Implement as an Aurora Theme (WebGL animated gradients). This ensures the BTS theme has the premium visual parity with the existing cosmic themes.
 
 ### Asset Integration
-- **D-02:** Integrate the `bts-chibi.gif` and `bts_chibi_bg...png` assets as a clickable easter egg rather than a persistent background watermark or just an about-modal feature.
+- **D-02:** The `bts-chibi.gif` animation will run when the user clicks the theme. The `bts_chibi_bg...png` asset will be integrated directly into the background of the calculator.
 
 ### Color Palette
 - **D-03:** The primary color base is Deep Purple (Signature BTS color, e.g., `#8A2BE2` / `#9D00FF`).
@@ -26,7 +26,8 @@ Implement a new visual theme inspired by BTS (K-pop group) into the existing cal
 - **D-04:** The theme will support both Light and Dark modes. Since it's an Aurora theme, it will require a static CSS fallback for light mode, as Aurora themes currently force dark mode.
 
 ### Claude's Discretion
-- Exactly where and how the easter egg is triggered.
+- How exactly the `bts-chibi.gif` is animated or overlayed when the theme is clicked.
+- How the static `bts_chibi_bg...png` interacts with the WebGL Aurora background (e.g., blending modes, opacity, positioning).
 - Specific easing, shader uniforms (aurora speeds, amplitudes) to complement the purple colors.
 - Light mode static fallback design details.
 
