@@ -4,8 +4,8 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 5
 status: completed
-stopped_at: Phase 6 context gathered
-last_updated: "2026-04-05T17:28:55.750Z"
+stopped_at: Phase 6 UI-SPEC approved
+last_updated: "2026-04-05T19:01:21.378Z"
 progress:
   total_phases: 6
   completed_phases: 4
@@ -28,5 +28,5 @@ Status: Project complete
 
 ## Session Checkpoint
 
-**Stopped at:** Phase 6 context gathered
-**Resume file:** .planning/phases/06-implement-bts-theme/06-CONTEXT.md
+**Stopped at:** Phase 6 UI-SPEC approved
+**Resume file:** .planning/phases/06-implement-bts-theme/06-UI-SPEC.md
