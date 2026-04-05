@@ -2020,13 +2020,13 @@ body.dark-theme .about-modal-inner::-webkit-scrollbar-thumb {
 
 .about-modal .about-header h2 {
     margin: 0 0 0.2rem 0;
-    font-size: 1.2rem;
+    font-size: 1.25rem;
     font-weight: 700;
     color: var(--text-primary);
 }
 
 .about-modal .about-intro {
-    font-size: 0.82rem;
+    font-size: 0.875rem;
     line-height: 1.6;
     color: var(--text-secondary);
     margin: 0 0 1.25rem 0;
@@ -2043,7 +2043,7 @@ body.dark-theme .about-modal-inner::-webkit-scrollbar-thumb {
     display: flex;
     align-items: center;
     gap: 0.4rem;
-    font-size: 0.72rem;
+    font-size: 0.75rem;
     font-weight: 700;
     color: var(--primary-blue);
     text-transform: uppercase;
@@ -2127,14 +2127,14 @@ body.dark-theme .about-badge {
 
 .about-dev-info h4 {
     margin: 0 0 0.3rem 0;
-    font-size: 0.82rem;
+    font-size: 0.875rem;
     font-weight: 700;
     color: var(--text-primary);
 }
 
 .about-dev-info p {
     margin: 0 0 0.5rem 0;
-    font-size: 0.72rem;
+    font-size: 0.75rem;
     line-height: 1.55;
     color: var(--text-secondary);
     font-style: italic;
@@ -2144,7 +2144,7 @@ body.dark-theme .about-badge {
     display: inline-flex;
     align-items: center;
     gap: 0.3rem;
-    font-size: 0.72rem;
+    font-size: 0.75rem;
     font-weight: 600;
     color: var(--primary-blue);
     text-decoration: none;
