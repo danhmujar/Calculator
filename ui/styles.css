@@ -59,9 +59,9 @@
     --glass-border: rgba(255, 255, 255, 0.35);
     --glass-bg: rgba(255, 255, 255, 0.82);
     --glass-bg-hover: rgba(255, 255, 255, 0.70);
-    --modal-glass-bg: rgba(255, 255, 255, 0.85);
+    --modal-glass-bg: rgba(255, 255, 255, 0.45);
     --modal-glass-border: rgba(255, 255, 255, 0.45);
-    --overlay-backdrop: rgba(0, 0, 0, 0.35);
+    --overlay-backdrop: rgba(255, 255, 255, 0.5);
     --glass-shadow: 0 4px 16px rgba(0, 0, 0, 0.10), 0 1px 3px rgba(0, 0, 0, 0.06);
     --glass-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.14), 0 2px 6px rgba(0, 0, 0, 0.08);
 
@@ -116,8 +116,9 @@ body.dark-theme {
     --glass-border: rgba(255, 255, 255, 0.12);
     --glass-bg: rgba(30, 32, 40, 0.82);
     --glass-bg-hover: rgba(40, 42, 52, 0.80);
-    --modal-glass-bg: rgba(28, 30, 36, 0.85);
+    --modal-glass-bg: rgba(28, 30, 36, 0.45);
     --modal-glass-border: rgba(255, 255, 255, 0.08);
+    --overlay-backdrop: rgba(255, 255, 255, 0.15);
     --glass-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.2);
     --glass-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.4), 0 2px 6px rgba(0, 0, 0, 0.3);
     --close-btn-bg: rgba(255, 255, 255, 0.08);
@@ -549,7 +550,7 @@ body.is-resizing * {
     margin: 0 auto;
     /* Hardware accelerated layout properties where possible, but inclusive of layout props for cohesive mode toggle */
     will-change: transform, opacity, flex-basis;
-    transition: 
+    transition:
         opacity 0.5s var(--ease),
         visibility 0.5s var(--ease),
         transform 0.5s var(--ease),
@@ -596,9 +597,9 @@ body.is-resizing * {
     box-shadow: var(--panel-shadow);
     z-index: 10;
     will-change: transform, opacity, width;
-    transition: 
-        width 0.5s var(--ease), 
-        transform 0.5s var(--ease), 
+    transition:
+        width 0.5s var(--ease),
+        transform 0.5s var(--ease),
         opacity 0.5s var(--ease),
         box-shadow 0.4s var(--ease),
         max-width 0.5s var(--ease),
@@ -616,6 +617,7 @@ body.is-resizing * {
         min-width: 0;
         border-left-color: transparent;
     }
+
     .right-panel.open {
         transform: translateX(0);
     }
@@ -854,8 +856,16 @@ input[type=number]::-webkit-outer-spin-button {
 }
 
 @keyframes blink {
-    0%, 90%, 100% { transform: scaleY(1); }
-    95% { transform: scaleY(0.1); }
+
+    0%,
+    90%,
+    100% {
+        transform: scaleY(1);
+    }
+
+    95% {
+        transform: scaleY(0.1);
+    }
 }
 
 .eye {
@@ -1870,20 +1880,20 @@ button:focus-visible {
     position: fixed;
     inset: 0;
     z-index: 2000;
-    background: var(--overlay-backdrop);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
+    background-color: transparent;
     display: flex;
     align-items: center;
     justify-content: center;
-    opacity: 0;
     visibility: hidden;
-    transition: opacity 0.3s var(--ease), visibility 0.3s var(--ease);
+    pointer-events: none;
+    transition: visibility 0s 0.35s;
 }
 
 .about-overlay.open {
-    opacity: 1;
     visibility: visible;
+    pointer-events: auto;
+    background-color: transparent;
+    transition: visibility 0s 0s;
 }
 
 /* --- About Modal Panel --- */
@@ -1891,19 +1901,23 @@ button:focus-visible {
     position: relative;
     background: var(--modal-glass-bg);
     border: 1px solid var(--modal-glass-border);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    backdrop-filter: blur(7.5px) saturate(100%);
+    -webkit-backdrop-filter: blur(7.5px) saturate(100%);
     border-radius: 20px;
     max-width: 36rem;
     width: 92%;
     max-height: 80vh;
     overflow: hidden;
     box-shadow: 0 16px 48px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.6);
-    transform: translateY(24px) scale(0.96);
-    transition: transform 0.35s var(--spring);
     color: var(--text-primary);
     display: flex;
     flex-direction: column;
+    opacity: 0;
+    transition: opacity 0.35s var(--ease);
+}
+
+.about-overlay.open .about-modal {
+    opacity: 1;
 }
 
 .about-modal-inner {
@@ -1911,6 +1925,8 @@ button:focus-visible {
     overflow-y: auto;
     flex: 1;
     background: transparent;
+    transform: translateY(24px) scale(0.96);
+    transition: transform 0.35s var(--spring);
 }
 
 .about-modal-inner::-webkit-scrollbar {
@@ -1930,7 +1946,7 @@ body.dark-theme .about-modal-inner::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.15);
 }
 
-.about-overlay.open .about-modal {
+.about-overlay.open .about-modal-inner {
     transform: translateY(0) scale(1);
 }
 
@@ -2201,8 +2217,15 @@ body.dark-theme .about-badge {
 }
 
 @keyframes contextMenuFadeIn {
-    from { opacity: 0; transform: scale(0.95); }
-    to { opacity: 1; transform: scale(1); }
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
 }
 
 /* --- PWA: Offline Badge --- */
@@ -2239,8 +2262,15 @@ body.dark-theme .about-badge {
 }
 
 @keyframes badgePulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.65; }
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.65;
+    }
 }
 
 /* --- PWA: Update Toast Banner --- */
@@ -2270,8 +2300,15 @@ body.dark-theme .about-badge {
 }
 
 @keyframes slideUpToast {
-    from { opacity: 0; transform: translateX(-50%) translateY(20px); }
-    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
 }
 
 .update-toast-actions {
@@ -2365,4 +2402,3 @@ body.webgl-active.dark-theme #sci-container {
         background-color: rgba(28, 30, 36, 0.75) !important;
     }
 }
-
