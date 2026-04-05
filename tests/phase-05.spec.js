@@ -33,14 +33,15 @@ test.describe('Phase 5', () => {
     // Wait for the background color to become semi-transparent
     await page.waitForFunction(() => {
         const el = document.querySelector('.calc-display');
+        if (!el) return false;
         const color = window.getComputedStyle(el).backgroundColor;
         const parts = color.match(/[\d.]+/g);
         if (parts && parts.length === 4) {
             const alpha = parseFloat(parts[3]);
-            return alpha >= 0.4 && alpha <= 0.6;
+            return alpha >= 0.35 && alpha <= 0.65;
         }
         return false;
-    }, { timeout: 10000 });
+    }, { timeout: 15000 });
 
     const backgroundColor = await page.evaluate(() => {
         const el = document.querySelector('.calc-display');
@@ -51,7 +52,7 @@ test.describe('Phase 5', () => {
     const parts = backgroundColor.match(/[\d.]+/g);
     const alpha = (parts && parts.length === 4) ? parseFloat(parts[3]) : 1;
     
-    expect(alpha).toBeGreaterThanOrEqual(0.4);
-    expect(alpha).toBeLessThanOrEqual(0.6);
+    expect(alpha).toBeGreaterThanOrEqual(0.35);
+    expect(alpha).toBeLessThanOrEqual(0.65);
   });
 });

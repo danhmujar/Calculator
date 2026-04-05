@@ -1051,10 +1051,16 @@ input:checked+.slider .slider-bg {
     transition: background-color 0.3s var(--ease);
 }
 
-/* REQ-02: Theme-Aware Transparency for WebGL Mode */
-body.webgl-active #sidebar .calc-display,
+/* --- WEBGL UNDERLAY VISIBILITY (REQ-WGL-02) --- */
+body.webgl-active .calc-display,
 body.webgl-active #sci-container {
-    background-color: color-mix(in srgb, var(--glass-bg), transparent 75%) !important;
+    background: rgba(255, 255, 255, 0.45) !important;
+    transition: background 0.3s var(--ease);
+}
+
+body.webgl-active.dark-theme .calc-display,
+body.webgl-active.dark-theme #sci-container {
+    background: rgba(28, 30, 36, 0.45) !important;
 }
 
 .calc-display-top {
