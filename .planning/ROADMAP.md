@@ -33,3 +33,13 @@ Plans:
 Plans:
 - [x] 04-01-PLAN.md — Theme Transition and WebGL Rendering Polish
 - [x] 04-02-PLAN.md — Glass Opacity and UI Character Polish
+
+## Phase 5: About Modal and Main Calculator Transparency Fix [✅ Completed]
+
+**Goal:** Fix WebGL blur underlay on the about-modal and resolve the opaque background masking issue over the main calculator display caused by a CSS selector typo.
+**Requirements**: REQ-01, REQ-02
+**Depends on:** Phase 4
+**Plans:** 1 plans
+
+Plans:
+- [x] 05-01-PLAN.md — Fix WebGL blur underlay on about-modal and resolve the opaque background masking over main calculator display

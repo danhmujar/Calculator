@@ -606,6 +606,10 @@ export class WebGLRenderer {
                 this.pushRect(rect, [...color, 0.1], 12, id);
             } else if (id === 'main-calc-display') {
                 this.pushRect(rect, [...this.themeColors.primary, 0.15], 16, id);
+            } else if (element.classList.contains('about-modal')) {
+                if (element.closest('.about-overlay.open')) {
+                    this.pushRect(rect, [...this.themeColors.primary, 0.15], 16, id);
+                }
             } else if (element.classList.contains('math-row') || element.classList.contains('calc-row-instance')) {
                 this.pushRect(rect, [...this.themeColors.primary, 0.05], 8, id);
             }

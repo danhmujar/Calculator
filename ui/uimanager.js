@@ -149,6 +149,12 @@ export class UIManager {
             layoutManager.observe(mf, `math-field-${i}`);
         });
 
+        const aboutModal = document.querySelector('.about-modal');
+        if (aboutModal) {
+            layoutManager.observe(aboutModal, 'about-modal');
+        }
+        window.layoutManager = layoutManager;
+
         this.webgl = new WebGLContext();
         this.webgl.canvas.setAttribute('aria-hidden', 'true');
         this.webglRenderer = new WebGLRenderer(this.webgl, this.typography);
