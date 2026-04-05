@@ -340,6 +340,7 @@ export class UIManager {
             if (window.innerWidth > 1024) {
                 rightPanel.addEventListener('animationend', () => {
                     rightPanel.classList.add('open');
+                    document.body.classList.add('drawer-open');
                 }, { once: true });
             }
         }
@@ -354,6 +355,13 @@ export class UIManager {
                 void rightPanel.offsetWidth;
                 requestAnimationFrame(() => {
                     rightPanel.classList.add('open');
+                    document.body.classList.add('drawer-open');
+                });
+            } else if (!isDesktop && !wasMobile && rightPanel && rightPanel.classList.contains('open')) {
+                void rightPanel.offsetWidth;
+                requestAnimationFrame(() => {
+                    rightPanel.classList.remove('open');
+                    document.body.classList.remove('drawer-open');
                 });
             }
             wasMobile = !isDesktop;
@@ -511,6 +519,7 @@ export class UIManager {
         void sidebar.offsetWidth;
         requestAnimationFrame(() => {
             sidebar.classList.toggle('open');
+            document.body.classList.toggle('drawer-open', !isClosing);
             if (isClosing && isMobile && document.body.classList.contains('scientific-mode')) this.setCalcMode('standard');
             if (this.webglRenderer) renderer.schedule(() => this.webglRenderer.render());
         });

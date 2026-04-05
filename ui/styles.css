@@ -705,7 +705,6 @@ h2 {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    will-change: transform, filter;
     transition: transform 0.4s var(--spring), filter 0.4s var(--spring), border-color 0.4s var(--ease), background-color 0.4s var(--ease);
 }
 
@@ -1632,6 +1631,12 @@ body[class*="theme-aurora"] .audit-tape-container {
 
     .close-drawer {
         display: flex;
+    }
+
+    /* Hide FABs when the calculator right-panel drawer is open */
+    body.drawer-open .mobile-panel-fab,
+    body.drawer-open .about-fab {
+        display: none !important;
     }
 
     .right-panel {
