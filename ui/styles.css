@@ -522,8 +522,7 @@ body[class*="theme-aurora"] .calc-btn {
 
 /* WebGL Underlay Transparency (REQ-WGL-03) */
 body.webgl-active .right-panel,
-body.webgl-active .calc-card,
-body.webgl-active .calc-display {
+body.webgl-active .calc-card {
     background-color: color-mix(in srgb, var(--panel-bg) 85%, transparent);
 }
 
@@ -1046,10 +1045,8 @@ input:checked+.slider .slider-bg {
 
 .calc-display {
     padding: 1.5rem;
-    background-color: color-mix(in srgb, var(--calc-btn-bg) 82%, transparent);
+    background-color: transparent;
     border-bottom: 1px solid var(--border-color);
-    backdrop-filter: blur(12px) saturate(150%);
-    -webkit-backdrop-filter: blur(12px) saturate(150%);
     display: flex;
     flex-direction: column;
     align-items: flex-end;
@@ -2382,13 +2379,11 @@ body.dark-theme .about-badge {
 }
 
 /* --- WEBGL UNDERLAY VISIBILITY (REQ-WGL-02) --- */
-body.webgl-active #main-calc-display,
 body.webgl-active #sci-container {
     background: rgba(255, 255, 255, 0.45) !important;
     transition: background 0.3s ease;
 }
 
-body.webgl-active.dark-theme #main-calc-display,
 body.webgl-active.dark-theme #sci-container {
     background: rgba(28, 30, 36, 0.45) !important;
 }

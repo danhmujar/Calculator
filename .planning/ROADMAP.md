@@ -43,3 +43,13 @@ Plans:
 
 Plans:
 - [x] 05-01-PLAN.md — Fix WebGL blur underlay on about-modal and resolve the opaque background masking over main calculator display
+
+### Phase 6: Implement BTS Theme
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 5
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 6 to break down)

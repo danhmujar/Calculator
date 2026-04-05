@@ -604,8 +604,6 @@ export class WebGLRenderer {
                 const isOp = element.classList.contains('op');
                 const color = isEq ? this.themeColors.primary : (isOp ? this.themeColors.accent : this.themeColors.primary);
                 this.pushRect(rect, [...color, 0.1], 12, id);
-            } else if (id === 'main-calc-display') {
-                this.pushRect(rect, [...this.themeColors.primary, 0.15], 16, id);
             } else if (element.classList.contains('about-modal')) {
                 if (element.closest('.about-overlay.open')) {
                     this.pushRect(rect, [...this.themeColors.primary, 0.15], 16, id);
