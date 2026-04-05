@@ -60,14 +60,17 @@ class LayoutManager {
         const id = this.elements.get(element);
         if (id && store.state.layout && store.state.layout[id]) {
             const cached = store.state.layout[id];
-            // Return in same format as getBoundingClientRect for compatibility
+            const scrollX = window.scrollX || window.pageXOffset;
+            const scrollY = window.scrollY || window.pageYOffset;
+            
+            // Convert document-relative back to viewport-relative
             return {
-                left: cached.x,
-                top: cached.y,
+                left: cached.x - scrollX,
+                top: cached.y - scrollY,
                 width: cached.w,
                 height: cached.h,
-                right: cached.x + cached.w,
-                bottom: cached.y + cached.h
+                right: (cached.x - scrollX) + cached.w,
+                bottom: (cached.y - scrollY) + cached.h
             };
         }
         return element.getBoundingClientRect();
@@ -85,18 +88,19 @@ class LayoutManager {
     }
 
     _updateRect(element, id) {
-        // We use getBoundingClientRect here, but it's only called when 
-        // the element resizes, not in every render frame.
         const rect = element.getBoundingClientRect();
+        const scrollX = window.scrollX || window.pageXOffset;
+        const scrollY = window.scrollY || window.pageYOffset;
         
         // Ensure layout object exists
         if (!store.state.layout) {
             store.state.layout = {};
         }
 
+        // Store as document-relative coordinates
         store.state.layout[id] = {
-            x: rect.left,
-            y: rect.top,
+            x: rect.left + scrollX,
+            y: rect.top + scrollY,
             w: rect.width,
             h: rect.height
         };

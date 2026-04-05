@@ -161,9 +161,18 @@ export class UIManager {
         if (this.webgl.canvas) {
             document.body.prepend(this.webgl.canvas);
             document.body.classList.add('webgl-active');
-            this.webgl.canvas.style.display = 'block';
-            this.webgl.canvas.style.zIndex = '-1';
-            this.webgl.canvas.style.pointerEvents = 'none';
+            
+            // Enforce Underlay Pattern (REQ-WGL-03)
+            Object.assign(this.webgl.canvas.style, {
+                display: 'block',
+                position: 'fixed',
+                top: '0',
+                left: '0',
+                width: '100vw',
+                height: '100vh',
+                zIndex: '-1',
+                pointerEvents: 'none'
+            });
             
             renderer.schedule(() => {
                 this.webglRenderer.render();
@@ -174,6 +183,11 @@ export class UIManager {
                     if (this.webglRenderer) this.webglRenderer.render();
                 }, { passive: true });
             }
+
+            // Sync WebGL with window scroll
+            window.addEventListener('scroll', () => {
+                if (this.webglRenderer) this.webglRenderer.render();
+            }, { passive: true });
         }
 
         this.setupEntranceAnimations();
@@ -358,10 +372,17 @@ export class UIManager {
                     document.body.classList.add('drawer-open');
                 });
             } else if (!isDesktop && !wasMobile && rightPanel && rightPanel.classList.contains('open')) {
+                // When moving from Desktop to Mobile, close the drawer automatically
+                // Disable transition to prevent it from 'flying' across the screen
+                rightPanel.style.transition = 'none';
                 void rightPanel.offsetWidth;
                 requestAnimationFrame(() => {
                     rightPanel.classList.remove('open');
                     document.body.classList.remove('drawer-open');
+                    // Fast delay to re-enable transitions after the class is removed
+                    setTimeout(() => {
+                        rightPanel.style.transition = '';
+                    }, 50);
                 });
             }
             wasMobile = !isDesktop;
