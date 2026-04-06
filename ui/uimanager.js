@@ -360,6 +360,18 @@ export class UIManager {
         }
     }
 
+    syncLayoutDuringTransition(durationMs = 600) {
+        const start = performance.now();
+        const tick = (now) => {
+            layoutManager.refreshAll();
+            if (this.webglRenderer) this.webglRenderer.render();
+            if (now - start < durationMs) {
+                requestAnimationFrame(tick);
+            }
+        };
+        requestAnimationFrame(tick);
+    }
+
     setupResizeHandler() {
         const rightPanel = document.querySelector('.right-panel');
         let wasMobile = window.innerWidth <= 1024;
@@ -371,6 +383,7 @@ export class UIManager {
                     rightPanel.classList.add('open');
                     document.body.classList.add('drawer-open');
                 });
+                this.syncLayoutDuringTransition(600);
             } else if (!isDesktop && !wasMobile && rightPanel && rightPanel.classList.contains('open')) {
                 // When moving from Desktop to Mobile, close the drawer automatically
                 // Disable transition to prevent it from 'flying' across the screen
@@ -384,6 +397,10 @@ export class UIManager {
                         rightPanel.style.transition = '';
                     }, 50);
                 });
+                this.syncLayoutDuringTransition(100);
+            } else {
+                // Regular resize
+                this.syncLayoutDuringTransition(300);
             }
             wasMobile = !isDesktop;
             if (this.webgl) this.webgl.resize();
@@ -460,7 +477,14 @@ export class UIManager {
         const updater = () => {
             const xVal = parseFloat(xInput.value);
             const yVal = parseFloat(yInput.value);
-            resultValue.textContent = this.calculateRowResult(type, isNaN(xVal) ? null : xVal, isNaN(yVal) ? null : yVal);
+            const newResult = this.calculateRowResult(type, isNaN(xVal) ? null : xVal, isNaN(yVal) ? null : yVal);
+            
+            if (resultValue.textContent !== newResult) {
+                resultValue.textContent = newResult;
+                resultValue.classList.remove('result-updated');
+                void resultValue.offsetWidth; // Force reflow
+                resultValue.classList.add('result-updated');
+            }
         };
         xInput.addEventListener('input', updater);
         yInput.addEventListener('input', updater);
@@ -476,24 +500,49 @@ export class UIManager {
         requestAnimationFrame(() => {
             newRow.style.maxHeight = newRow.scrollHeight + 'px';
             newRow.classList.remove('row-enter');
+            
+            let cleanedUp = false;
+            const cleanup = () => {
+                if (cleanedUp) return;
+                cleanedUp = true;
+                newRow.style.maxHeight = '';
+                if (this.webglRenderer) this.webglRenderer.render();
+            };
+
             newRow.addEventListener('transitionend', (e) => {
-                if (e.propertyName === 'max-height') newRow.style.maxHeight = '';
+                if (e.propertyName === 'max-height') cleanup();
             }, { once: true });
+
+            // Safety fallback in case transitionend is interrupted (e.g. window resize)
+            setTimeout(cleanup, 500); 
         });
     }
 
     deleteRow(btnEl) {
         const rowInstance = btnEl.closest('.calc-row-instance');
         if (!rowInstance) return;
-        rowInstance.style.maxHeight = rowInstance.scrollHeight + 'px';
-        void rowInstance.offsetWidth;
+        
+        // Use offsetHeight for precise height capture (including padding/borders)
+        const initialHeight = rowInstance.offsetHeight;
+        rowInstance.style.maxHeight = initialHeight + 'px';
+        
+        // Force reflow to lock the current height before animating to 0
+        void rowInstance.offsetHeight;
+        
         requestAnimationFrame(() => {
             rowInstance.classList.add('row-exit');
-            const cleanup = () => rowInstance.remove();
+            const cleanup = () => {
+                layoutManager.unobserve(rowInstance);
+                rowInstance.remove();
+                if (this.webglRenderer) this.webglRenderer.render();
+            };
+            
             rowInstance.addEventListener('transitionend', (e) => {
                 if (e.propertyName === 'max-height') cleanup();
             }, { once: true });
-            setTimeout(cleanup, 400);
+            
+            // Safety fallback if transition fails
+            setTimeout(cleanup, 500); 
         });
     }
 
@@ -569,6 +618,8 @@ export class UIManager {
                 const defaultSwatch = picker.querySelector('.theme-swatch[data-theme=""]');
                 if (defaultSwatch) defaultSwatch.classList.add('active');
             }
+            // CRITICAL FIX: Update the persistent store so it doesn't revert on reload!
+            store.state.persistent.theme = '';
         }
         body.classList.toggle('dark-theme');
         const isDark = body.classList.contains('dark-theme');
@@ -814,14 +865,23 @@ export class UIManager {
         requestAnimationFrame(() => {
             row.style.maxHeight = row.scrollHeight + 'px';
             row.classList.remove('row-enter');
+            
+            let cleanedUp = false;
+            const cleanup = () => {
+                if (cleanedUp) return;
+                cleanedUp = true;
+                row.style.maxHeight = '';
+                if (this.webglRenderer) this.webglRenderer.render();
+            };
+
             row.addEventListener('transitionend', (e) => {
-                if (e.propertyName === 'max-height') {
-                    row.style.maxHeight = '';
-                    if (this.webglRenderer) this.webglRenderer.render();
-                }
+                if (e.propertyName === 'max-height') cleanup();
             }, { once: true });
-            if (row.scrollHeight === 0) row.style.maxHeight = '';
-            if (this.webglRenderer) this.webglRenderer.render();
+            
+            if (row.scrollHeight === 0) cleanup();
+            
+            // Safety fallback
+            setTimeout(cleanup, 500);
         });
         const resEl = document.getElementById(uniqueId);
         if (resEl) this.setupMathFieldListeners(mf, resEl);
@@ -860,15 +920,20 @@ export class UIManager {
         delSvg.appendChild(useEl);
         delBtn.appendChild(delSvg);
         delBtn.addEventListener('click', () => {
-            rowEl.style.maxHeight = rowEl.scrollHeight + 'px';
+            const initialHeight = rowEl.offsetHeight;
+            rowEl.style.maxHeight = initialHeight + 'px';
             void rowEl.offsetWidth;
             requestAnimationFrame(() => {
                 rowEl.classList.add('row-exit');
-                const cleanup = () => rowEl.remove();
+                const cleanup = () => {
+                    layoutManager.unobserve(rowEl);
+                    rowEl.remove();
+                    if (this.webglRenderer) this.webglRenderer.render();
+                };
                 rowEl.addEventListener('transitionend', (e) => {
                     if (e.propertyName === 'max-height') cleanup();
                 }, { once: true });
-                setTimeout(cleanup, 400);
+                setTimeout(cleanup, 500);
             });
         });
         actionsDiv.appendChild(resEl);

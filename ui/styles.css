@@ -729,8 +729,12 @@ h2 {
     border-bottom: 1px dashed var(--border-color);
     position: relative;
     overflow: hidden;
-    will-change: max-height, opacity;
-    transition: max-height 0.35s var(--ease), opacity 0.3s var(--ease), padding 0.35s var(--ease), margin 0.35s var(--ease);
+    transition: 
+        max-height 0.4s var(--ease), 
+        opacity 0.4s var(--ease), 
+        padding 0.4s var(--ease), 
+        margin 0.4s var(--ease),
+        border-bottom-width 0.4s var(--ease);
 }
 
 .calc-row-instance:last-child {
@@ -764,7 +768,8 @@ input[type="number"] {
 
 input[type="number"]:focus {
     border-color: var(--primary-blue);
-    box-shadow: 0 0 0 3px var(--primary-alpha-10);
+    box-shadow: 0 0 0 4px var(--primary-alpha-10), inset 0 1px 2px rgba(0, 0, 0, 0.05);
+    background-color: var(--panel-bg);
 }
 
 input[type=number]::-webkit-inner-spin-button,
@@ -786,6 +791,17 @@ input[type=number]::-webkit-outer-spin-button {
     color: var(--primary-blue);
     min-width: 60px;
     text-align: right;
+    transition: transform 0.2s var(--ease), color 0.2s var(--ease);
+}
+
+.result-value.result-updated {
+    animation: resultPulse 0.4s var(--ease);
+}
+
+@keyframes resultPulse {
+    0% { transform: scale(1); color: var(--primary-blue); }
+    50% { transform: scale(1.1); color: var(--primary-hover); }
+    100% { transform: scale(1); color: var(--primary-blue); }
 }
 
 .icon-btn {
@@ -1209,7 +1225,9 @@ body[class*="theme-aurora-sunset"].scientific-mode .right-panel {
     padding-top: 0 !important;
     padding-bottom: 0 !important;
     margin-top: 0 !important;
-    margin-bottom: 0 !important;
+    margin-bottom: -1rem !important; /* Counteracts the flex container gap */
+    border-bottom-width: 0 !important;
+    pointer-events: none;
 }
 
 .row-exit {
@@ -1218,7 +1236,9 @@ body[class*="theme-aurora-sunset"].scientific-mode .right-panel {
     padding-top: 0 !important;
     padding-bottom: 0 !important;
     margin-top: 0 !important;
-    margin-bottom: 0 !important;
+    margin-bottom: -1rem !important; /* Counteracts the flex container gap */
+    border-bottom-width: 0 !important;
+    pointer-events: none;
 }
 
 .math-row:hover {
@@ -1978,6 +1998,7 @@ body.dark-theme .about-modal-inner::-webkit-scrollbar-thumb {
     display: flex;
     align-items: center;
     justify-content: center;
+    z-index: 10; /* Keep button above scrolling content */
     transition: background 0.2s, color 0.2s, transform 0.2s;
 }
 

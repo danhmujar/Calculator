@@ -597,19 +597,21 @@ export class WebGLRenderer {
             const computedStyle = getComputedStyle(element);
             if (computedStyle.display === 'none' || computedStyle.visibility === 'hidden' || computedStyle.opacity === '0') continue;
 
+            const isHovered = element.matches(':hover');
+
             if (element.classList.contains('calc-card')) {
-                this.pushRect(rect, [1, 1, 1, 0.05], 8, id);
+                this.pushRect(rect, [1, 1, 1, isHovered ? 0.08 : 0.05], 8, id);
             } else if (element.classList.contains('btn') || element.classList.contains('icon-btn') || element.classList.contains('calc-btn')) {
                 const isEq = element.classList.contains('eq');
                 const isOp = element.classList.contains('op');
                 const color = isEq ? this.themeColors.primary : (isOp ? this.themeColors.accent : this.themeColors.primary);
-                this.pushRect(rect, [...color, 0.1], 12, id);
+                this.pushRect(rect, [...color, isHovered ? 0.15 : 0.1], 12, id);
             } else if (element.classList.contains('about-modal')) {
                 if (element.closest('.about-overlay.open')) {
                     this.pushRect(rect, [...this.themeColors.primary, 0.15], 16, id);
                 }
             } else if (element.classList.contains('math-row') || element.classList.contains('calc-row-instance')) {
-                this.pushRect(rect, [...this.themeColors.primary, 0.05], 8, id);
+                this.pushRect(rect, [...this.themeColors.primary, isHovered ? 0.1 : 0.05], 8, id);
             }
         }
 
