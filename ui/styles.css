@@ -1758,6 +1758,7 @@ body[class*="theme-aurora"] .audit-tape-container {
     .calc-row-instance {
         flex-direction: column;
         align-items: stretch;
+        flex-wrap: nowrap; /* Prevents wrapping horizontally into new columns during max-height transitions */
     }
 
     .input-group {
