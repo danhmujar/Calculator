@@ -499,9 +499,18 @@ body[class*="theme-aurora"] .left-panel header {
     transform: translate3d(var(--pupil-x-2, 0px), var(--pupil-y-2, 0px), 0);
 }
 
-/* Prevent iOS double-tap-to-zoom on calculator buttons */
-.calc-btn {
+/* Prevent iOS double-tap-to-zoom on interactive elements */
+button,
+.calc-btn,
+.icon-btn,
+.add-row-btn,
+.delete-row-btn,
+.add-math-btn,
+.theme-swatch {
     touch-action: manipulation;
+}
+
+.calc-btn {
     min-height: 44px;
     min-width: 44px;
 }
