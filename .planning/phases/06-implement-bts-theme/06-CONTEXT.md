@@ -1,36 +1,31 @@
 # Phase 06: implement-bts-theme - Context
 
-**Gathered:** 2026-04-06
+**Gathered:** 2026-04
 **Status:** Ready for planning
 
 <domain>
 ## Phase Boundary
 
-Implement a new visual theme inspired by BTS (K-pop group) into the existing calculator. This involves adding the new theme to the `VALID_THEMES` array, wiring it into the CSS/WebGL architecture, defining the color uniforms, and integrating the specific assets provided (`bts-chibi.gif` and `bts_chibi_bg...png`).
-
+Implementing a new BTS-inspired theme featuring a custom image background, bubble particle animation, and a custom GIF in the UI, supporting forced dark mode and utilizing a "Borahae" purple color palette.
 </domain>
 
 <decisions>
 ## Implementation Decisions
 
-### Theme Architecture
-- **D-01:** Implement as an Aurora Theme (WebGL animated gradients). This ensures the BTS theme has the premium visual parity with the existing cosmic themes.
+### Visual Style
+- **D-01:** The background must use `brain_session/bts_chibi_bg_1775310615594.png`.
+- **D-02:** The theme should include a bubble particle animation (likely implemented in WebGL since the app is transitioning to WebGL underlays).
 
-### Asset Integration
-- **D-02:** The `bts-chibi.gif` animation will run when the user clicks the theme. The `bts_chibi_bg...png` asset will be integrated directly into the background of the calculator, overlaid with an animated "shining stars" effect across the background to enhance the cosmic BTS aesthetic.
+### Color Palette & Theme Mode
+- **D-03:** Use a "Classic 'Borahae' Purple" color palette.
+- **D-04:** The theme must force Dark Mode when activated.
 
-### Color Palette
-- **D-03:** The primary color base is Deep Purple (Signature BTS color, e.g., `#8A2BE2` / `#9D00FF`).
-
-### Dark/Light Mode
-- **D-04:** The theme will support both Light and Dark modes. Since it's an Aurora theme, it will require a static CSS fallback for light mode, as Aurora themes currently force dark mode.
+### UI Integration
+- **D-05:** The main calculator sidebar's equal button must contain the image `public/assets/bts-chibi.gif`.
 
 ### Claude's Discretion
-- How exactly the `bts-chibi.gif` is animated or overlayed when the theme is clicked.
-- How the static `bts_chibi_bg...png` interacts with the WebGL Aurora background (e.g., blending modes, opacity, positioning).
-- Specific easing, shader uniforms (aurora speeds, amplitudes) to complement the purple colors.
-- Light mode static fallback design details.
-
+- Technical implementation of the bubble particle animation in WebGL.
+- Placement and sizing of the GIF inside the equals button to ensure it looks good and maintains accessibility.
 </decisions>
 
 <canonical_refs>
@@ -38,49 +33,47 @@ Implement a new visual theme inspired by BTS (K-pop group) into the existing cal
 
 **Downstream agents MUST read these before planning or implementing.**
 
-### Architecture and Theming
-- `.planning/codebase/ARCHITECTURE.md` - Overall system architecture.
-- `.planning/REQUIREMENTS.md` - Core requirements for WebGL integration and stacking parity.
+### Project Documents
+- `.planning/ROADMAP.md` — Defines phase boundary (Phase 6: Implement BTS Theme).
+- `.planning/REQUIREMENTS.md` — Defines strict architectural guidelines (WebGL vanilla, remove CSS filters).
 
-### Existing Code
-- `ui/uimanager.js` - Contains `VALID_THEMES` and theme switcher logic.
-- `services/theme.js` - State container for active themes.
-- `ui/webgl/renderer.js` - Injects theme color uniforms to the WebGL shader context.
-
+### Assets
+- `brain_session/bts_chibi_bg_1775310615594.png` — Target background image.
+- `public/assets/bts-chibi.gif` — Target equal button image.
 </canonical_refs>
 
 <code_context>
 ## Existing Code Insights
 
 ### Reusable Assets
-- `themeManager` (`services/theme.js`): Provides color interpolations to `renderer.js`.
-- `.theme-picker` (`ui/styles.css`): UI widget that displays theme swatches. The BTS theme will need a swatch added.
+- `ui/uimanager.js`: `VALID_THEMES` array where the new theme class (e.g., `theme-bts`) will be registered.
+- `ui/webgl/renderer.js`: `ThemeObserver` monitors `document.body` classes to trigger shader updates.
+- `ui/styles.css`: Contains color themes. A new `.theme-bts` section is needed here to apply the baseline purple values and the background properties.
 
 ### Established Patterns
-- Aurora Themes (`theme-aurora-*`): Forces `dark-theme` by default and utilizes the Kawase dual-pass blur and custom color uniforms in WebGL. Supporting Light mode for Aurora requires modifying this constraint or providing a static CSS alternate.
+- Themes currently use CSS classes on `document.body` (e.g., `theme-aurora`). The new theme will follow this pattern.
+- Dark Mode is forced by adding the `dark-theme` class to the body.
 
 ### Integration Points
-- Add `theme-aurora-bts` to `VALID_THEMES` array in `uimanager.js`.
-- Provide `#8A2BE2` shader uniform configuration in `renderer.js` when this theme is active.
-- Add corresponding CSS selectors in `ui/styles.css` (e.g., `body.theme-aurora-bts`).
-
+- Theme Picker dropdown in the DOM to select the BTS theme.
+- The Equals button in the DOM for injecting the GIF.
+- WebGL Renderer for setting up the texture background and particle system for the bubbles.
 </code_context>
 
 <specifics>
 ## Specific Ideas
 
-- Ensure the easter egg feels cohesive with the overall minimalist frosted glass UI.
-
+- The equal button in the main calc sidebar must contain the `public/assets/bts-chibi.gif`.
+- The WebGL underlay needs to support an image background (`brain_session/bts_chibi_bg_1775310615594.png`) and a new particle effect (bubbles) specifically for this theme, rather than just solid colors or the Aurora gradient.
 </specifics>
 
 <deferred>
 ## Deferred Ideas
 
 None — discussion stayed within phase scope.
-
 </deferred>
 
 ---
 
 *Phase: 06-implement-bts-theme*
-*Context gathered: 2026-04-06*
+*Context gathered: 2026-04*

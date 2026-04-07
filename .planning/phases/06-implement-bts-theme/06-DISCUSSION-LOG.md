@@ -3,36 +3,22 @@
 > **Audit trail only.** Do not use as input to planning, research, or execution agents.
 > Decisions are captured in CONTEXT.md — this log preserves the alternatives considered.
 
-**Date:** 2026-04-06
+**Date:** 2026-04
 **Phase:** 06-implement-bts-theme
-**Areas discussed:** Theme Architecture, Asset Integration, Color Palette, Dark/Light Mode
+**Areas discussed:** Visual Style, Color Palette, Dark Mode Behavior, Iconography/Assets
 
 ---
 
-## Theme Architecture
+## Visual Style
 
 | Option | Description | Selected |
 |--------|-------------|----------|
-| Aurora Theme | Uses WebGL shaders, animated gradients, deeper blur effects. Forces dark mode. (Recommended) | ✓ |
-| Static CSS Theme | Uses solid colors/simple CSS gradients. | |
+| Solid Color | Standard CSS-based theme | |
+| Dynamic Aurora Gradient | WebGL animated background - Recommended for the modern look | |
+| Other | Custom freeform response | ✓ |
 
-**User's choice:** Aurora Theme
-**Notes:** User chose the premium WebGL-powered theme architecture.
-
----
-
-## Asset Integration
-
-| Option | Description | Selected |
-|--------|-------------|----------|
-| Background Watermark | Subtle background watermark beneath the calculator. | |
-| Always-on Character | Display the chibi prominently outside or beside the calculator permanently. | |
-| About Modal Only | Display the chibi only in the About modal. | |
-| Easter Egg | A clickable easter egg that triggers a visual effect. | |
-| Other | Custom integration approach | ✓ |
-
-**User's choice:** "the bts chibi will run when the user clicks the theme. the png will be integrated to the background" + added shining stars effect.
-**Notes:** User specified that the GIF animation should trigger upon selecting the theme, the PNG will serve as an integrated background element, and the background must feature animated shining stars to complement the purple Aurora.
+**User's choice:** `background is brain_session\bts_chibi_bg_1775310615594.png is bubble particle animation`
+**Notes:** User requested a specific background image with a custom bubble particle animation instead of the standard options.
 
 ---
 
@@ -40,33 +26,40 @@
 
 | Option | Description | Selected |
 |--------|-------------|----------|
-| Deep Purple | Signature BTS Deep Purple (#8A2BE2 / #9D00FF) | ✓ |
-| Pastel Pink/Purple | Softer pastel pinks and purples | |
-| Midnight Purple | Dark midnight blue base with bright purple glowing accents | |
+| Classic "Borahae" Purple | Deep, vibrant violet - Recommended | ✓ |
+| Neon/Synthwave Purple | High contrast, bright magenta/cyan accents | |
+| Soft Pastel Purple | Subtle, calming lilac | |
 
-**User's choice:** Deep Purple
-**Notes:** Selected the classic BTS purple hue.
+**User's choice:** Classic "Borahae" Purple
 
 ---
 
-## Dark/Light Mode
+## Dark Mode Behavior
 
 | Option | Description | Selected |
 |--------|-------------|----------|
-| Locked to Dark Mode | Best for Aurora WebGL themes (Recommended) | |
-| Support Both | Needs a static fallback for light mode | ✓ |
+| Support Both | Theme will switch between light and dark variants | |
+| Force Dark Mode | Recommended if using Aurora, as glowing gradients look best on dark | ✓ |
 
-**User's choice:** Support Both
-**Notes:** This creates an additional constraint since Aurora themes traditionally force dark mode.
+**User's choice:** Force Dark Mode
+
+---
+
+## Iconography/Assets
+
+| Option | Description | Selected |
+|--------|-------------|----------|
+| Colors only | Keep it subtle and clean - Recommended | ✓ |
+| Add faint logo watermark | Rendered in the WebGL canvas | |
+
+**User's choice:** Colors only
+**Notes:** Although the user chose "Colors only" here, they later clarified in a revision: "i want this public\assets\bts-chibi.gif to be in equal button in main calc sidebar". This was captured as a specific requirement.
 
 ---
 
 ## Claude's Discretion
-
-- Easter egg trigger location and interaction.
-- Light mode fallback design for the Aurora theme.
-- Exact WebGL shader uniforms tuning for the Deep Purple palette.
+- Particle implementation specifics.
+- Integration mechanics of the GIF inside the equals button.
 
 ## Deferred Ideas
-
 None.
