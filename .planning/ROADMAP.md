@@ -7,11 +7,17 @@
   - Sibling segregation of the `<canvas id="webgl-underlay">` and DOM `<main>`, forcing independent stacking contexts.
   - Verify pointer events are successfully neutralized (`pointer-events: none`) preventing the canvas from hijacking clicks.
 
-## Phase 2: Underlay Blur Integration and UI Synchronization
+## Phase 2: Underlay Blur Integration and UI Synchronization [✅ Completed]
 - **Objective:** Establish the multi-pass blur and coordinate visual state syncing between the DOM and the WebGL renderer.
 - **Outcomes:**
-  - [UI-SYNC-01] Connect the `ResizeObserver` correctly so that expanding the scientific mode explicitly triggers shader resize passes without destroying the z-index.
-  - [UI-SYNC-02] Achieve 100% Visual Parity: The dual-FBO rendering pass closely matches the original CSS Aurora configurations.
+  - [x] [UI-SYNC-01] Connect the `ResizeObserver` correctly so that expanding the scientific mode explicitly triggers shader resize passes without destroying the z-index.
+  - [x] [UI-SYNC-02] Achieve 100% Visual Parity: The dual-FBO rendering pass closely matches the original CSS Aurora configurations.
+**Plans:** 3 plans (COMPLETED)
+
+Plans:
+- [x] 02-01-PLAN.md — Core Blur Implementation
+- [x] 02-02-PLAN.md — Theme Synchronization Bridge
+- [x] 02-03-PLAN.md — Resizing and Verification
 
 ## Phase 3: Verification & Parity Artifact Purge
 - **Objective:** Strip dead code related to historical transitions and validate end-state against requirements.

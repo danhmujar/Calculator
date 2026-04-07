@@ -26,8 +26,8 @@ The application is migrating from heavy CSS `backdrop-filter` and gradient effec
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Focus exclusively on stability | The WebGL layer is currently transitional and causing regressions. Solidifying the base is more important than adding visual flair right now. | Pending |
-| Enforce strict visual parity | End-users love the Aurora theme; the backend shift should be completely invisible apart from smoother frame rates. | Pending |
+| Focus exclusively on stability | The WebGL layer is currently transitional and causing regressions. Solidifying the base is more important than adding visual flair right now. | Complete |
+| Enforce strict visual parity | End-users love the Aurora theme; the backend shift should be completely invisible apart from smoother frame rates. | Complete |
 
 ## Evolution
 
