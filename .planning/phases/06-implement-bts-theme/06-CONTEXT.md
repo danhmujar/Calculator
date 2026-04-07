@@ -13,7 +13,7 @@ Implementing a new BTS-inspired theme featuring a custom image background, bubbl
 ## Implementation Decisions
 
 ### Visual Style
-- **D-01:** The background must use `brain_session/bts_chibi_bg_1775310615594.png`.
+- **D-01:** The background must use `public/assets/bts_chibi_bg_1775310615594.png`.
 - **D-02:** The theme should include a bubble particle animation (likely implemented in WebGL since the app is transitioning to WebGL underlays).
 
 ### Color Palette & Theme Mode
@@ -39,7 +39,7 @@ Implementing a new BTS-inspired theme featuring a custom image background, bubbl
 - `.planning/REQUIREMENTS.md` — Defines strict architectural guidelines (WebGL vanilla, remove CSS filters).
 
 ### Assets
-- `brain_session/bts_chibi_bg_1775310615594.png` — Target background image.
+- `public/assets/bts_chibi_bg_1775310615594.png` — Target background image.
 - `public/assets/bts-chibi.gif` — Target equal button image.
 - `public/assets/bts logo.png` — Target theme picker icon.
 </canonical_refs>
@@ -67,7 +67,7 @@ Implementing a new BTS-inspired theme featuring a custom image background, bubbl
 
 - The equal button in the main calc sidebar must contain the `public/assets/bts-chibi.gif`.
 - The theme palette selection must use `public/assets/bts logo.png` as its icon instead of a standard solid color swatch.
-- The WebGL underlay needs to support an image background (`brain_session/bts_chibi_bg_1775310615594.png`) and a new particle effect (bubbles) specifically for this theme, rather than just solid colors or the Aurora gradient.
+- The WebGL underlay needs to support an image background (`public/assets/bts_chibi_bg_1775310615594.png`) and a new particle effect (bubbles) specifically for this theme, rather than just solid colors or the Aurora gradient.
 </specifics>
 
 <deferred>

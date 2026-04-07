@@ -17,7 +17,7 @@
 | Dynamic Aurora Gradient | WebGL animated background - Recommended for the modern look | |
 | Other | Custom freeform response | ✓ |
 
-**User's choice:** `background is brain_session\bts_chibi_bg_1775310615594.png is bubble particle animation`
+**User's choice:** `background is public\assets\bts_chibi_bg_1775310615594.png is bubble particle animation`
 **Notes:** User requested a specific background image with a custom bubble particle animation instead of the standard options.
 
 ---
