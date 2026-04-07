@@ -31,6 +31,7 @@ export class UIManager {
             'theme-teal', 'theme-terracotta', 'theme-forest', 'theme-slate',
             'theme-rosewood', 'theme-pistachio', 'theme-purple',
             'theme-aurora', 'theme-aurora-ocean', 'theme-aurora-cyber', 'theme-aurora-sunset',
+            'theme-bts',
             '' // Default theme
         ];
 
@@ -610,8 +611,9 @@ export class UIManager {
     toggleTheme() {
         const body = document.body;
         const isAurora = Array.from(body.classList).some(c => c.startsWith('theme-aurora'));
-        if (isAurora && body.classList.contains('dark-theme')) {
-            body.classList.remove('theme-aurora', 'theme-aurora-ocean', 'theme-aurora-cyber', 'theme-aurora-sunset');
+        const isBTS = body.classList.contains('theme-bts');
+        if ((isAurora || isBTS) && body.classList.contains('dark-theme')) {
+            body.classList.remove('theme-aurora', 'theme-aurora-ocean', 'theme-aurora-cyber', 'theme-aurora-sunset', 'theme-bts');
             const picker = document.querySelector('.theme-picker');
             if (picker) {
                 picker.querySelectorAll('.theme-swatch').forEach(btn => btn.classList.remove('active'));
@@ -641,12 +643,12 @@ export class UIManager {
         }
         btnEl.classList.add('active');
         btnEl.setAttribute('aria-checked', 'true');
-        document.body.classList.remove('theme-teal', 'theme-terracotta', 'theme-forest', 'theme-slate', 'theme-rosewood', 'theme-pistachio', 'theme-purple', 'theme-aurora', 'theme-aurora-ocean', 'theme-aurora-cyber', 'theme-aurora-sunset');
+        document.body.classList.remove('theme-teal', 'theme-terracotta', 'theme-forest', 'theme-slate', 'theme-rosewood', 'theme-pistachio', 'theme-purple', 'theme-aurora', 'theme-aurora-ocean', 'theme-aurora-cyber', 'theme-aurora-sunset', 'theme-bts');
         if (themeClass) {
             document.body.classList.add(themeClass);
             store.state.persistent.theme = themeClass;
             
-            if (themeClass.startsWith('theme-aurora')) {
+            if (themeClass.startsWith('theme-aurora') || themeClass === 'theme-bts') {
                 document.body.classList.add('dark-theme');
                 store.state.persistent.darkMode = true;
                 const checkbox = document.getElementById('checkbox');

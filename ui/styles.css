@@ -435,6 +435,74 @@ body.theme-aurora-sunset.dark-theme {
     --aurora-bg: conic-gradient(from 0deg at 50% 50%, var(--aurora-color-1), var(--aurora-color-2), var(--aurora-color-1), var(--aurora-color-3), var(--aurora-color-1));
 }
 
+/* --- 9. BTS "BORAHAE" THEME (Forced Dark + Custom Image BG) --- */
+body.theme-bts,
+body.theme-bts.dark-theme {
+    --bg-color: #0d0618;
+    --panel-bg: rgba(20, 10, 35, 0.55);
+    --border-color: rgba(180, 130, 255, 0.18);
+    --text-primary: #f0e6ff;
+    --text-secondary: #b8a4d6;
+    --primary-blue: #9b59b6;
+    --primary-hover: #8344a5;
+    --calc-btn-bg: rgba(30, 15, 50, 0.55);
+    --calc-btn-border: rgba(60, 30, 100, 0.4);
+    --calc-btn-hover: rgba(70, 35, 115, 0.6);
+    --aurora-color-1: #1a0633;
+    --aurora-color-2: #5b2d8e;
+    --aurora-color-3: #2e1065;
+    --glass-border: rgba(180, 130, 255, 0.15);
+    --glass-bg: rgba(20, 10, 35, 0.75);
+    --glass-bg-hover: rgba(30, 15, 50, 0.70);
+    --modal-glass-bg: rgba(20, 10, 35, 0.55);
+    --modal-glass-border: rgba(180, 130, 255, 0.12);
+    --overlay-backdrop: rgba(10, 5, 20, 0.6);
+    --glass-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.2);
+    --glass-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.4), 0 2px 6px rgba(0, 0, 0, 0.3);
+    --close-btn-bg: rgba(255, 255, 255, 0.08);
+    --close-btn-bg-hover: rgba(255, 255, 255, 0.16);
+    --shadow-soft-light: rgba(255, 255, 255, 0.04);
+    --shadow-soft-dark: rgba(0, 0, 0, 0.5);
+    --panel-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    --danger: #ff6b4a;
+    --danger-hover: #ff5232;
+    --danger-bg: rgba(222, 53, 11, 0.15);
+}
+
+/* BTS Theme: Equals button chibi GIF overlay */
+body.theme-bts .calc-btn.eq {
+    background-image: url('/Calculator/assets/bts-chibi.gif');
+    background-size: cover;
+    background-position: center;
+    color: transparent;
+    border-color: rgba(155, 89, 182, 0.5);
+}
+
+/* BTS Theme: Calc button bg override */
+body.theme-bts .calc-btn {
+    background-color: var(--calc-btn-bg);
+}
+
+/* BTS Theme: Frosted glass for sidebar and cards */
+body.theme-bts .right-panel,
+body.theme-bts .calc-card,
+body.theme-bts .left-panel header {
+    contain: layout style;
+}
+
+/* BTS Theme: WebGL underlay transparency */
+body.webgl-active.theme-bts {
+    background-color: transparent !important;
+}
+
+/* BTS Theme swatch: Logo image instead of solid color */
+.theme-swatch--bts {
+    background-image: url('/Calculator/assets/bts logo.png');
+    background-size: cover;
+    background-position: center;
+    border-color: rgba(155, 89, 182, 0.5) !important;
+}
+
 /* Aurora Shared Animated Background */
 body::before {
     content: '';

@@ -49,6 +49,10 @@ export class WebGLRenderer {
         this.primitiveProgram = null;
         this.primitiveVAO = null;
 
+        // BTS theme texture
+        this.btsBackgroundTex = null;
+        this.btsTexLoaded = false;
+
         /**
          * Cached theme colors from UIManager.
          */
@@ -87,9 +91,9 @@ export class WebGLRenderer {
         if (this._animId) return;
         const tick = () => {
             this._animId = requestAnimationFrame(tick);
-            // Continuous render required for Aurora shader rotation (u_time)
+            // Continuous render required for Aurora shader rotation (u_time) and BTS bubbles
             if (document.body.classList.contains('webgl-active') && 
-                document.body.className.includes('theme-aurora')) {
+                (document.body.className.includes('theme-aurora') || document.body.className.includes('theme-bts'))) {
                 this.render();
             }
         };
@@ -185,6 +189,9 @@ export class WebGLRenderer {
 
             this.initialized = true;
             console.info('WebGLRenderer: Instanced batch rendering pipeline initialized.');
+
+            // Load BTS background texture asynchronously
+            this.loadBTSTexture();
         } catch (error) {
             console.error('WebGLRenderer: Pipeline initialization failed:', error);
             this.initialized = false;
@@ -214,6 +221,41 @@ export class WebGLRenderer {
 
         this.fboA = this.context.createFramebuffer(blurWidth, blurHeight);
         this.fboB = this.context.createFramebuffer(blurWidth, blurHeight);
+    }
+
+    /**
+     * Asynchronously loads the BTS background image as a WebGL texture.
+     */
+    loadBTSTexture() {
+        if (this.btsBackgroundTex) return; // Already loaded or loading
+
+        const gl = this.gl;
+        
+        // Create a 1x1 placeholder texture immediately
+        this.btsBackgroundTex = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, this.btsBackgroundTex);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE,
+            new Uint8Array([26, 6, 51, 255]) // Dark purple placeholder
+        );
+
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+            gl.bindTexture(gl.TEXTURE_2D, this.btsBackgroundTex);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+            gl.generateMipmap(gl.TEXTURE_2D);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+            this.btsTexLoaded = true;
+            console.info('WebGLRenderer: BTS background texture loaded.');
+            this.render();
+        };
+        img.onerror = () => {
+            console.warn('WebGLRenderer: Failed to load BTS background texture.');
+        };
+        img.src = './assets/bts_chibi_bg_1775310615594.png';
     }
 
     /**
@@ -555,6 +597,7 @@ export class WebGLRenderer {
         let currentDest = this.fboB;
 
         const isAurora = document.body.className.includes('theme-aurora') ? 1.0 : 0.0;
+        const isBTS = document.body.className.includes('theme-bts') ? 1.0 : 0.0;
 
         const passes = [0.0, 1.0, 2.0, 3.0];
         for (const offset of passes) {
@@ -597,8 +640,17 @@ export class WebGLRenderer {
             uAuroraColor2: theme.uAuroraColor2,
             uAuroraColor3: theme.uAuroraColor3,
             uIsAurora: isAurora,
-            uIsFinalPass: 1.0 // Indicate this is the final composition
+            uIsFinalPass: 1.0, // Indicate this is the final composition
+            uIsBTS: isBTS,
+            uBackgroundTexture: 1
         });
+
+        // Bind BTS background texture to unit 1 if active
+        if (isBTS > 0.5 && this.btsBackgroundTex && this.btsTexLoaded) {
+            gl.activeTexture(gl.TEXTURE1);
+            gl.bindTexture(gl.TEXTURE_2D, this.btsBackgroundTex);
+            gl.activeTexture(gl.TEXTURE0); // Reset active texture
+        }
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
         // Draw sharp UI elements on top
