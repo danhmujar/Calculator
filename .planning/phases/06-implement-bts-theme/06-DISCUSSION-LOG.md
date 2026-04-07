@@ -53,7 +53,7 @@
 | Add faint logo watermark | Rendered in the WebGL canvas | |
 
 **User's choice:** Colors only
-**Notes:** Although the user chose "Colors only" here, they later clarified in a revision: "i want this public\assets\bts-chibi.gif to be in equal button in main calc sidebar". This was captured as a specific requirement.
+**Notes:** Although the user chose "Colors only" here, they later clarified in a revision: "i want this public\assets\bts-chibi.gif to be in equal button in main calc sidebar". They also requested to use "public\assets\bts logo.png" as the icon for the theme palette selection. These were captured as specific requirements.
 
 ---
 

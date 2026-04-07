@@ -22,6 +22,7 @@ Implementing a new BTS-inspired theme featuring a custom image background, bubbl
 
 ### UI Integration
 - **D-05:** The main calculator sidebar's equal button must contain the image `public/assets/bts-chibi.gif`.
+- **D-06:** The theme palette selection icon must use `public/assets/bts logo.png`.
 
 ### Claude's Discretion
 - Technical implementation of the bubble particle animation in WebGL.
@@ -40,6 +41,7 @@ Implementing a new BTS-inspired theme featuring a custom image background, bubbl
 ### Assets
 - `brain_session/bts_chibi_bg_1775310615594.png` — Target background image.
 - `public/assets/bts-chibi.gif` — Target equal button image.
+- `public/assets/bts logo.png` — Target theme picker icon.
 </canonical_refs>
 
 <code_context>
@@ -64,6 +66,7 @@ Implementing a new BTS-inspired theme featuring a custom image background, bubbl
 ## Specific Ideas
 
 - The equal button in the main calc sidebar must contain the `public/assets/bts-chibi.gif`.
+- The theme palette selection must use `public/assets/bts logo.png` as its icon instead of a standard solid color swatch.
 - The WebGL underlay needs to support an image background (`brain_session/bts_chibi_bg_1775310615594.png`) and a new particle effect (bubbles) specifically for this theme, rather than just solid colors or the Aurora gradient.
 </specifics>
 
