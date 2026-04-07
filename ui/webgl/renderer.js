@@ -80,6 +80,20 @@ export class WebGLRenderer {
         this.init();
         this.setupResizeObserver();
         this.setupThemeObserver();
+        this.startAnimationLoop();
+    }
+
+    startAnimationLoop() {
+        if (this._animId) return;
+        const tick = () => {
+            this._animId = requestAnimationFrame(tick);
+            // Continuous render required for Aurora shader rotation (u_time)
+            if (document.body.classList.contains('webgl-active') && 
+                document.body.className.includes('theme-aurora')) {
+                this.render();
+            }
+        };
+        this._animId = requestAnimationFrame(tick);
     }
 
     /**
@@ -159,6 +173,10 @@ export class WebGLRenderer {
             const index = gl.getUniformBlockIndex(this.batchProgram, blockName);
             if (index !== gl.INVALID_INDEX) {
                 gl.uniformBlockBinding(this.batchProgram, index, 0);
+            }
+            const primIndex = gl.getUniformBlockIndex(this.primitiveProgram, blockName);
+            if (primIndex !== gl.INVALID_INDEX) {
+                gl.uniformBlockBinding(this.primitiveProgram, primIndex, 0);
             }
             
             // Enable alpha blending for the underlay pattern
@@ -536,6 +554,8 @@ export class WebGLRenderer {
         let currentSrc = this.fboA;
         let currentDest = this.fboB;
 
+        const isAurora = document.body.className.includes('theme-aurora') ? 1.0 : 0.0;
+
         const passes = [0.0, 1.0, 2.0, 3.0];
         for (const offset of passes) {
             gl.bindFramebuffer(gl.FRAMEBUFFER, currentDest.framebuffer);
@@ -547,7 +567,9 @@ export class WebGLRenderer {
                 uOffset: offset,
                 uAuroraColor1: theme.uAuroraColor1,
                 uAuroraColor2: theme.uAuroraColor2,
-                uAuroraColor3: theme.uAuroraColor3
+                uAuroraColor3: theme.uAuroraColor3,
+                uIsAurora: isAurora,
+                uIsFinalPass: 0.0 // Just doing the blur passes
             });
 
             gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
@@ -573,7 +595,9 @@ export class WebGLRenderer {
             uOffset: 0.0, // Pass-through for final composition & coloring
             uAuroraColor1: theme.uAuroraColor1,
             uAuroraColor2: theme.uAuroraColor2,
-            uAuroraColor3: theme.uAuroraColor3
+            uAuroraColor3: theme.uAuroraColor3,
+            uIsAurora: isAurora,
+            uIsFinalPass: 1.0 // Indicate this is the final composition
         });
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
@@ -608,7 +632,8 @@ export class WebGLRenderer {
                 this.pushRect(rect, [...color, isHovered ? 0.15 : 0.1], 12, id);
             } else if (element.classList.contains('about-modal')) {
                 if (element.closest('.about-overlay.open')) {
-                    this.pushRect(rect, [...this.themeColors.primary, 0.15], 16, id);
+                    // Frosty background for the about modal
+                    this.pushRect(rect, [1.0, 1.0, 1.0, 0.25], 16, id);
                 }
             } else if (element.classList.contains('math-row') || element.classList.contains('calc-row-instance')) {
                 this.pushRect(rect, [...this.themeColors.primary, isHovered ? 0.1 : 0.05], 8, id);
@@ -621,6 +646,14 @@ export class WebGLRenderer {
             if (sidebar) {
                 const sidebarRect = layoutManager.getRect(sidebar);
                 if (sidebarRect.width > 0 && sidebarRect.height > 0) {
+                    // Frosty glass background for the sidebar itself
+                    this.pushRect({
+                        x: sidebarRect.left,
+                        y: sidebarRect.top,
+                        width: sidebarRect.width,
+                        height: sidebarRect.height
+                    }, [1.0, 1.0, 1.0, 0.20], 0, 'sidebar-glass-bg');
+
                     this.pushRect({
                         x: sidebarRect.left - 8,
                         y: sidebarRect.top,
@@ -686,35 +719,7 @@ export class WebGLRenderer {
      * Renders WebGL elements for the standard calculator display.
      */
     _renderStandardSymbols() {
-        if (document.body.classList.contains('mode-transitioning')) return;
-
-        const displayEl = document.getElementById('main-calc-display');
-        if (displayEl) {
-            const displayRect = layoutManager.getRect(displayEl);
-            const sidebar = document.getElementById('sidebar');
-            const sidebarRect = sidebar ? layoutManager.getRect(sidebar) : { width: 0 };
-            
-            const MIN_WIDTH_FOR_SYMBOLS = 200;
-            if (sidebarRect.width >= MIN_WIDTH_FOR_SYMBOLS) {
-                const displayCenterY = displayRect.top + displayRect.height / 2;
-                const sigmaX = displayRect.left + 24;
-                const piX = displayRect.right - 24;
-                
-                this.pushGlyph('Σ', 'bold 48px Inter', sigmaX, displayCenterY, [
-                    this.themeColors.primary[0],
-                    this.themeColors.primary[1],
-                    this.themeColors.primary[2],
-                    0.12
-                ], 28, 'sigma-symbol');
-
-                this.pushGlyph('π', 'bold 48px Inter', piX, displayCenterY, [
-                    this.themeColors.primary[0],
-                    this.themeColors.primary[1],
-                    this.themeColors.primary[2],
-                    0.10
-                ], 28, 'pi-symbol');
-            }
-        }
+        // Removed as per user request
     }
 }
 

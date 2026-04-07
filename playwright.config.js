@@ -1,4 +1,4 @@
-import { defineConfig } from '@playwright/test';
+import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './tests',
@@ -10,6 +10,23 @@ export default defineConfig({
     baseURL: 'http://localhost:5173',
     trace: 'on-first-retry',
   },
+  projects: [
+    {
+      name: 'chromium',
+      use: { 
+        ...devices['Desktop Chrome'],
+        launchOptions: {
+          args: [
+            '--ignore-gpu-blocklist',
+            '--use-gl=angle',
+            '--use-angle=d3d11',
+            '--enable-gpu-rasterization',
+            '--enable-zero-copy'
+          ]
+        }
+      },
+    },
+  ],
   expect: {
     timeout: 10000,
     toHaveScreenshot: {

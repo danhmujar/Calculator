@@ -25,6 +25,9 @@ Status: Project complete
 - Phase 4 complete: Optimization and UI Refinement
 - Phase 5 complete: About Modal and Main Calculator Transparency Fix
 - Phase 6 added: Implement BTS Theme
+- Phase 7 added: WebGL Aurora and Glass Effects
+- Phase 8 added: WebGL Theme System Migration
+- Phase 9 added: WebGL Component Transitions
 
 ## Session Checkpoint
 

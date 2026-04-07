@@ -132,6 +132,7 @@ void main() {
  */
 export const PRIMITIVE_FRAG = `#version 300 es
 precision highp float;
+${GLOBAL_STATE_BLOCK}
 
 uniform sampler2D uTexture;
 uniform vec2 uResolution;
@@ -141,6 +142,9 @@ uniform float uOffset;
 uniform vec3 uAuroraColor1;
 uniform vec3 uAuroraColor2;
 uniform vec3 uAuroraColor3;
+
+uniform float uIsAurora;
+uniform float uIsFinalPass;
 
 in vec2 v_texCoord;
 out vec4 outColor;
@@ -155,19 +159,64 @@ void main() {
     color += texture(uTexture, v_texCoord + (vec2(uOffset, -uOffset) + 0.5) * pixelSize);
     vec4 blurred = color * 0.25;
 
-    // Apply theme colorization based on UV position (Simulated Aurora)
-    float mask1 = smoothstep(0.2, 0.8, v_texCoord.x * v_texCoord.y);
-    float mask2 = smoothstep(0.8, 0.2, v_texCoord.x * (1.0 - v_texCoord.y));
-    
-    vec3 aurora = mix(uAuroraColor1, uAuroraColor2, mask1);
-    aurora = mix(aurora, uAuroraColor3, mask2);
+    if (uIsFinalPass > 0.5) {
+        // Apply theme colorization based on UV position (Simulated Aurora)
+        // Ensure perfect circular rotation regardless of screen aspect ratio
+        vec2 centered = v_texCoord - 0.5;
+        centered.x *= u_resolution.x / u_resolution.y;
+        
+        // Rotate the coordinates over time (~20s period)
+        float s = sin(u_time * 0.314159);
+        float c = cos(u_time * 0.314159);
+        vec2 rotated = vec2(
+            centered.x * c - centered.y * s,
+            centered.x * s + centered.y * c
+        );
+        
+        // Create two large, soft glowing "ovals/clouds" orbiting the center
+        // This lets the dark base color (Color1) dominate the background
+        float dist1 = length(rotated - vec2(0.45, 0.0));
+        float dist2 = length(rotated - vec2(-0.45, 0.0));
+        
+        // Smooth radial falloff (1.0 at center of blob, fading to 0.0)
+        float blob1 = 1.0 - smoothstep(0.0, 1.2, dist1 * 1.8);
+        float blob2 = 1.0 - smoothstep(0.0, 1.2, dist2 * 1.8);
+        
+        // Start with the dark base color, then smoothly add the glowing clouds of light
+        vec3 aurora = uAuroraColor1;
+        aurora += (uAuroraColor2 - uAuroraColor1) * blob1;
+        aurora += (uAuroraColor3 - uAuroraColor1) * blob2;
+        
+        // Clamp to prevent color blowout where the blobs overlap
+        aurora = clamp(aurora, 0.0, 1.0);
 
-    // Blend blurred content with aurora colors
-    // We boost the aurora where the blurred content is bright
-    float brightness = dot(blurred.rgb, vec3(0.299, 0.587, 0.114));
-    vec3 finalColor = mix(blurred.rgb, aurora, 0.4 + brightness * 0.2);
-
-    outColor = vec4(finalColor, blurred.a);
+        if (uIsAurora > 0.5) {
+            // Final composition for Aurora theme:
+            
+            // 1. Calculate a saturated, brightened version of the aurora to act as "frosted glass" transmission
+            float luma = dot(aurora, vec3(0.299, 0.587, 0.114));
+            vec3 auroraSaturated = mix(vec3(luma), aurora, 1.5); // CSS saturate(150%)
+            vec3 frostedAurora = auroraSaturated + 0.15;         // Lighten slightly
+            
+            // 2. Blend the frosted aurora effect based on the presence of blurred UI elements (alpha)
+            // The blurred.rgb provides the specific color tint (e.g. white for panels, primary color for glows)
+            float glassOpacity = min(blurred.a * 2.0, 1.0);
+            vec3 glassColor = mix(frostedAurora, blurred.rgb, 0.3); // Tint the glass with the UI highlight color
+            
+            vec3 finalColor = mix(aurora, glassColor, glassOpacity);
+            
+            outColor = vec4(finalColor, 1.0);
+        } else {
+            // Normal theme:
+            // Output blurred UI highlights with their original transparency
+            float brightness = dot(blurred.rgb, vec3(0.299, 0.587, 0.114));
+            vec3 finalColor = mix(blurred.rgb, aurora, 0.4 + brightness * 0.2);
+            outColor = vec4(finalColor, blurred.a);
+        }
+    } else {
+        // Blur passes: just pass the Kawase blur along
+        outColor = blurred;
+    }
 }
 `;
 

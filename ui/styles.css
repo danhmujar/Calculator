@@ -395,9 +395,9 @@ body.theme-aurora-ocean.dark-theme {
     --calc-btn-bg: rgba(12, 30, 50, 0.5);
     --calc-btn-border: rgba(20, 50, 80, 0.4);
     --calc-btn-hover: rgba(25, 60, 95, 0.6);
-    --aurora-color-1: #031525;
-    --aurora-color-2: #084c61;
-    --aurora-color-3: #0a3a5c;
+    --aurora-color-1: #040f1a;
+    --aurora-color-2: #0c3a5e;
+    --aurora-color-3: #2b1d4d;
     --aurora-bg: conic-gradient(from 0deg at 50% 50%, var(--aurora-color-1), var(--aurora-color-2), var(--aurora-color-1), var(--aurora-color-3), var(--aurora-color-1));
 }
 
@@ -412,9 +412,9 @@ body.theme-aurora-cyber.dark-theme {
     --calc-btn-bg: rgba(12, 35, 25, 0.5);
     --calc-btn-border: rgba(20, 60, 40, 0.4);
     --calc-btn-hover: rgba(25, 75, 50, 0.6);
-    --aurora-color-1: #021a14;
-    --aurora-color-2: #064e3b;
-    --aurora-color-3: #0f172a;
+    --aurora-color-1: #051f15;
+    --aurora-color-2: #0f4a2d;
+    --aurora-color-3: #0a424f;
     --aurora-bg: conic-gradient(from 0deg at 50% 50%, var(--aurora-color-1), var(--aurora-color-2), var(--aurora-color-1), var(--aurora-color-3), var(--aurora-color-1));
 }
 
@@ -448,30 +448,6 @@ body::before {
     opacity: 0;
     transition: background 0.8s var(--ease), opacity 0.8s var(--ease);
     pointer-events: none;
-}
-
-body[class*="theme-aurora"]::before {
-    background: var(--aurora-bg);
-    opacity: 1;
-    animation: auroraRotate 20s linear infinite;
-    will-change: transform;
-}
-
-@keyframes auroraRotate {
-    from {
-        transform: rotate(0deg);
-    }
-
-    to {
-        transform: rotate(360deg);
-    }
-}
-
-/* Pause aurora animation for users who prefer reduced motion */
-@media (prefers-reduced-motion: reduce) {
-    body[class*="theme-aurora"]::before {
-        animation: none;
-    }
 }
 
 /* Deep Frosted Glass Effect specifically for Aurora Theme */
@@ -530,6 +506,10 @@ body[class*="theme-aurora"] .calc-btn {
 }
 
 /* WebGL Underlay Transparency (REQ-WGL-03) */
+body.webgl-active[class*="theme-aurora"] {
+    background-color: transparent !important;
+}
+
 body.webgl-active .right-panel,
 body.webgl-active .calc-card {
     background-color: color-mix(in srgb, var(--panel-bg) 85%, transparent);
