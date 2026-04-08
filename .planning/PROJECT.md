@@ -11,13 +11,14 @@ The application is migrating from heavy CSS `backdrop-filter` and gradient effec
 - ✓ 3-Tier Architecture separation (Services, UI DOM layer, WebGL layer) — existing structure.
 - ✓ Base WebGL rendering architecture (Context, Buffers, Shaders) — existing.
 - ✓ Interactive DOM UI for 4 percentage types and scientific calculator mode — existing.
+- ✓ Remove Redundant CSS: Fully migrated and stripped legacy CSS backdrop-filters.
+- ✓ Fix Z-Index & Stacking: Unified WebGL canvas layering.
+- ✓ Strict Visual Parity: Aurora and BTS themes verified at 100% parity.
+- ✓ Clean Parity Artifacts: All legacy CSS color systems removed.
+- ✓ Test Verification: Full automated suite passed.
 
 ### Active
-- [ ] **Remove Redundant CSS:** Strip out all legacy CSS `backdrop-filter` rules to rely 100% on the WebGL compositor.
-- [ ] **Fix Z-Index & Stacking:** Implement stable z-index layering to ensure the DOM calculator perfectly floats above the WebGL underlay without visually breaking on mode toggles.
-- [ ] **Strict Visual Parity:** The WebGL-rendered Aurora themes must be visually identical (100% parity) to the previous pure CSS implementation.
-- [ ] **Clean Parity Artifacts:** Remove obsolete testing scaffolding and legacy CSS variables/classes tightly coupled to the old parity checks.
-- [ ] **Test Verification:** Ensure all Playwright automated tests (specifically the "Underlay Pattern" checks) pass flawlessly on the new architecture.
+- None. All requirements for WebGL migration successfully delivered.
 
 ### Out of Scope
 - **New 3D Features (Particles, Graphing, Post-processing):** — Kept out of scope to strictly prioritize architectural stability and performance of the base foundation first.
