@@ -174,36 +174,6 @@ void main() {
     vec4 blurred = color * 0.25;
 
     if (uIsFinalPass > 0.5) {
-        // Apply theme colorization based on UV position (Simulated Aurora)
-        // Ensure perfect circular rotation regardless of screen aspect ratio
-        vec2 centered = v_texCoord - 0.5;
-        centered.x *= u_resolution.x / u_resolution.y;
-        
-        // Rotate the coordinates over time (~20s period)
-        float s = sin(u_time * 0.314159);
-        float c = cos(u_time * 0.314159);
-        vec2 rotated = vec2(
-            centered.x * c - centered.y * s,
-            centered.x * s + centered.y * c
-        );
-        
-        // Create two large, soft glowing "ovals/clouds" orbiting the center
-        // This lets the dark base color (Color1) dominate the background
-        float dist1 = length(rotated - vec2(0.45, 0.0));
-        float dist2 = length(rotated - vec2(-0.45, 0.0));
-        
-        // Smooth radial falloff (1.0 at center of blob, fading to 0.0)
-        float blob1 = 1.0 - smoothstep(0.0, 1.2, dist1 * 1.8);
-        float blob2 = 1.0 - smoothstep(0.0, 1.2, dist2 * 1.8);
-        
-        // Start with the dark base color, then smoothly add the glowing clouds of light
-        vec3 aurora = uAuroraColor1;
-        aurora += (uAuroraColor2 - uAuroraColor1) * blob1;
-        aurora += (uAuroraColor3 - uAuroraColor1) * blob2;
-        
-        // Clamp to prevent color blowout where the blobs overlap
-        aurora = clamp(aurora, 0.0, 1.0);
-
         if (uIsBTS > 0.5) {
             // --- BTS THEME: Image background + Procedural bubbles ---
             
@@ -226,8 +196,8 @@ void main() {
             // Darken the image to serve as a subtle background
             imgColor *= 0.55; // Dim the image
             
-            // Base color (aurora) underneath, image composited at 45% opacity
-            vec3 baseBg = mix(aurora, imgColor, 0.45);
+            // Static base color (uAuroraColor1) underneath, image composited at 45% opacity
+            vec3 baseBg = mix(uAuroraColor1, imgColor, 0.45);
             
             // --- Procedural Bubble Particles ---
             float bubbleAccum = 0.0;
@@ -263,7 +233,7 @@ void main() {
             vec3 bubbleColor = vec3(0.68, 0.35, 0.88); // Borahae purple
             vec3 withBubbles = baseBg + bubbleColor * bubbleAccum;
             
-            // Frosted glass composition (same logic as Aurora)
+            // Frosted glass composition
             float luma = dot(withBubbles, vec3(0.299, 0.587, 0.114));
             vec3 saturated = mix(vec3(luma), withBubbles, 1.3);
             vec3 frosted = saturated + 0.1;
@@ -271,30 +241,53 @@ void main() {
             float glassOpacity = min(blurred.a * 2.0, 1.0);
             vec3 glassColor = mix(frosted, blurred.rgb, 0.3);
             
-            vec3 finalColor = mix(withBubbles, glassColor, glassOpacity);
-            outColor = vec4(finalColor, 1.0);
+            outColor = vec4(mix(withBubbles, glassColor, glassOpacity), 1.0);
             
         } else if (uIsAurora > 0.5) {
             // Final composition for Aurora theme:
             
+            // Apply theme colorization based on UV position (Simulated Aurora)
+            // Ensure perfect circular rotation regardless of screen aspect ratio
+            vec2 centered = v_texCoord - 0.5;
+            centered.x *= u_resolution.x / u_resolution.y;
+            
+            // Rotate the coordinates over time (~20s period)
+            float s = sin(u_time * 0.314159);
+            float c = cos(u_time * 0.314159);
+            vec2 rotated = vec2(
+                centered.x * c - centered.y * s,
+                centered.x * s + centered.y * c
+            );
+            
+            // Create two large, soft glowing "ovals/clouds" orbiting the center
+            float dist1 = length(rotated - vec2(0.45, 0.0));
+            float dist2 = length(rotated - vec2(-0.45, 0.0));
+            
+            // Smooth radial falloff (1.0 at center of blob, fading to 0.0)
+            float blob1 = 1.0 - smoothstep(0.0, 1.2, dist1 * 1.8);
+            float blob2 = 1.0 - smoothstep(0.0, 1.2, dist2 * 1.8);
+            
+            // Start with the dark base color, then smoothly add the glowing clouds of light
+            vec3 aurora = uAuroraColor1;
+            aurora += (uAuroraColor2 - uAuroraColor1) * blob1;
+            aurora += (uAuroraColor3 - uAuroraColor1) * blob2;
+            aurora = clamp(aurora, 0.0, 1.0);
+
             // 1. Calculate a saturated, brightened version of the aurora to act as "frosted glass" transmission
             float luma = dot(aurora, vec3(0.299, 0.587, 0.114));
             vec3 auroraSaturated = mix(vec3(luma), aurora, 1.5); // CSS saturate(150%)
             vec3 frostedAurora = auroraSaturated + 0.15;         // Lighten slightly
             
             // 2. Blend the frosted aurora effect based on the presence of blurred UI elements (alpha)
-            // The blurred.rgb provides the specific color tint (e.g. white for panels, primary color for glows)
             float glassOpacity = min(blurred.a * 2.0, 1.0);
             vec3 glassColor = mix(frostedAurora, blurred.rgb, 0.3); // Tint the glass with the UI highlight color
             
-            vec3 finalColor = mix(aurora, glassColor, glassOpacity);
-            
-            outColor = vec4(finalColor, 1.0);
+            outColor = vec4(mix(aurora, glassColor, glassOpacity), 1.0);
         } else {
             // Normal theme:
             // Output blurred UI highlights with their original transparency
             float brightness = dot(blurred.rgb, vec3(0.299, 0.587, 0.114));
-            vec3 finalColor = mix(blurred.rgb, aurora, 0.4 + brightness * 0.2);
+            vec3 finalColor = mix(blurred.rgb, uAuroraColor1, 0.4 + brightness * 0.2);
             outColor = vec4(finalColor, blurred.a);
         }
     } else {
