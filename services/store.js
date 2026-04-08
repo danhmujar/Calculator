@@ -176,6 +176,7 @@ const defaultState = {
         operator: null,
         resetNext: false,
         memoryValue: 0,
+        updateAvailable: false,
         activeRowIndex: -1,
         selection: null,
         focusState: null,

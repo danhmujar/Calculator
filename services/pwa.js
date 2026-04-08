@@ -127,24 +127,16 @@ export class PWAManager {
         this.updateSW = registerSW({
             onNeedRefresh() {
                 console.log('PWA: New content available, please refresh.');
-                const updateToast = document.getElementById('update-toast');
-                if (updateToast) {
-                    updateToast.hidden = false;
-                    const refreshBtn = document.getElementById('update-refresh-btn');
-                    if (refreshBtn) {
-                        refreshBtn.addEventListener('click', () => {
+                // Dispatch custom event for the UI layer to handle
+                window.dispatchEvent(new CustomEvent('pwa-update-available', {
+                    detail: { 
+                        updateCallback: () => {
                             if (typeof self.updateSW === 'function') {
                                 self.updateSW(true);
                             }
-                        }, { once: true });
+                        }
                     }
-                    const dismissBtn = document.getElementById('update-dismiss-btn');
-                    if (dismissBtn) {
-                        dismissBtn.addEventListener('click', () => {
-                            updateToast.hidden = true;
-                        }, { once: true });
-                    }
-                }
+                }));
             },
             onOfflineReady() {
                 showToastCallback('App ready for offline use');

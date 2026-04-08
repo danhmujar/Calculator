@@ -13,3 +13,8 @@
 ## Constraints
 - **Stack Optimization**: No heavy 3D rendering wrappers (e.g., Three.js, Babylon) are permitted. We must remain on raw vanilla WebGL 2.0.
 - **Responsiveness**: The WebGL underlay must correctly redraw its render target constraints across all scaling variables (`ResizeObserver` and `devicePixelRatio` scaling).
+
+## Phase 7: PWA Update Notifications
+- [x] **PWA-01**: Automated `version.json` generation.
+- [x] **PWA-02**: Service Worker logic for detecting updates.
+- [x] **PWA-03**: Integration with existing `update-toast` UI.

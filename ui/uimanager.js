@@ -569,6 +569,32 @@ export class UIManager {
         this.toastTimeout = setTimeout(() => toast.classList.remove('show'), this.TOAST_DURATION_MS);
     }
 
+    /**
+     * Shows the PWA update notification toast and wires up its actions.
+     */
+    showUpdateToast(onRefresh) {
+        const toast = document.getElementById('update-toast');
+        if (!toast) return;
+
+        toast.hidden = false;
+
+        const refreshBtn = document.getElementById('update-refresh-btn');
+        if (refreshBtn) {
+            refreshBtn.onclick = () => {
+                if (typeof onRefresh === 'function') {
+                    onRefresh();
+                }
+            };
+        }
+
+        const dismissBtn = document.getElementById('update-dismiss-btn');
+        if (dismissBtn) {
+            dismissBtn.onclick = () => {
+                toast.hidden = true;
+            };
+        }
+    }
+
     createCopySvg(size = 14) {
         const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         svg.setAttribute('width', size);

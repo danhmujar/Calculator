@@ -31,6 +31,14 @@ class AppOrchestrator {
             pwaManager.init(uiManager.showToast.bind(uiManager));
             initEyeTracking();
 
+            // Handle PWA update events
+            window.addEventListener('pwa-update-available', (e) => {
+                console.log('App: PWA update available detected');
+                this.calcState.updateAvailable = true;
+                this.onUpdateCallback = e.detail.updateCallback;
+                uiManager.showUpdateToast(this.onUpdateCallback);
+            });
+
             const eventManager = new EventManager({
                 onDigit: (digit) => this.calcDigit(digit),
                 onOperation: (op) => this.calcOperation(op),
