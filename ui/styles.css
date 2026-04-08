@@ -754,7 +754,7 @@ h2 {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    transition: transform 0.4s var(--spring), filter 0.4s var(--spring), border-color 0.4s var(--ease), background-color 0.4s var(--ease);
+    transition: transform 0.4s var(--spring), filter 0.4s var(--spring);
 }
 
 .calc-card:hover {
