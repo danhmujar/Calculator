@@ -7,12 +7,14 @@ export class PWAManager {
     constructor() {
         this.deferredInstallPrompt = null;
         this.updateSW = null;
+        this.currentVersion = null;
     }
 
     init(showToastCallback) {
         this.setupOfflineHandlers(showToastCallback);
         this.setupInstallPrompt();
         this.registerServiceWorker(showToastCallback);
+        this.startVersionPolling();
         
         // Bind install button if it exists
         const installBtn = document.getElementById('pwa-install-btn');
@@ -71,16 +73,69 @@ export class PWAManager {
         });
     }
 
+    async startVersionPolling() {
+        // Initial fetch to get current version
+        await this.checkVersion();
+
+        // Check on visibility change (user comes back to tab)
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                this.checkVersion();
+            }
+        });
+
+        // Periodic check every 1 hour (3600000 ms)
+        setInterval(() => this.checkVersion(), 3600000);
+    }
+
+    async checkVersion() {
+        try {
+            // In Vite, base URL is provided via import.meta.env.BASE_URL
+            const baseUrl = import.meta.env.BASE_URL || '/';
+            // Use timestamp to bypass cache
+            const response = await fetch(`${baseUrl}version.json?t=${Date.now()}`, { 
+                cache: 'no-store' 
+            });
+            
+            if (!response.ok) return;
+            
+            const data = await response.json();
+            
+            if (!this.currentVersion) {
+                this.currentVersion = data.version;
+                console.log(`PWA: Initial version cached: ${this.currentVersion}`);
+                return;
+            }
+
+            if (this.currentVersion !== data.version) {
+                console.log(`PWA: New version detected: ${data.version} (current: ${this.currentVersion})`);
+                this.currentVersion = data.version;
+                
+                // Trigger Service Worker update check
+                if (this.updateSW) {
+                    console.log('PWA: Triggering Service Worker update check...');
+                    this.updateSW();
+                }
+            }
+        } catch (error) {
+            console.error('PWA: Failed to check version:', error);
+        }
+    }
+
     registerServiceWorker(showToastCallback) {
+        const self = this;
         this.updateSW = registerSW({
             onNeedRefresh() {
+                console.log('PWA: New content available, please refresh.');
                 const updateToast = document.getElementById('update-toast');
                 if (updateToast) {
                     updateToast.hidden = false;
                     const refreshBtn = document.getElementById('update-refresh-btn');
                     if (refreshBtn) {
                         refreshBtn.addEventListener('click', () => {
-                            if (this.updateSW) this.updateSW(true);
+                            if (typeof self.updateSW === 'function') {
+                                self.updateSW(true);
+                            }
                         }, { once: true });
                     }
                     const dismissBtn = document.getElementById('update-dismiss-btn');
