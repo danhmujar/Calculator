@@ -103,17 +103,17 @@ const BASE_LIGHT = {
 };
 
 const BASE_DARK = {
-    '--bg-color': '#0f1115',
-    '--panel-bg': '#1c1e24',
-    '--border-color': '#2b2e35',
+    '--bg-color': '#080c14',
+    '--panel-bg': '#151b26',
+    '--border-color': '#212a3d',
     '--text-primary': '#e6e8ed',
     '--text-secondary': '#9aa1b3',
     '--primary-blue': '#0052cc', // Fallback, usually overridden
     '--primary-hover': '#003d99',
-    '--calc-btn-bg': '#22252b',
-    '--calc-btn-border': '#2b2e35',
-    '--calc-btn-hover': '#292d36',
-    '--aurora-color-1': '#0f1115',
+    '--calc-btn-bg': '#1a2233',
+    '--calc-btn-border': '#212a3d',
+    '--calc-btn-hover': '#243044',
+    '--aurora-color-1': '#080c14',
     // Neumorphism Dark
     '--shadow-sm': '0 1px 2px rgba(0, 0, 0, 0.3)',
     '--shadow-md': '0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.2)',
