@@ -374,12 +374,13 @@ body.theme-purple.dark-theme {
     --calc-btn-border: #3A287B;
 }
 
-/* --- 8. AURORA THEMES (Animated Gradients) --- */
-/* Base Aurora Styles */
-body[class*="theme-aurora"] {
+/* --- 8. WEBGL-FIRST THEMES (Aurora & BTS) --- */
+/* Base Styles for themes using the WebGL underlay pattern */
+body[class*="theme-aurora"],
+body.theme-bts {
     --text-primary: #ffffff;
     --text-secondary: #a7a2bd;
-    /* Neumorphism adjustments for glassy aurora */
+    /* Neumorphism adjustments for glassy/underlay visuals */
     --shadow-soft-light: rgba(255, 255, 255, 0.05);
     --shadow-soft-dark: rgba(0, 0, 0, 0.5);
     --panel-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
@@ -399,7 +400,6 @@ body.theme-aurora.dark-theme {
     --aurora-color-1: #1a0b2e;
     --aurora-color-2: #4b1d52;
     --aurora-color-3: #0d2847;
-    --aurora-bg: conic-gradient(from 0deg at 50% 50%, var(--aurora-color-1), var(--aurora-color-2), var(--aurora-color-1), var(--aurora-color-3), var(--aurora-color-1));
 }
 
 /* 8.2 Oceanic Aurora (Blue/Teal - Masculine) */
@@ -416,7 +416,6 @@ body.theme-aurora-ocean.dark-theme {
     --aurora-color-1: #040f1a;
     --aurora-color-2: #0c3a5e;
     --aurora-color-3: #2b1d4d;
-    --aurora-bg: conic-gradient(from 0deg at 50% 50%, var(--aurora-color-1), var(--aurora-color-2), var(--aurora-color-1), var(--aurora-color-3), var(--aurora-color-1));
 }
 
 /* 8.3 Cyber Neon (Dark Green/Blue - Masculine) */
@@ -433,7 +432,6 @@ body.theme-aurora-cyber.dark-theme {
     --aurora-color-1: #051f15;
     --aurora-color-2: #0f4a2d;
     --aurora-color-3: #0a424f;
-    --aurora-bg: conic-gradient(from 0deg at 50% 50%, var(--aurora-color-1), var(--aurora-color-2), var(--aurora-color-1), var(--aurora-color-3), var(--aurora-color-1));
 }
 
 /* 8.4 Sunset Aurora (Peach/Orange - Feminine) */
@@ -450,7 +448,6 @@ body.theme-aurora-sunset.dark-theme {
     --aurora-color-1: #2a0b0b;
     --aurora-color-2: #7c2d12;
     --aurora-color-3: #831843;
-    --aurora-bg: conic-gradient(from 0deg at 50% 50%, var(--aurora-color-1), var(--aurora-color-2), var(--aurora-color-1), var(--aurora-color-3), var(--aurora-color-1));
 }
 
 /* --- 9. BTS "BORAHAE" THEME (Forced Dark + Custom Image BG) --- */
@@ -459,8 +456,6 @@ body.theme-bts.dark-theme {
     --bg-color: #0d0618;
     --panel-bg: rgba(20, 10, 35, 0.55);
     --border-color: rgba(180, 130, 255, 0.18);
-    --text-primary: #f0e6ff;
-    --text-secondary: #b8a4d6;
     --primary-blue: #9b59b6;
     --primary-hover: #8344a5;
     --calc-btn-bg: rgba(30, 15, 50, 0.55);
@@ -479,9 +474,6 @@ body.theme-bts.dark-theme {
     --glass-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.4), 0 2px 6px rgba(0, 0, 0, 0.3);
     --close-btn-bg: rgba(255, 255, 255, 0.08);
     --close-btn-bg-hover: rgba(255, 255, 255, 0.16);
-    --shadow-soft-light: rgba(255, 255, 255, 0.04);
-    --shadow-soft-dark: rgba(0, 0, 0, 0.5);
-    --panel-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
     --danger: #ff6b4a;
     --danger-hover: #ff5232;
     --danger-bg: rgba(222, 53, 11, 0.15);
@@ -492,25 +484,14 @@ body.theme-bts .calc-btn.eq {
     background-image: url('/Calculator/assets/bts-chibi.gif');
     background-size: cover;
     background-position: center;
-    color: transparent;
+    color: transparent !important;
     border-color: rgba(155, 89, 182, 0.5);
 }
 
-/* BTS Theme: Calc button bg override */
-body.theme-bts .calc-btn {
+/* Unified Button Overrides for Animated Themes */
+body.theme-bts .calc-btn,
+body[class*="theme-aurora"] .calc-btn {
     background-color: var(--calc-btn-bg);
-}
-
-/* BTS Theme: Frosted glass for sidebar and cards */
-body.theme-bts .right-panel,
-body.theme-bts .calc-card,
-body.theme-bts .left-panel header {
-    contain: layout style;
-}
-
-/* BTS Theme: WebGL underlay transparency */
-body.webgl-active.theme-bts {
-    background-color: transparent !important;
 }
 
 /* BTS Theme swatch: Logo image instead of solid color */
@@ -536,16 +517,12 @@ body::before {
     pointer-events: none;
 }
 
-/* Deep Frosted Glass Effect specifically for Aurora Theme */
-body[class*="theme-aurora"] .right-panel,
-body[class*="theme-aurora"] .calc-card,
-body[class*="theme-aurora"] .left-panel header {
-    contain: layout style;
-}
-
-/* Rendering Optimizations */
-.calc-keypad,
-.calc-display {
+/* Unified Rendering Optimizations for WebGL underlay themes */
+body.webgl-active .right-panel,
+body.webgl-active .calc-card,
+body.webgl-active .left-panel header,
+body.webgl-active .calc-keypad,
+body.webgl-active .calc-display {
     contain: layout style;
 }
 
@@ -575,10 +552,6 @@ button,
 .calc-btn {
     min-height: 44px;
     min-width: 44px;
-}
-
-body[class*="theme-aurora"] .calc-btn {
-    background-color: var(--calc-btn-bg);
 }
 
 /* Layout */
@@ -2500,14 +2473,4 @@ body.webgl-active #sci-container {
 
 body.webgl-active.dark-theme #sci-container {
     background: rgba(28, 30, 36, 0.45) !important;
-}
-
-@media (max-width: 1024px) {
-    body.webgl-active .right-panel {
-        background-color: rgba(255, 255, 255, 0.75) !important;
-    }
-
-    body.webgl-active.dark-theme .right-panel {
-        background-color: rgba(28, 30, 36, 0.75) !important;
-    }
 }
