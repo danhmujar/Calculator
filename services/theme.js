@@ -128,7 +128,15 @@ const BASE_WEBGL_THEME = {
     '--text-secondary': '#a7a2bd',
     '--shadow-soft-light': 'rgba(255, 255, 255, 0.05)',
     '--shadow-soft-dark': 'rgba(0, 0, 0, 0.5)',
-    '--panel-shadow': '0 8px 32px rgba(0, 0, 0, 0.4)'
+    '--panel-shadow': '0 8px 32px rgba(0, 0, 0, 0.4)',
+    '--glass-border': 'rgba(255, 255, 255, 0.15)',
+    '--glass-bg': 'rgba(20, 15, 30, 0.75)',
+    '--glass-bg-hover': 'rgba(30, 20, 40, 0.70)',
+    '--modal-glass-bg': 'rgba(20, 15, 30, 0.55)',
+    '--modal-glass-border': 'rgba(255, 255, 255, 0.12)',
+    '--overlay-backdrop': 'rgba(10, 5, 20, 0.6)',
+    '--close-btn-bg': 'rgba(255, 255, 255, 0.08)',
+    '--close-btn-bg-hover': 'rgba(255, 255, 255, 0.16)'
 };
 
 const THEME_CONFIG = {
