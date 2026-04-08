@@ -437,40 +437,61 @@ class ThemeTransitionManager {
     }
 
     /**
-     * Initializes the manager with the current theme colors from the DOM.
+     * Initializes the manager with the current theme colors from the JS config.
      */
     init() {
         const initial = this._fetchThemeColors();
         this.currentColors = { ...initial };
         this.startColors = { ...initial };
         this.targetColors = { ...initial };
+        this._applyColorsToDOM(this.currentColors);
     }
 
     /**
-     * Internal helper to fetch colors from CSS variables.
-     * Only call this when the theme actually changes to avoid layout thrashing.
+     * Internal helper to fetch colors from the JS configuration.
      */
     _fetchThemeColors() {
-        const style = getComputedStyle(document.body);
-        const className = document.body.className;
-        const color1 = style.getPropertyValue('--aurora-color-1').trim() || '#1a0b2e';
-        const color2 = style.getPropertyValue('--aurora-color-2').trim() || '#4b1d52';
-        const color3 = style.getPropertyValue('--aurora-color-3').trim() || '#0d2847';
+        const classList = document.body.className.split(' ');
+        const isDark = classList.includes('dark-theme');
+        let activeTheme = '';
         
-        const mode = this._getModeFromClass(className);
+        for (const cls of classList) {
+            if (cls.startsWith('theme-')) {
+                activeTheme = cls;
+                break;
+            }
+        }
+        
+        const themeData = THEME_CONFIG[activeTheme] || THEME_CONFIG[''];
+        const palette = isDark ? themeData.dark : themeData.light;
+        
+        const mode = this._getModeFromClass(activeTheme);
         const grain = mode === 0 ? 0.02 : 0.0;
 
-        return {
-            uAuroraColor1: parseHexToRgb(color1),
-            uAuroraColor2: parseHexToRgb(color2),
-            uAuroraColor3: parseHexToRgb(color3),
+        const targetState = {
+            uBackgroundMode: mode,
             uGrainIntensity: grain,
-            uBackgroundMode: mode
+            uAuroraColor1: parseHexToRgb(palette['--aurora-color-1'] || '#1a0b2e'),
+            uAuroraColor2: parseHexToRgb(palette['--aurora-color-2'] || '#4b1d52'),
+            uAuroraColor3: parseHexToRgb(palette['--aurora-color-3'] || '#0d2847')
         };
+
+        // Parse all CSS variables into the target state
+        for (const [key, value] of Object.entries(palette)) {
+            if (key.startsWith('--') && !key.startsWith('--aurora-color')) {
+                if (typeof value === 'string' && value.startsWith('#')) {
+                    targetState[key] = parseHexToRgbArray(value); // Array of [0-255, 0-255, 0-255]
+                } else {
+                    targetState[key] = value; // Keep as string (e.g., box-shadow)
+                }
+            }
+        }
+
+        return targetState;
     }
 
     /**
-     * Updates the target theme by fetching current CSS variables.
+     * Updates the target theme by fetching from JS Config.
      * Call this when the theme class on the body/html changes.
      */
     updateTargetTheme() {
@@ -510,16 +531,46 @@ class ThemeTransitionManager {
             } else if (typeof target === 'number' && key !== 'uBackgroundMode') {
                 this.currentColors[key] = start + (target - start) * easedT;
             } else {
-                // Non-interpolated values (like uBackgroundMode)
+                // Non-interpolated values (strings, booleans, uBackgroundMode)
                 this.currentColors[key] = target;
             }
         }
+
+        this._applyColorsToDOM(this.currentColors);
 
         if (t >= 1.0) {
             this.isTransitioning = false;
         }
 
         return this.currentColors;
+    }
+
+    /**
+     * Applies the current interpolated color state to the DOM as CSS variables.
+     * @param {Object} state 
+     */
+    _applyColorsToDOM(state) {
+        for (const [key, value] of Object.entries(state)) {
+            if (key.startsWith('--')) {
+                if (Array.isArray(value)) {
+                    document.body.style.setProperty(key, `rgb(${Math.round(value[0])}, ${Math.round(value[1])}, ${Math.round(value[2])})`);
+                } else {
+                    document.body.style.setProperty(key, value);
+                }
+            }
+        }
+
+        // Dynamically calculate alpha variants for the primary blue color
+        if (state['--primary-blue'] && Array.isArray(state['--primary-blue'])) {
+            const [r, g, b] = state['--primary-blue'];
+            const rInt = Math.round(r);
+            const gInt = Math.round(g);
+            const bInt = Math.round(b);
+            document.body.style.setProperty('--primary-alpha-05', `rgba(${rInt}, ${gInt}, ${bInt}, 0.05)`);
+            document.body.style.setProperty('--primary-alpha-10', `rgba(${rInt}, ${gInt}, ${bInt}, 0.10)`);
+            document.body.style.setProperty('--primary-alpha-15', `rgba(${rInt}, ${gInt}, ${bInt}, 0.15)`);
+            document.body.style.setProperty('--primary-alpha-30', `rgba(${rInt}, ${gInt}, ${bInt}, 0.30)`);
+        }
     }
 }
 
