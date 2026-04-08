@@ -2,7 +2,7 @@
 .agent/
 
 # Screenshots
-*.png
+screenshots/
 !public/icon-*.png
 
 # System instructions (local)
