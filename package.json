@@ -19,6 +19,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "postbuild": "node -e \"const fs = require('fs'); const pkg = JSON.parse(fs.readFileSync('./package.json', 'utf8')); const versionInfo = { version: pkg.version, build_time: new Date().toISOString() }; fs.writeFileSync('./public/version.json', JSON.stringify(versionInfo, null, 2)); if (fs.existsSync('./dist')) fs.writeFileSync('./dist/version.json', JSON.stringify(versionInfo, null, 2));\"",
     "preview": "vite preview"
   },
   "repository": {
