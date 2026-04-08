@@ -438,6 +438,7 @@ class ThemeTransitionManager {
         this.duration = 400; // ms
         this.startTime = 0;
         this.isTransitioning = false;
+        this.frameCounter = 0; 
         
         this.currentColors = {
             uAuroraColor1: [0.1, 0.04, 0.18],
