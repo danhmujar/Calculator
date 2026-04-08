@@ -17,3 +17,16 @@
 
 ## Phase 6: Implement BTS Theme [✅ Completed]
 - **Objective:** Integrate BTS "Borahae" theme with WebGL procedural bubbles and background textures.
+
+## Phase 7: PWA Update Notifications
+- **Objective:** Implement a Service Worker-based update notification system for GitHub Pages.
+- **Outcomes:**
+  - Automated `version.json` generation.
+  - Service Worker logic for detecting updates.
+  - Integration with existing `update-toast` UI.
+**Plans:** 3 plans
+
+Plans:
+- [ ] 07-01-PLAN.md — Build script and version manifest setup
+- [ ] 07-02-PLAN.md — Service Worker implementation for version polling
+- [ ] 07-03-PLAN.md — UI toast integration and cache-busting logic
