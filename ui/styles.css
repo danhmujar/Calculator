@@ -162,7 +162,6 @@ body {
     height: 100vh;
     overflow: hidden;
     display: flex;
-    transition: background-color 0.4s var(--ease), color 0.4s var(--ease);
 
     /* MathLive Virtual Keyboard Theming integration */
     --keyboard-background: var(--panel-bg);
@@ -183,7 +182,6 @@ body {
     --keyboard-toolbar-background: var(--panel-bg);
     --keyboard-toolbar-background-hover: var(--calc-btn-hover);
 }
-
 /* Fix MathLive FOUC */
 math-field:not(:defined) {
     visibility: hidden;
@@ -754,6 +752,7 @@ h2 {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    will-change: transform, opacity;
     transition: transform 0.4s var(--spring), filter 0.4s var(--spring);
 }
 
@@ -1400,7 +1399,7 @@ math-field:focus-within {
     position: relative;
     z-index: 1;
     will-change: transform;
-    transition: transform 0.2s var(--spring), color 0.2s var(--spring);
+    transition: transform 0.2s var(--spring);
 }
 
 .calc-btn::after {
@@ -2245,7 +2244,7 @@ body.dark-theme .about-badge {
 }
 
 .calculator-body {
-    transition: fill 0.4s var(--ease);
+    will-change: fill;
 }
 
 .sidebar-controls {
