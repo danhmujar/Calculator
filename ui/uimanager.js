@@ -204,6 +204,19 @@ export class UIManager {
         this.syncThemeColors();
     }
 
+    /**
+     * Maps theme names to background modes for WebGL.
+     * Mode 0: Solid color
+     * Mode 1: Aurora (animated)
+     * Mode 2: BTS (image + bubbles)
+     */
+    getBackgroundMode(theme) {
+        if (!theme) return 0;
+        if (theme === 'theme-bts') return 2;
+        if (theme.includes('theme-aurora')) return 1;
+        return 0; // All other themes are solid
+    }
+
     setupThemePicker() {
         const picker = document.querySelector('.theme-picker');
         if (picker) {

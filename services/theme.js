@@ -39,11 +39,22 @@ class ThemeTransitionManager {
         this.currentColors = {
             uAuroraColor1: [0.1, 0.04, 0.18],
             uAuroraColor2: [0.29, 0.11, 0.32],
-            uAuroraColor3: [0.05, 0.16, 0.28]
+            uAuroraColor3: [0.05, 0.16, 0.28],
+            uGrainIntensity: 0.0,
+            uBackgroundMode: 0
         };
         
         this.startColors = { ...this.currentColors };
         this.targetColors = { ...this.currentColors };
+    }
+
+    /**
+     * Helper to map theme class to background mode.
+     */
+    _getModeFromClass(className) {
+        if (className.includes('theme-bts')) return 2;
+        if (className.includes('theme-aurora')) return 1;
+        return 0;
     }
 
     /**
@@ -62,14 +73,20 @@ class ThemeTransitionManager {
      */
     _fetchThemeColors() {
         const style = getComputedStyle(document.body);
+        const className = document.body.className;
         const color1 = style.getPropertyValue('--aurora-color-1').trim() || '#1a0b2e';
         const color2 = style.getPropertyValue('--aurora-color-2').trim() || '#4b1d52';
         const color3 = style.getPropertyValue('--aurora-color-3').trim() || '#0d2847';
         
+        const mode = this._getModeFromClass(className);
+        const grain = mode === 0 ? 0.02 : 0.0;
+
         return {
             uAuroraColor1: parseHexToRgb(color1),
             uAuroraColor2: parseHexToRgb(color2),
-            uAuroraColor3: parseHexToRgb(color3)
+            uAuroraColor3: parseHexToRgb(color3),
+            uGrainIntensity: grain,
+            uBackgroundMode: mode
         };
     }
 
@@ -105,11 +122,18 @@ class ThemeTransitionManager {
             const start = this.startColors[key];
             const target = this.targetColors[key];
             
-            this.currentColors[key] = [
-                start[0] + (target[0] - start[0]) * easedT,
-                start[1] + (target[1] - start[1]) * easedT,
-                start[2] + (target[2] - start[2]) * easedT
-            ];
+            if (Array.isArray(target)) {
+                this.currentColors[key] = [
+                    start[0] + (target[0] - start[0]) * easedT,
+                    start[1] + (target[1] - start[1]) * easedT,
+                    start[2] + (target[2] - start[2]) * easedT
+                ];
+            } else if (typeof target === 'number' && key !== 'uBackgroundMode') {
+                this.currentColors[key] = start + (target - start) * easedT;
+            } else {
+                // Non-interpolated values (like uBackgroundMode)
+                this.currentColors[key] = target;
+            }
         }
 
         if (t >= 1.0) {

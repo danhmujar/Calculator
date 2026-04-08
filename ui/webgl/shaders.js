@@ -83,13 +83,12 @@ export class ShaderManager {
             } else if (typeof value === 'number') {
                 // Samplers and specific integer uniforms must use uniform1i
                 const lowerName = name.toLowerCase();
-                if (lowerName === 'u_atlas' || lowerName.includes('sampler') || lowerName.includes('texture')) {
+                if (lowerName === 'u_atlas' || lowerName.includes('sampler') || lowerName.includes('texture') || name === 'uBackgroundMode') {
                     gl.uniform1i(location, value);
                 } else {
                     gl.uniform1f(location, value);
                 }
-            }
- else if (typeof value === 'boolean') {
+            } else if (typeof value === 'boolean') {
                 gl.uniform1i(location, value ? 1 : 0);
             }
         }
@@ -143,15 +142,21 @@ uniform vec3 uAuroraColor1;
 uniform vec3 uAuroraColor2;
 uniform vec3 uAuroraColor3;
 
-uniform float uIsAurora;
+// Background Pipeline
+uniform int uBackgroundMode; // 0: Solid, 1: Aurora, 2: BTS
+uniform float uGrainIntensity;
 uniform float uIsFinalPass;
 
 // BTS Theme uniforms
-uniform float uIsBTS;
 uniform sampler2D uBackgroundTexture;
 
 in vec2 v_texCoord;
 out vec4 outColor;
+
+// Procedural noise function for grain
+float noise(vec2 uv) {
+    return fract(sin(dot(uv, vec2(12.9898, 78.233))) * 43758.5453);
+}
 
 // Procedural bubble function
 float bubble(vec2 uv, vec2 center, float radius) {
@@ -174,7 +179,9 @@ void main() {
     vec4 blurred = color * 0.25;
 
     if (uIsFinalPass > 0.5) {
-        if (uIsBTS > 0.5) {
+        vec3 finalBg = uAuroraColor1;
+
+        if (uBackgroundMode == 2) {
             // --- BTS THEME: Image background + Procedural bubbles ---
             
             // Cover-fill UV calculation (no stretching, crop from center)
@@ -183,21 +190,16 @@ void main() {
             vec2 bgUV = v_texCoord;
             bgUV.y = 1.0 - bgUV.y; // Flip Y for WebGL
             if (screenAspect > imgAspect) {
-                // Screen is wider than image — crop top/bottom
                 float scale = imgAspect / screenAspect;
                 bgUV.y = bgUV.y * scale + (1.0 - scale) * 0.5;
             } else {
-                // Screen is taller than image — crop left/right
                 float scale = screenAspect / imgAspect;
                 bgUV.x = bgUV.x * scale + (1.0 - scale) * 0.5;
             }
             vec3 imgColor = texture(uBackgroundTexture, bgUV).rgb;
-            
-            // Darken the image to serve as a subtle background
             imgColor *= 0.55; // Dim the image
             
-            // Static base color (uAuroraColor1) underneath, image composited at 45% opacity
-            vec3 baseBg = mix(uAuroraColor1, imgColor, 0.45);
+            finalBg = mix(uAuroraColor1, imgColor, 0.45);
             
             // --- Procedural Bubble Particles ---
             float bubbleAccum = 0.0;
@@ -209,7 +211,7 @@ void main() {
             for (int i = 0; i < 12; i++) {
                 float fi = float(i);
                 float speed = 0.08 + fi * 0.012;
-                float phase = fi * 1.618033; // golden ratio spacing
+                float phase = fi * 1.618033;
                 float xBase = fract(sin(fi * 127.1 + 311.7) * 43758.5453) * aspect;
                 float yPos = fract(-u_time * speed + phase);
                 float xOff = sin(u_time * 0.5 + fi * 2.4) * 0.03;
@@ -229,29 +231,14 @@ void main() {
                 bubbleAccum += bubble(uv, vec2(xBase + xOff, yPos), radius) * 0.35;
             }
             
-            // Purple-tinted bubbles
             vec3 bubbleColor = vec3(0.68, 0.35, 0.88); // Borahae purple
-            vec3 withBubbles = baseBg + bubbleColor * bubbleAccum;
+            finalBg += bubbleColor * bubbleAccum;
             
-            // Frosted glass composition
-            float luma = dot(withBubbles, vec3(0.299, 0.587, 0.114));
-            vec3 saturated = mix(vec3(luma), withBubbles, 1.3);
-            vec3 frosted = saturated + 0.1;
-            
-            float glassOpacity = min(blurred.a * 2.0, 1.0);
-            vec3 glassColor = mix(frosted, blurred.rgb, 0.3);
-            
-            outColor = vec4(mix(withBubbles, glassColor, glassOpacity), 1.0);
-            
-        } else if (uIsAurora > 0.5) {
-            // Final composition for Aurora theme:
-            
-            // Apply theme colorization based on UV position (Simulated Aurora)
-            // Ensure perfect circular rotation regardless of screen aspect ratio
+        } else if (uBackgroundMode == 1) {
+            // --- AURORA THEME: Rotating Gradient Blobs ---
             vec2 centered = v_texCoord - 0.5;
             centered.x *= u_resolution.x / u_resolution.y;
             
-            // Rotate the coordinates over time (~20s period)
             float s = sin(u_time * 0.314159);
             float c = cos(u_time * 0.314159);
             vec2 rotated = vec2(
@@ -259,37 +246,39 @@ void main() {
                 centered.x * s + centered.y * c
             );
             
-            // Create two large, soft glowing "ovals/clouds" orbiting the center
             float dist1 = length(rotated - vec2(0.45, 0.0));
             float dist2 = length(rotated - vec2(-0.45, 0.0));
-            
-            // Smooth radial falloff (1.0 at center of blob, fading to 0.0)
             float blob1 = 1.0 - smoothstep(0.0, 1.2, dist1 * 1.8);
             float blob2 = 1.0 - smoothstep(0.0, 1.2, dist2 * 1.8);
             
-            // Start with the dark base color, then smoothly add the glowing clouds of light
-            vec3 aurora = uAuroraColor1;
-            aurora += (uAuroraColor2 - uAuroraColor1) * blob1;
-            aurora += (uAuroraColor3 - uAuroraColor1) * blob2;
-            aurora = clamp(aurora, 0.0, 1.0);
-
-            // 1. Calculate a saturated, brightened version of the aurora to act as "frosted glass" transmission
-            float luma = dot(aurora, vec3(0.299, 0.587, 0.114));
-            vec3 auroraSaturated = mix(vec3(luma), aurora, 1.5); // CSS saturate(150%)
-            vec3 frostedAurora = auroraSaturated + 0.15;         // Lighten slightly
+            finalBg = uAuroraColor1;
+            finalBg += (uAuroraColor2 - uAuroraColor1) * blob1;
+            finalBg += (uAuroraColor3 - uAuroraColor1) * blob2;
+            finalBg = clamp(finalBg, 0.0, 1.0);
             
-            // 2. Blend the frosted aurora effect based on the presence of blurred UI elements (alpha)
-            float glassOpacity = min(blurred.a * 2.0, 1.0);
-            vec3 glassColor = mix(frostedAurora, blurred.rgb, 0.3); // Tint the glass with the UI highlight color
-            
-            outColor = vec4(mix(aurora, glassColor, glassOpacity), 1.0);
         } else {
-            // Normal theme:
-            // Output blurred UI highlights with their original transparency
-            float brightness = dot(blurred.rgb, vec3(0.299, 0.587, 0.114));
-            vec3 finalColor = mix(blurred.rgb, uAuroraColor1, 0.4 + brightness * 0.2);
-            outColor = vec4(finalColor, blurred.a);
+            // --- SOLID THEME: Base color ---
+            finalBg = uAuroraColor1;
         }
+
+        // Apply Grain (Noise) to all modes, but primarily intended for Solid
+        if (uGrainIntensity > 0.0) {
+            float n = noise(v_texCoord * 1000.0); // High frequency noise
+            finalBg += (n - 0.5) * uGrainIntensity;
+        }
+
+        // --- Unified Frosted Glass Composition ---
+        // 1. Saturated version for frosted transmission
+        float luma = dot(finalBg, vec3(0.299, 0.587, 0.114));
+        vec3 saturated = mix(vec3(luma), finalBg, 1.4);
+        vec3 frosted = saturated + 0.12;
+        
+        // 2. Blend with blurred highlights
+        float glassOpacity = min(blurred.a * 2.0, 1.0);
+        vec3 glassColor = mix(frosted, blurred.rgb, 0.3);
+        
+        outColor = vec4(mix(finalBg, glassColor, glassOpacity), 1.0);
+
     } else {
         // Blur passes: just pass the Kawase blur along
         outColor = blurred;

@@ -85,11 +85,15 @@
     --pupil-y-1: 0px;
     --pupil-x-2: 0px;
     --pupil-y-2: 0px;
+
+    /* WebGL Base Color Mapping */
+    --aurora-color-1: var(--bg-color);
 }
 
 /* Dark Mode Theme overrides */
 body.dark-theme {
     --bg-color: #0f1115;
+    --aurora-color-1: #0f1115;
     --panel-bg: #1c1e24;
     --border-color: #2b2e35;
     --text-primary: #e6e8ed;
@@ -219,6 +223,7 @@ math-field:not(:defined) {
 /* 1. Transformative Teal */
 body.theme-teal {
     --bg-color: #E6F2F2;
+    --aurora-color-1: #E6F2F2;
     --panel-bg: #F4F9F9;
     --border-color: #B2D8D8;
     --primary-blue: #0A7A7A;
@@ -227,6 +232,7 @@ body.theme-teal {
 
 body.theme-teal.dark-theme {
     --bg-color: #041616;
+    --aurora-color-1: #041616;
     --panel-bg: #072626;
     --border-color: #0E3E3E;
     --primary-blue: #23A9A9;
@@ -239,6 +245,7 @@ body.theme-teal.dark-theme {
 /* 2. Deep Terracotta */
 body.theme-terracotta {
     --bg-color: #F8EBE7;
+    --aurora-color-1: #F8EBE7;
     --panel-bg: #FDF9F8;
     --border-color: #E2BDB2;
     --primary-blue: #C15C3D;
@@ -247,6 +254,7 @@ body.theme-terracotta {
 
 body.theme-terracotta.dark-theme {
     --bg-color: #1A0D0A;
+    --aurora-color-1: #1A0D0A;
     --panel-bg: #2B1813;
     --border-color: #4A2B23;
     --primary-blue: #E27B5A;
@@ -259,6 +267,7 @@ body.theme-terracotta.dark-theme {
 /* 3. Forest Green */
 body.theme-forest {
     --bg-color: #EBF1ED;
+    --aurora-color-1: #EBF1ED;
     --panel-bg: #F5F8F6;
     --border-color: #B5CDBE;
     --primary-blue: #3E7153;
@@ -267,6 +276,7 @@ body.theme-forest {
 
 body.theme-forest.dark-theme {
     --bg-color: #09120D;
+    --aurora-color-1: #09120D;
     --panel-bg: #111F17;
     --border-color: #1D3627;
     --primary-blue: #61A37B;
@@ -279,6 +289,7 @@ body.theme-forest.dark-theme {
 /* 4. Slate Graphite */
 body.theme-slate {
     --bg-color: #EDEFF2;
+    --aurora-color-1: #EDEFF2;
     --panel-bg: #F5F7F9;
     --border-color: #CBD2DE;
     --primary-blue: #475569;
@@ -287,6 +298,7 @@ body.theme-slate {
 
 body.theme-slate.dark-theme {
     --bg-color: #0A0D11;
+    --aurora-color-1: #0A0D11;
     --panel-bg: #121820;
     --border-color: #212C3B;
     --primary-blue: #7E95AD;
@@ -299,6 +311,7 @@ body.theme-slate.dark-theme {
 /* 5. Dusty Rosewood */
 body.theme-rosewood {
     --bg-color: #F8ECEE;
+    --aurora-color-1: #F8ECEE;
     --panel-bg: #FDF9FA;
     --border-color: #DEC3C8;
     --primary-blue: #B86B77;
@@ -307,6 +320,7 @@ body.theme-rosewood {
 
 body.theme-rosewood.dark-theme {
     --bg-color: #1A0C0E;
+    --aurora-color-1: #1A0C0E;
     --panel-bg: #291619;
     --border-color: #46292E;
     --primary-blue: #D58693;
@@ -319,6 +333,7 @@ body.theme-rosewood.dark-theme {
 /* 6. Pale Pistachio */
 body.theme-pistachio {
     --bg-color: #F1F6F2;
+    --aurora-color-1: #F1F6F2;
     --panel-bg: #F8FBF8;
     --border-color: #C0D8C4;
     --primary-blue: #6A9970;
@@ -327,6 +342,7 @@ body.theme-pistachio {
 
 body.theme-pistachio.dark-theme {
     --bg-color: #0A140C;
+    --aurora-color-1: #0A140C;
     --panel-bg: #112014;
     --border-color: #1F3A24;
     --primary-blue: #8CBA92;
@@ -339,6 +355,7 @@ body.theme-pistachio.dark-theme {
 /* 7. Royal Purple */
 body.theme-purple {
     --bg-color: #F1EDFC;
+    --aurora-color-1: #F1EDFC;
     --panel-bg: #F8F6FD;
     --border-color: #CDBCF4;
     --primary-blue: #7C3AED;
@@ -347,6 +364,7 @@ body.theme-purple {
 
 body.theme-purple.dark-theme {
     --bg-color: #120A24;
+    --aurora-color-1: #120A24;
     --panel-bg: #1B113B;
     --border-color: #332168;
     --primary-blue: #A276F5;
@@ -573,9 +591,10 @@ body[class*="theme-aurora"] .calc-btn {
     z-index: 1;
 }
 
-/* WebGL Underlay Transparency (REQ-WGL-03) */
-body.webgl-active[class*="theme-aurora"] {
+/* Global WebGL Underlay Transparency (REQ-WGL-03) */
+body.webgl-active {
     background-color: transparent !important;
+    transition: none !important;
 }
 
 body.webgl-active .right-panel,

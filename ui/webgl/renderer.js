@@ -91,9 +91,8 @@ export class WebGLRenderer {
         if (this._animId) return;
         const tick = () => {
             this._animId = requestAnimationFrame(tick);
-            // Continuous render required for Aurora shader rotation (u_time) and BTS bubbles
-            if (document.body.classList.contains('webgl-active') && 
-                (document.body.className.includes('theme-aurora') || document.body.className.includes('theme-bts'))) {
+            // Continuous render for u_time based effects (Aurora, BTS bubbles, Grain)
+            if (document.body.classList.contains('webgl-active')) {
                 this.render();
             }
         };
@@ -596,9 +595,6 @@ export class WebGLRenderer {
         let currentSrc = this.fboA;
         let currentDest = this.fboB;
 
-        const isAurora = document.body.className.includes('theme-aurora') ? 1.0 : 0.0;
-        const isBTS = document.body.className.includes('theme-bts') ? 1.0 : 0.0;
-
         const passes = [0.0, 1.0, 2.0, 3.0];
         for (const offset of passes) {
             gl.bindFramebuffer(gl.FRAMEBUFFER, currentDest.framebuffer);
@@ -611,7 +607,8 @@ export class WebGLRenderer {
                 uAuroraColor1: theme.uAuroraColor1,
                 uAuroraColor2: theme.uAuroraColor2,
                 uAuroraColor3: theme.uAuroraColor3,
-                uIsAurora: isAurora,
+                uBackgroundMode: theme.uBackgroundMode,
+                uGrainIntensity: theme.uGrainIntensity,
                 uIsFinalPass: 0.0 // Just doing the blur passes
             });
 
@@ -639,14 +636,14 @@ export class WebGLRenderer {
             uAuroraColor1: theme.uAuroraColor1,
             uAuroraColor2: theme.uAuroraColor2,
             uAuroraColor3: theme.uAuroraColor3,
-            uIsAurora: isAurora,
+            uBackgroundMode: theme.uBackgroundMode,
+            uGrainIntensity: theme.uGrainIntensity,
             uIsFinalPass: 1.0, // Indicate this is the final composition
-            uIsBTS: isBTS,
             uBackgroundTexture: 1
         });
 
         // Bind BTS background texture to unit 1 if active
-        if (isBTS > 0.5 && this.btsBackgroundTex && this.btsTexLoaded) {
+        if (theme.uBackgroundMode === 2 && this.btsBackgroundTex && this.btsTexLoaded) {
             gl.activeTexture(gl.TEXTURE1);
             gl.bindTexture(gl.TEXTURE_2D, this.btsBackgroundTex);
             gl.activeTexture(gl.TEXTURE0); // Reset active texture
