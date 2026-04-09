@@ -26,8 +26,11 @@
   - Integration with existing `update-toast` UI.
 **Plans:** 3/3 plans executed
 
-Plans:
-- [x] 07-01-PLAN.md — Build script and version manifest setup
-- [x] 07-02-PLAN.md — Service Worker implementation for version polling
-- [x] 07-03-PLAN.md — UI toast integration and cache-busting logic
+## Phase 8: Migrating CSS Styles to WebGL [🕒 Pending]
+- **Objective:** Move UI component styling and rendering from traditional CSS to the WebGL underlay/overlay pipeline for better performance and visual effects.
+- **Outcomes:**
+  - WebGL-driven button borders and backgrounds.
+  - Procedural UI effects (glow, refraction) managed in shaders.
+  - Reduced DOM complexity and improved frame consistency.
+
 

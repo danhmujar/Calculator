@@ -84,8 +84,13 @@ export class PWAManager {
             }
         });
 
-        // Periodic check every 1 hour (3600000 ms)
-        setInterval(() => this.checkVersion(), 3600000);
+        // Check on window focus (switching back from IDE/other app)
+        window.addEventListener('focus', () => {
+            this.checkVersion();
+        });
+
+        // Periodic check every 5 minutes (300000 ms)
+        setInterval(() => this.checkVersion(), 300000);
     }
 
     async checkVersion() {

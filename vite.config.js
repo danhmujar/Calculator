@@ -52,8 +52,7 @@ export default defineConfig({
           'tests/**',
           '.planning/**'
         ],
-        clientsClaim: true,
-        skipWaiting: true
+        clientsClaim: true
       }
     })
   ]
