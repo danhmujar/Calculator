@@ -15,13 +15,13 @@ created: 2026-04-07
 
 ## Design System
 
-| Property | Value |
-|----------|-------|
-| Tool | none |
-| Preset | not applicable |
-| Component library | none |
-| Icon library | custom SVG |
-| Font | Plus Jakarta Sans, Roboto Mono |
+| Property          | Value                          |
+| ----------------- | ------------------------------ |
+| Tool              | none                           |
+| Preset            | not applicable                 |
+| Component library | none                           |
+| Icon library      | custom SVG                     |
+| Font              | Plus Jakarta Sans, Roboto Mono |
 
 ---
 
@@ -29,15 +29,15 @@ created: 2026-04-07
 
 Declared values (must be multiples of 4):
 
-| Token | Value | Usage |
-|-------|-------|-------|
-| xs | 4px | Icon gaps, inline padding |
-| sm | 8px | Compact element spacing |
-| md | 16px | Default element spacing |
-| lg | 24px | Section padding |
-| xl | 32px | Layout gaps |
-| 2xl | 48px | Major section breaks |
-| 3xl | 64px | Page-level spacing |
+| Token | Value | Usage                     |
+| ----- | ----- | ------------------------- |
+| xs    | 4px   | Icon gaps, inline padding |
+| sm    | 8px   | Compact element spacing   |
+| md    | 16px  | Default element spacing   |
+| lg    | 24px  | Section padding           |
+| xl    | 32px  | Layout gaps               |
+| 2xl   | 48px  | Major section breaks      |
+| 3xl   | 64px  | Page-level spacing        |
 
 Exceptions: Touch targets (`.calc-btn`, `.icon-btn`) enforce a minimum of 44px.
 
@@ -45,23 +45,23 @@ Exceptions: Touch targets (`.calc-btn`, `.icon-btn`) enforce a minimum of 44px.
 
 ## Typography
 
-| Role | Size | Weight | Line Height |
-|------|------|--------|-------------|
-| Body | 16px | 500 | 1.5 |
-| Label | 14px | 600 | 1.2 |
-| Heading | 20px | 600 | 1.2 |
-| Display | 40px | 500 | 1.2 |
+| Role    | Size | Weight | Line Height |
+| ------- | ---- | ------ | ----------- |
+| Body    | 16px | 500    | 1.5         |
+| Label   | 14px | 600    | 1.2         |
+| Heading | 20px | 600    | 1.2         |
+| Display | 40px | 500    | 1.2         |
 
 ---
 
 ## Color
 
-| Role | Value | Usage |
-|------|-------|-------|
-| Dominant (60%) | #0f1115 | Background, surfaces (forced Dark Mode) |
-| Secondary (30%) | #1c1e24 | Cards, sidebar, nav |
-| Accent (10%) | #9b4de0 | Active toggles, active theme swatch, memory indicators |
-| Destructive | #ff6b4a | Destructive actions only |
+| Role            | Value   | Usage                                                  |
+| --------------- | ------- | ------------------------------------------------------ |
+| Dominant (60%)  | #0f1115 | Background, surfaces (forced Dark Mode)                |
+| Secondary (30%) | #1c1e24 | Cards, sidebar, nav                                    |
+| Accent (10%)    | #9b4de0 | Active toggles, active theme swatch, memory indicators |
+| Destructive     | #ff6b4a | Destructive actions only                               |
 
 Accent reserved for: Mode toggles (`.toggle-btn.active`), selected theme swatches (`.theme-swatch.active`), memory indicators. Note: The primary equals button is replaced by `bts-chibi.gif` for this theme.
 
@@ -69,21 +69,21 @@ Accent reserved for: Mode toggles (`.toggle-btn.active`), selected theme swatche
 
 ## Copywriting Contract
 
-| Element | Copy |
-|---------|------|
-| Primary CTA | Activate Theme |
-| Empty state heading | No history |
-| Empty state body | Your calculation history will appear here. |
-| Error state | Invalid expression - Please review your formula |
+| Element                  | Copy                                                       |
+| ------------------------ | ---------------------------------------------------------- |
+| Primary CTA              | Activate Theme                                             |
+| Empty state heading      | No history                                                 |
+| Empty state body         | Your calculation history will appear here.                 |
+| Error state              | Invalid expression - Please review your formula            |
 | Destructive confirmation | Clear History: Are you sure you want to clear all history? |
 
 ---
 
 ## Registry Safety
 
-| Registry | Blocks Used | Safety Gate |
-|----------|-------------|-------------|
-| shadcn official | none | not required |
+| Registry        | Blocks Used | Safety Gate  |
+| --------------- | ----------- | ------------ |
+| shadcn official | none        | not required |
 
 ---
 

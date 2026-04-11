@@ -11,37 +11,37 @@
 
 ## About Modal Focus
 
-| Option | Description | Selected |
-|--------|-------------|----------|
-| layoutManager integration | Add it to layoutManager observer to handle ResizeObserver shifts | ✓ |
-| Manual animation frame sync | Only verify visibility vs DOM, push manual rect on frame updates | |
+| Option                      | Description                                                      | Selected |
+| --------------------------- | ---------------------------------------------------------------- | -------- |
+| layoutManager integration   | Add it to layoutManager observer to handle ResizeObserver shifts | ✓        |
+| Manual animation frame sync | Only verify visibility vs DOM, push manual rect on frame updates |          |
 
 **User's choice:** layoutManager integration
-**Notes:** 
+**Notes:**
 
 ---
 
 ## Modal Visibility checks
 
-| Option | Description | Selected |
-|--------|-------------|----------|
+| Option             | Description                                               | Selected                     |
+| ------------------ | --------------------------------------------------------- | ---------------------------- |
 | Overlay Open Class | Use parent '.about-overlay.open' class as source of truth | ✓ (implied by 'recommended') |
-| Computed CSS state | Use computed style ('opacity' or 'display') | |
+| Computed CSS state | Use computed style ('opacity' or 'display')               |                              |
 
 **User's choice:** recommended
-**Notes:** 
+**Notes:**
 
 ---
 
 ## CSS Selector Target
 
-| Option | Description | Selected |
-|--------|-------------|----------|
-| Use ID Selector | Change to #main-calc-display to match DOM ID | ✓ (implied by 'recommended') |
-| Use Class Selector | Add a class like .calc-display to DOM and target that | |
+| Option             | Description                                           | Selected                     |
+| ------------------ | ----------------------------------------------------- | ---------------------------- |
+| Use ID Selector    | Change to #main-calc-display to match DOM ID          | ✓ (implied by 'recommended') |
+| Use Class Selector | Add a class like .calc-display to DOM and target that |                              |
 
 **User's choice:** recommended
-**Notes:** 
+**Notes:**
 
 ---
 

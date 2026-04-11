@@ -1,4 +1,5 @@
-const isBrowser = typeof window !== 'undefined' && typeof document !== 'undefined';
+const isBrowser =
+  typeof window !== 'undefined' && typeof document !== 'undefined';
 
 export class Renderer {
   constructor() {
@@ -9,14 +10,16 @@ export class Renderer {
   /**
    * Batch DOM updates. Call `requestAnimationFrame` only once per frame,
    * executing all queued callbacks at the same time.
-   * @param {Function} callback 
+   * @param {Function} callback
    */
   schedule(callback) {
     if (this.queue.has(callback)) return;
     this.queue.add(callback);
-    
+
     if (this.rafId === null) {
-      const scheduleFrame = isBrowser ? requestAnimationFrame : (cb) => setTimeout(cb, 16);
+      const scheduleFrame = isBrowser
+        ? requestAnimationFrame
+        : (cb) => setTimeout(cb, 16);
       this.rafId = scheduleFrame(() => {
         this.flush();
       });

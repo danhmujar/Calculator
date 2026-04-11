@@ -1,448 +1,882 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, viewport-fit=cover">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, minimum-scale=1.0, viewport-fit=cover"
+    />
     <title>Percentage & Math Calculator</title>
-    <meta name="description"
-        content="Free online percentage calculator with interactive math tools, scientific mode via MathLive, and 12 beautiful themes including animated Aurora gradients. Instantly calculate percentages, perform arithmetic, and evaluate complex formulas.">
-    <meta name="theme-color" content="#0052cc">
-    <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data:; img-src 'self' data:; connect-src 'self'; worker-src 'self' blob:;">
+    <meta
+      name="description"
+      content="Free online percentage calculator with interactive math tools, scientific mode via MathLive, and 12 beautiful themes including animated Aurora gradients. Instantly calculate percentages, perform arithmetic, and evaluate complex formulas."
+    />
+    <meta name="theme-color" content="#0052cc" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data:; img-src 'self' data:; connect-src 'self'; worker-src 'self' blob:;"
+    />
     <!-- CSP is enforced via server HTTP headers (e.g., GitHub Pages _headers / Cloudflare) -->
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="icon" type="image/svg+xml" href="./icon-192.svg">
-    <link rel="apple-touch-icon" href="./icon-192.png">
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <link rel="icon" type="image/svg+xml" href="./icon-192.svg" />
+    <link rel="apple-touch-icon" href="./icon-192.png" />
 
-    
     <!-- Critical CSS Preload -->
-    <link rel="preload" href="./ui/styles.css" as="style">
-    <link rel="stylesheet" href="./ui/styles.css">
+    <link rel="preload" href="./ui/styles.css" as="style" />
+    <link rel="stylesheet" href="./ui/styles.css" />
     <style>
-        :root {
-            --pupil-x-1: 0px;
-            --pupil-y-1: 0px;
-            --pupil-x-2: 0px;
-            --pupil-y-2: 0px;
-        }
+      :root {
+        --pupil-x-1: 0px;
+        --pupil-y-1: 0px;
+        --pupil-x-2: 0px;
+        --pupil-y-2: 0px;
+      }
     </style>
-</head>
+  </head>
 
-<body>
+  <body>
     <a href="#main-calc-display" class="skip-link">Skip to calculator</a>
     <span class="offline-badge" id="offline-badge" hidden aria-live="polite">
-        <svg width="12" height="12" aria-hidden="true"><use xlink:href="./assets/sprites.svg#icon-offline"></use></svg>
-        Offline
+      <svg width="12" height="12" aria-hidden="true">
+        <use xlink:href="./assets/sprites.svg#icon-offline"></use>
+      </svg>
+      Offline
     </span>
     <noscript>
-        <p class="noscript-msg">This application requires JavaScript to run.</p>
+      <p class="noscript-msg">This application requires JavaScript to run.</p>
     </noscript>
 
     <div class="layout-container">
-        <!-- Left Panel: Percentage Suite -->
-        <main class="left-panel">
-            <header class="header-row">
-                <div class="header-brand">
-                    <div class="calculator-wrapper">
-                                            <svg aria-hidden="true" class="calculator-svg" viewBox="15 5 70 90" overflow="visible">
-                        <rect width="60" height="80" x="20" y="10" fill="var(--primary-blue)" class="calculator-body" rx="8" ry="8"/>
-                        <rect width="50" height="25" x="25" y="15" fill="#f8fafc" rx="4" ry="4"/>
-                        <g class="eye">
-                            <circle cx="38" cy="27" r="7" fill="#fff" stroke="#334155" stroke-width="2"/>
-                            <circle cx="38" cy="27" r="3" fill="#334155" class="pupil pupil-1" id="pupil1"/>
-                        </g>
-                        <g class="eye">
-                            <circle cx="62" cy="27" r="7" fill="#fff" stroke="#334155" stroke-width="2"/>
-                            <circle cx="62" cy="27" r="3" fill="#334155" class="pupil pupil-2" id="pupil2"/>
-                        </g>
-                        <g fill="#fff" opacity=".8">
-                            <rect width="8" height="8" x="28" y="48" rx="2"/><rect width="8" height="8" x="42" y="48" rx="2"/><rect width="8" height="8" x="56" y="48" rx="2"/><rect width="8" height="8" x="70" y="48" rx="2"/>
-                            <rect width="8" height="8" x="28" y="62" rx="2"/><rect width="8" height="8" x="42" y="62" rx="2"/><rect width="8" height="8" x="56" y="62" rx="2"/><rect width="8" height="8" x="70" y="62" rx="2"/>
-                            <rect width="22" height="8" x="28" y="76" rx="2"/><rect width="8" height="8" x="56" y="76" rx="2"/><rect width="8" height="8" x="70" y="76" fill="#fcd34d" opacity="1" rx="2"/>
-                        </g>
-                    </svg>
-                    </div>
-                    <div>
-                        <h1>Percentage & Math Calculator</h1>
-                        <p class="header-subtext">Instant percentage tools and an interactive calculator.</p>
-                    </div>
-                </div>
-                <div class="header-controls">
+      <!-- Left Panel: Percentage Suite -->
+      <main class="left-panel">
+        <header class="header-row">
+          <div class="header-brand">
+            <div class="calculator-wrapper">
+              <svg
+                aria-hidden="true"
+                class="calculator-svg"
+                viewBox="15 5 70 90"
+                overflow="visible"
+              >
+                <rect
+                  width="60"
+                  height="80"
+                  x="20"
+                  y="10"
+                  fill="var(--primary-blue)"
+                  class="calculator-body"
+                  rx="8"
+                  ry="8"
+                />
+                <rect
+                  width="50"
+                  height="25"
+                  x="25"
+                  y="15"
+                  fill="#f8fafc"
+                  rx="4"
+                  ry="4"
+                />
+                <g class="eye">
+                  <circle
+                    cx="38"
+                    cy="27"
+                    r="7"
+                    fill="#fff"
+                    stroke="#334155"
+                    stroke-width="2"
+                  />
+                  <circle
+                    cx="38"
+                    cy="27"
+                    r="3"
+                    fill="#334155"
+                    class="pupil pupil-1"
+                    id="pupil1"
+                  />
+                </g>
+                <g class="eye">
+                  <circle
+                    cx="62"
+                    cy="27"
+                    r="7"
+                    fill="#fff"
+                    stroke="#334155"
+                    stroke-width="2"
+                  />
+                  <circle
+                    cx="62"
+                    cy="27"
+                    r="3"
+                    fill="#334155"
+                    class="pupil pupil-2"
+                    id="pupil2"
+                  />
+                </g>
+                <g fill="#fff" opacity=".8">
+                  <rect width="8" height="8" x="28" y="48" rx="2" />
+                  <rect width="8" height="8" x="42" y="48" rx="2" />
+                  <rect width="8" height="8" x="56" y="48" rx="2" />
+                  <rect width="8" height="8" x="70" y="48" rx="2" />
+                  <rect width="8" height="8" x="28" y="62" rx="2" />
+                  <rect width="8" height="8" x="42" y="62" rx="2" />
+                  <rect width="8" height="8" x="56" y="62" rx="2" />
+                  <rect width="8" height="8" x="70" y="62" rx="2" />
+                  <rect width="22" height="8" x="28" y="76" rx="2" />
+                  <rect width="8" height="8" x="56" y="76" rx="2" />
+                  <rect
+                    width="8"
+                    height="8"
+                    x="70"
+                    y="76"
+                    fill="#fcd34d"
+                    opacity="1"
+                    rx="2"
+                  />
+                </g>
+              </svg>
+            </div>
+            <div>
+              <h1>Percentage & Math Calculator</h1>
+              <p class="header-subtext">
+                Instant percentage tools and an interactive calculator.
+              </p>
+            </div>
+          </div>
+          <div class="header-controls">
+            <div class="theme-dropdown" id="theme-dropdown-container">
+              <button
+                class="icon-btn palette-btn-inner"
+                id="palette-toggle-btn"
+                title="Choose Color Theme"
+              >
+                <svg aria-hidden="true" class="anim-bounce-hover">
+                  <use xlink:href="./assets/sprites.svg#icon-palette"></use>
+                </svg>
+              </button>
 
-                    <div class="theme-dropdown" id="theme-dropdown-container">
-                        <button class="icon-btn palette-btn-inner" id="palette-toggle-btn" title="Choose Color Theme">
-                            <svg aria-hidden="true" class="anim-bounce-hover"><use xlink:href="./assets/sprites.svg#icon-palette"></use></svg>
-                        </button>
+              <!-- 2026 Color Palette Picker -->
+              <div
+                class="theme-picker"
+                role="radiogroup"
+                aria-label="Color theme"
+              >
+                <!-- Masculine / General -->
+                <button
+                  class="theme-swatch active"
+                  style="background-color: #0052cc"
+                  data-theme=""
+                  title="Financial Blue (Default)"
+                  role="radio"
+                  aria-checked="true"
+                  aria-label="Financial Blue (Default)"
+                ></button>
+                <button
+                  class="theme-swatch"
+                  style="background-color: #0a7a7a"
+                  data-theme="theme-teal"
+                  title="Transformative Teal"
+                  role="radio"
+                  aria-checked="false"
+                  aria-label="Transformative Teal"
+                ></button>
+                <button
+                  class="theme-swatch"
+                  style="background-color: #c15c3d"
+                  data-theme="theme-terracotta"
+                  title="Deep Terracotta"
+                  role="radio"
+                  aria-checked="false"
+                  aria-label="Deep Terracotta"
+                ></button>
+                <button
+                  class="theme-swatch"
+                  style="background-color: #3e7153"
+                  data-theme="theme-forest"
+                  title="Forest Green"
+                  role="radio"
+                  aria-checked="false"
+                  aria-label="Forest Green"
+                ></button>
+                <button
+                  class="theme-swatch"
+                  style="background-color: #475569"
+                  data-theme="theme-slate"
+                  title="Slate Graphite"
+                  role="radio"
+                  aria-checked="false"
+                  aria-label="Slate Graphite"
+                ></button>
 
-                        <!-- 2026 Color Palette Picker -->
-                        <div class="theme-picker" role="radiogroup" aria-label="Color theme">
-                            <!-- Masculine / General -->
-                            <button class="theme-swatch active" style="background-color: #0052cc;" data-theme=""
-                                title="Financial Blue (Default)" role="radio" aria-checked="true"
-                                aria-label="Financial Blue (Default)"></button>
-                            <button class="theme-swatch" style="background-color: #0A7A7A;" data-theme="theme-teal"
-                                title="Transformative Teal" role="radio" aria-checked="false"
-                                aria-label="Transformative Teal"></button>
-                            <button class="theme-swatch" style="background-color: #C15C3D;"
-                                data-theme="theme-terracotta" title="Deep Terracotta" role="radio" aria-checked="false"
-                                aria-label="Deep Terracotta"></button>
-                            <button class="theme-swatch" style="background-color: #3E7153;" data-theme="theme-forest"
-                                title="Forest Green" role="radio" aria-checked="false"
-                                aria-label="Forest Green"></button>
-                            <button class="theme-swatch" style="background-color: #475569;" data-theme="theme-slate"
-                                title="Slate Graphite" role="radio" aria-checked="false"
-                                aria-label="Slate Graphite"></button>
+                <!-- Feminine -->
+                <button
+                  class="theme-swatch"
+                  style="background-color: #b86b77"
+                  data-theme="theme-rosewood"
+                  title="Dusty Rosewood"
+                  role="radio"
+                  aria-checked="false"
+                  aria-label="Dusty Rosewood"
+                ></button>
+                <button
+                  class="theme-swatch"
+                  style="background-color: #8cba92"
+                  data-theme="theme-pistachio"
+                  title="Pale Pistachio"
+                  role="radio"
+                  aria-checked="false"
+                  aria-label="Pale Pistachio"
+                ></button>
+                <button
+                  class="theme-swatch"
+                  style="background-color: #7c3aed"
+                  data-theme="theme-purple"
+                  title="Royal Purple"
+                  role="radio"
+                  aria-checked="false"
+                  aria-label="Royal Purple"
+                ></button>
 
-                            <!-- Feminine -->
-                            <button class="theme-swatch" style="background-color: #B86B77;" data-theme="theme-rosewood"
-                                title="Dusty Rosewood" role="radio" aria-checked="false"
-                                aria-label="Dusty Rosewood"></button>
-                            <button class="theme-swatch" style="background-color: #8CBA92;" data-theme="theme-pistachio"
-                                title="Pale Pistachio" role="radio" aria-checked="false"
-                                aria-label="Pale Pistachio"></button>
-                            <button class="theme-swatch" style="background-color: #7C3AED;" data-theme="theme-purple"
-                                title="Royal Purple" role="radio" aria-checked="false"
-                                aria-label="Royal Purple"></button>
+                <!-- Animated Aurora Themes -->
+                <button
+                  class="theme-swatch"
+                  style="background: conic-gradient(#020617, #0ea5e9, #8b5cf6)"
+                  data-theme="theme-aurora-ocean"
+                  title="Oceanic Aurora (Masculine)"
+                  role="radio"
+                  aria-checked="false"
+                  aria-label="Oceanic Aurora"
+                ></button>
+                <button
+                  class="theme-swatch"
+                  style="background: conic-gradient(#052e16, #22c55e, #06b6d4)"
+                  data-theme="theme-aurora-cyber"
+                  title="Cyber Neon (Masculine)"
+                  role="radio"
+                  aria-checked="false"
+                  aria-label="Cyber Neon"
+                ></button>
+                <button
+                  class="theme-swatch"
+                  style="background: conic-gradient(#d946ef, #4b1d52, #0d2847)"
+                  data-theme="theme-aurora"
+                  title="Cosmic Aurora (Feminine)"
+                  role="radio"
+                  aria-checked="false"
+                  aria-label="Cosmic Aurora"
+                ></button>
+                <button
+                  class="theme-swatch"
+                  style="background: conic-gradient(#fb923c, #7c2d12, #831843)"
+                  data-theme="theme-aurora-sunset"
+                  title="Sunset Aurora (Feminine)"
+                  role="radio"
+                  aria-checked="false"
+                  aria-label="Sunset Aurora"
+                ></button>
 
-                            <!-- Animated Aurora Themes -->
-                            <button class="theme-swatch" style="background: conic-gradient(#020617, #0ea5e9, #8b5cf6);"
-                                data-theme="theme-aurora-ocean" title="Oceanic Aurora (Masculine)" role="radio"
-                                aria-checked="false" aria-label="Oceanic Aurora"></button>
-                            <button class="theme-swatch" style="background: conic-gradient(#052e16, #22c55e, #06b6d4);"
-                                data-theme="theme-aurora-cyber" title="Cyber Neon (Masculine)" role="radio"
-                                aria-checked="false" aria-label="Cyber Neon"></button>
-                            <button class="theme-swatch" style="background: conic-gradient(#d946ef, #4b1d52, #0d2847);"
-                                data-theme="theme-aurora" title="Cosmic Aurora (Feminine)" role="radio"
-                                aria-checked="false" aria-label="Cosmic Aurora"></button>
-                            <button class="theme-swatch" style="background: conic-gradient(#fb923c, #7c2d12, #831843);"
-                                data-theme="theme-aurora-sunset" title="Sunset Aurora (Feminine)" role="radio"
-                                aria-checked="false" aria-label="Sunset Aurora"></button>
-
-                            <!-- BTS Theme -->
-                            <button class="theme-swatch theme-swatch--bts" data-theme="theme-bts"
-                                title="Borahae Purple (BTS)" role="radio"
-                                aria-checked="false" aria-label="Borahae Purple BTS Theme"></button>
-                        </div>
-                    </div>
-
-                    <div class="theme-switch-wrapper">
-                        <label class="theme-switch" for="checkbox">
-                            <input type="checkbox" id="checkbox" aria-label="Toggle dark mode" />
-                            <div class="slider">
-                                <div class="slider-bg">
-                                    <div class="slider-bg-day">
-                                        <!-- Piling Clouds leaning right, avoiding sun on the left -->
-                                        <svg width="68" height="34" aria-hidden="true" style="position:absolute;right:-2px;top:0"><use xlink:href="./assets/sprites.svg#icon-clouds"></use></svg>
-                                    </div>
-                                    <div class="slider-bg-night">
-                                        <!-- Detailed Stars -->
-                                        <svg width="68" height="34" aria-hidden="true" style="position:absolute;left:0;top:0"><use xlink:href="./assets/sprites.svg#icon-stars"></use></svg>
-                                    </div>
-                                </div>
-
-                                <!-- Decorative Elements ON the Knob -->
-                                <svg aria-hidden="true" class="sun-details"><use xlink:href="./assets/sprites.svg#icon-sun"></use></svg>
-                                <svg aria-hidden="true" class="moon-details"><use xlink:href="./assets/sprites.svg#icon-moon"></use></svg>
-                            </div>
-                        </label>
-                    </div>
-                </div>
-            </header>
-
-            <!-- Card 1: X is what % of Y -->
-            <section class="calc-card" data-type="type1">
-                <div class="card-header-wrapper">
-                    <h2>X is what % of Y</h2>
-                    <button class="add-row-btn" data-add-row="type1" aria-label="Add row to X is what % of Y">
-                        <svg width="14" height="14" aria-hidden="true"><use xlink:href="./assets/sprites.svg#icon-plus"></use></svg>
-                        Add Row
-                    </button>
-                </div>
-                <div class="calc-rows-container">
-                    <!-- Template injected by JS -->
-                </div>
-            </section>
-
-            <!-- Card 2: What is X% of Y -->
-            <section class="calc-card" data-type="type2">
-                <div class="card-header-wrapper">
-                    <h2>What is X% of Y</h2>
-                    <button class="add-row-btn" data-add-row="type2" aria-label="Add row to What is X% of Y">
-                        <svg width="14" height="14" aria-hidden="true"><use xlink:href="./assets/sprites.svg#icon-plus"></use></svg>
-                        Add Row
-                    </button>
-                </div>
-                <div class="calc-rows-container">
-                </div>
-            </section>
-
-            <!-- Card 3: Percentage change from X to Y -->
-            <section class="calc-card" data-type="type3">
-                <div class="card-header-wrapper">
-                    <h2>Percentage change from X to Y</h2>
-                    <button class="add-row-btn" data-add-row="type3"
-                        aria-label="Add row to Percentage change from X to Y">
-                        <svg width="14" height="14" aria-hidden="true"><use xlink:href="./assets/sprites.svg#icon-plus"></use></svg>
-                        Add Row
-                    </button>
-                </div>
-                <div class="calc-rows-container">
-                </div>
-            </section>
-
-            <!-- Card 4: X is P% of what? -->
-            <section class="calc-card" data-type="type4">
-                <div class="card-header-wrapper">
-                    <h2>X is P% of what?</h2>
-                    <button class="add-row-btn" data-add-row="type4" aria-label="Add row to X is P% of what?">
-                        <svg width="14" height="14" aria-hidden="true"><use xlink:href="./assets/sprites.svg#icon-plus"></use></svg>
-                        Add Row
-                    </button>
-                </div>
-                <div class="calc-rows-container">
-                </div>
-            </section>
-
-
-        </main>
-
-        <aside class="right-panel" id="sidebar">
-            <div class="panel-resizer" id="panel-resizer" role="separator" aria-orientation="vertical" tabindex="0" aria-valuenow="400" aria-valuemin="320" aria-valuemax="600" aria-label="Resize sidebar"></div>
-            <div class="sidebar-header">
-                <h2>Calculator</h2>
-
-                <div class="mode-toggle" role="radiogroup" aria-label="Calculator Mode">
-                    <button class="toggle-btn active" id="btn-mode-std" data-mode="standard" role="radio"
-                        aria-checked="true" aria-label="Switch to standard mode">STD</button>
-                    <button class="toggle-btn" id="btn-mode-sci" data-mode="scientific" role="radio"
-                        aria-checked="false" aria-label="Switch to scientific mode">SCI</button>
-                </div>
-
-                <div class="sidebar-controls">
-                    <button class="icon-btn" id="history-toggle-btn" title="History"
-                        aria-label="Toggle calculation history">
-                        <svg aria-hidden="true" class="anim-wiggle-hover"><use xlink:href="./assets/sprites.svg#icon-history"></use></svg>
-                    </button>
-                    <button class="close-drawer icon-btn" id="close-drawer-btn" aria-label="Close sidebar">
-                        <svg aria-hidden="true"><use xlink:href="./assets/sprites.svg#icon-close"></use></svg>
-                    </button>
-                </div>
+                <!-- BTS Theme -->
+                <button
+                  class="theme-swatch theme-swatch--bts"
+                  data-theme="theme-bts"
+                  title="Borahae Purple (BTS)"
+                  role="radio"
+                  aria-checked="false"
+                  aria-label="Borahae Purple BTS Theme"
+                ></button>
+              </div>
             </div>
 
-            <div class="calc-display">
-                <div class="calc-display-top">
-                    <span class="memory-indicator" id="memory-indicator" aria-label="Memory stored" hidden>M</span>
-                    <div class="calc-history-preview" id="main-calc-prev" aria-live="polite"></div>
-                </div>
-                <div class="calc-current" id="main-calc-display" aria-live="polite" tabindex="0">0</div>
-            </div>
-
-            <!-- Scientific Mode Container -->
-            <div class="scientific-container" id="sci-container">
-                <div id="sci-rows-wrapper" class="sci-rows-wrapper">
-                    <!-- Rows injected here -->
-                </div>
-                <button class="add-math-btn" id="add-math-btn">
-                    <svg width="18" height="18" aria-hidden="true"><use xlink:href="./assets/sprites.svg#icon-plus"></use></svg>
-                    New Expression
-                </button>
-            </div>
-
-            <div class="calc-keypad" id="calc-keypad">
-                <button class="calc-btn op" data-action="memory" data-value="MC" aria-label="Memory clear">MC</button>
-                <button class="calc-btn op" data-action="memory" data-value="MR" aria-label="Memory recall">MR</button>
-                <button class="calc-btn op" data-action="memory" data-value="M-"
-                    aria-label="Memory subtract">M-</button>
-                <button class="calc-btn op" data-action="memory" data-value="M+" aria-label="Memory add">M+</button>
-
-                <button class="calc-btn op" data-action="clear" aria-label="Clear calculator">C</button>
-                <button class="calc-btn op" data-action="backspace" aria-label="Backspace">⌫</button>
-                <button class="calc-btn op" data-action="percent" aria-label="Percentage">%</button>
-                <button class="calc-btn op" data-action="op" data-value="/" aria-label="Divide">÷</button>
-
-                <button class="calc-btn num" data-action="digit" data-value="7">7</button>
-                <button class="calc-btn num" data-action="digit" data-value="8">8</button>
-                <button class="calc-btn num" data-action="digit" data-value="9">9</button>
-                <button class="calc-btn op" data-action="op" data-value="*" aria-label="Multiply">×</button>
-
-                <button class="calc-btn num" data-action="digit" data-value="4">4</button>
-                <button class="calc-btn num" data-action="digit" data-value="5">5</button>
-                <button class="calc-btn num" data-action="digit" data-value="6">6</button>
-                <button class="calc-btn op" data-action="op" data-value="-" aria-label="Subtract">−</button>
-
-                <button class="calc-btn num" data-action="digit" data-value="1">1</button>
-                <button class="calc-btn num" data-action="digit" data-value="2">2</button>
-                <button class="calc-btn num" data-action="digit" data-value="3">3</button>
-                <button class="calc-btn op" data-action="op" data-value="+" aria-label="Add">+</button>
-
-                <button class="calc-btn num" data-action="digit" data-value="0">0</button>
-                <button class="calc-btn num" data-action="digit" data-value=".">.</button>
-                <button class="calc-btn eq" data-action="equals" aria-label="Equals">=</button>
-            </div>
-
-            <div class="audit-tape-container" id="history-drawer">
-                <div class="audit-header">
-                    <div class="audit-header-left">
-                        <button class="icon-btn" id="history-back-btn" title="Back">
-                            <svg width="18" height="18" aria-hidden="true"><use xlink:href="./assets/sprites.svg#icon-chevron-left"></use></svg>
-                        </button>
-                        <span>History</span>
+            <div class="theme-switch-wrapper">
+              <label class="theme-switch" for="checkbox">
+                <input
+                  type="checkbox"
+                  id="checkbox"
+                  aria-label="Toggle dark mode"
+                />
+                <div class="slider">
+                  <div class="slider-bg">
+                    <div class="slider-bg-day">
+                      <!-- Piling Clouds leaning right, avoiding sun on the left -->
+                      <svg
+                        width="68"
+                        height="34"
+                        aria-hidden="true"
+                        style="position: absolute; right: -2px; top: 0"
+                      >
+                        <use
+                          xlink:href="./assets/sprites.svg#icon-clouds"
+                        ></use>
+                      </svg>
                     </div>
-                    <button class="icon-btn" id="clear-tape-btn" title="Clear Tape">
-                        <svg width="16" height="16" aria-hidden="true"><use xlink:href="./assets/sprites.svg#icon-trash"></use></svg>
-                    </button>
+                    <div class="slider-bg-night">
+                      <!-- Detailed Stars -->
+                      <svg
+                        width="68"
+                        height="34"
+                        aria-hidden="true"
+                        style="position: absolute; left: 0; top: 0"
+                      >
+                        <use xlink:href="./assets/sprites.svg#icon-stars"></use>
+                      </svg>
+                    </div>
+                  </div>
+
+                  <!-- Decorative Elements ON the Knob -->
+                  <svg aria-hidden="true" class="sun-details">
+                    <use xlink:href="./assets/sprites.svg#icon-sun"></use>
+                  </svg>
+                  <svg aria-hidden="true" class="moon-details">
+                    <use xlink:href="./assets/sprites.svg#icon-moon"></use>
+                  </svg>
                 </div>
-                <ul class="audit-list" id="audit-list">
-                    <!-- Dynamic Items -->
-                </ul>
+              </label>
             </div>
-        </aside>
+          </div>
+        </header>
+
+        <!-- Card 1: X is what % of Y -->
+        <section class="calc-card" data-type="type1">
+          <div class="card-header-wrapper">
+            <h2>X is what % of Y</h2>
+            <button
+              class="add-row-btn"
+              data-add-row="type1"
+              aria-label="Add row to X is what % of Y"
+            >
+              <svg width="14" height="14" aria-hidden="true">
+                <use xlink:href="./assets/sprites.svg#icon-plus"></use>
+              </svg>
+              Add Row
+            </button>
+          </div>
+          <div class="calc-rows-container">
+            <!-- Template injected by JS -->
+          </div>
+        </section>
+
+        <!-- Card 2: What is X% of Y -->
+        <section class="calc-card" data-type="type2">
+          <div class="card-header-wrapper">
+            <h2>What is X% of Y</h2>
+            <button
+              class="add-row-btn"
+              data-add-row="type2"
+              aria-label="Add row to What is X% of Y"
+            >
+              <svg width="14" height="14" aria-hidden="true">
+                <use xlink:href="./assets/sprites.svg#icon-plus"></use>
+              </svg>
+              Add Row
+            </button>
+          </div>
+          <div class="calc-rows-container"></div>
+        </section>
+
+        <!-- Card 3: Percentage change from X to Y -->
+        <section class="calc-card" data-type="type3">
+          <div class="card-header-wrapper">
+            <h2>Percentage change from X to Y</h2>
+            <button
+              class="add-row-btn"
+              data-add-row="type3"
+              aria-label="Add row to Percentage change from X to Y"
+            >
+              <svg width="14" height="14" aria-hidden="true">
+                <use xlink:href="./assets/sprites.svg#icon-plus"></use>
+              </svg>
+              Add Row
+            </button>
+          </div>
+          <div class="calc-rows-container"></div>
+        </section>
+
+        <!-- Card 4: X is P% of what? -->
+        <section class="calc-card" data-type="type4">
+          <div class="card-header-wrapper">
+            <h2>X is P% of what?</h2>
+            <button
+              class="add-row-btn"
+              data-add-row="type4"
+              aria-label="Add row to X is P% of what?"
+            >
+              <svg width="14" height="14" aria-hidden="true">
+                <use xlink:href="./assets/sprites.svg#icon-plus"></use>
+              </svg>
+              Add Row
+            </button>
+          </div>
+          <div class="calc-rows-container"></div>
+        </section>
+      </main>
+
+      <aside class="right-panel" id="sidebar">
+        <div
+          class="panel-resizer"
+          id="panel-resizer"
+          role="separator"
+          aria-orientation="vertical"
+          tabindex="0"
+          aria-valuenow="400"
+          aria-valuemin="320"
+          aria-valuemax="600"
+          aria-label="Resize sidebar"
+        ></div>
+        <div class="sidebar-header">
+          <h2>Calculator</h2>
+
+          <div
+            class="mode-toggle"
+            role="radiogroup"
+            aria-label="Calculator Mode"
+          >
+            <button
+              class="toggle-btn active"
+              id="btn-mode-std"
+              data-mode="standard"
+              role="radio"
+              aria-checked="true"
+              aria-label="Switch to standard mode"
+            >
+              STD
+            </button>
+            <button
+              class="toggle-btn"
+              id="btn-mode-sci"
+              data-mode="scientific"
+              role="radio"
+              aria-checked="false"
+              aria-label="Switch to scientific mode"
+            >
+              SCI
+            </button>
+          </div>
+
+          <div class="sidebar-controls">
+            <button
+              class="icon-btn"
+              id="history-toggle-btn"
+              title="History"
+              aria-label="Toggle calculation history"
+            >
+              <svg aria-hidden="true" class="anim-wiggle-hover">
+                <use xlink:href="./assets/sprites.svg#icon-history"></use>
+              </svg>
+            </button>
+            <button
+              class="close-drawer icon-btn"
+              id="close-drawer-btn"
+              aria-label="Close sidebar"
+            >
+              <svg aria-hidden="true">
+                <use xlink:href="./assets/sprites.svg#icon-close"></use>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="calc-display">
+          <div class="calc-display-top">
+            <span
+              class="memory-indicator"
+              id="memory-indicator"
+              aria-label="Memory stored"
+              hidden
+              >M</span
+            >
+            <div
+              class="calc-history-preview"
+              id="main-calc-prev"
+              aria-live="polite"
+            ></div>
+          </div>
+          <div
+            class="calc-current"
+            id="main-calc-display"
+            aria-live="polite"
+            tabindex="0"
+          >
+            0
+          </div>
+        </div>
+
+        <!-- Scientific Mode Container -->
+        <div class="scientific-container" id="sci-container">
+          <div id="sci-rows-wrapper" class="sci-rows-wrapper">
+            <!-- Rows injected here -->
+          </div>
+          <button class="add-math-btn" id="add-math-btn">
+            <svg width="18" height="18" aria-hidden="true">
+              <use xlink:href="./assets/sprites.svg#icon-plus"></use>
+            </svg>
+            New Expression
+          </button>
+        </div>
+
+        <div class="calc-keypad" id="calc-keypad">
+          <button
+            class="calc-btn op"
+            data-action="memory"
+            data-value="MC"
+            aria-label="Memory clear"
+          >
+            MC
+          </button>
+          <button
+            class="calc-btn op"
+            data-action="memory"
+            data-value="MR"
+            aria-label="Memory recall"
+          >
+            MR
+          </button>
+          <button
+            class="calc-btn op"
+            data-action="memory"
+            data-value="M-"
+            aria-label="Memory subtract"
+          >
+            M-
+          </button>
+          <button
+            class="calc-btn op"
+            data-action="memory"
+            data-value="M+"
+            aria-label="Memory add"
+          >
+            M+
+          </button>
+
+          <button
+            class="calc-btn op"
+            data-action="clear"
+            aria-label="Clear calculator"
+          >
+            C
+          </button>
+          <button
+            class="calc-btn op"
+            data-action="backspace"
+            aria-label="Backspace"
+          >
+            ⌫
+          </button>
+          <button
+            class="calc-btn op"
+            data-action="percent"
+            aria-label="Percentage"
+          >
+            %
+          </button>
+          <button
+            class="calc-btn op"
+            data-action="op"
+            data-value="/"
+            aria-label="Divide"
+          >
+            ÷
+          </button>
+
+          <button class="calc-btn num" data-action="digit" data-value="7">
+            7
+          </button>
+          <button class="calc-btn num" data-action="digit" data-value="8">
+            8
+          </button>
+          <button class="calc-btn num" data-action="digit" data-value="9">
+            9
+          </button>
+          <button
+            class="calc-btn op"
+            data-action="op"
+            data-value="*"
+            aria-label="Multiply"
+          >
+            ×
+          </button>
+
+          <button class="calc-btn num" data-action="digit" data-value="4">
+            4
+          </button>
+          <button class="calc-btn num" data-action="digit" data-value="5">
+            5
+          </button>
+          <button class="calc-btn num" data-action="digit" data-value="6">
+            6
+          </button>
+          <button
+            class="calc-btn op"
+            data-action="op"
+            data-value="-"
+            aria-label="Subtract"
+          >
+            −
+          </button>
+
+          <button class="calc-btn num" data-action="digit" data-value="1">
+            1
+          </button>
+          <button class="calc-btn num" data-action="digit" data-value="2">
+            2
+          </button>
+          <button class="calc-btn num" data-action="digit" data-value="3">
+            3
+          </button>
+          <button
+            class="calc-btn op"
+            data-action="op"
+            data-value="+"
+            aria-label="Add"
+          >
+            +
+          </button>
+
+          <button class="calc-btn num" data-action="digit" data-value="0">
+            0
+          </button>
+          <button class="calc-btn num" data-action="digit" data-value=".">
+            .
+          </button>
+          <button class="calc-btn eq" data-action="equals" aria-label="Equals">
+            =
+          </button>
+        </div>
+
+        <div class="audit-tape-container" id="history-drawer">
+          <div class="audit-header">
+            <div class="audit-header-left">
+              <button class="icon-btn" id="history-back-btn" title="Back">
+                <svg width="18" height="18" aria-hidden="true">
+                  <use
+                    xlink:href="./assets/sprites.svg#icon-chevron-left"
+                  ></use>
+                </svg>
+              </button>
+              <span>History</span>
+            </div>
+            <button class="icon-btn" id="clear-tape-btn" title="Clear Tape">
+              <svg width="16" height="16" aria-hidden="true">
+                <use xlink:href="./assets/sprites.svg#icon-trash"></use>
+              </svg>
+            </button>
+          </div>
+          <ul class="audit-list" id="audit-list">
+            <!-- Dynamic Items -->
+          </ul>
+        </div>
+      </aside>
     </div>
 
     <!-- Mobile Toggle FAB -->
-    <button class="glass-fab mobile-panel-fab" id="mobile-panel-toggle-btn" title="Open Calculator"
-        aria-label="Open Calculator">
-        <svg aria-hidden="true"><use xlink:href="./assets/sprites.svg#icon-calc-fab"></use></svg>
+    <button
+      class="glass-fab mobile-panel-fab"
+      id="mobile-panel-toggle-btn"
+      title="Open Calculator"
+      aria-label="Open Calculator"
+    >
+      <svg aria-hidden="true">
+        <use xlink:href="./assets/sprites.svg#icon-calc-fab"></use>
+      </svg>
     </button>
 
-    <div class="toast" id="toast" role="status" aria-live="polite">Copied to clipboard!</div>
+    <div class="toast" id="toast" role="status" aria-live="polite">
+      Copied to clipboard!
+    </div>
 
     <!-- PWA Update Notification Banner -->
-    <div class="update-toast" id="update-toast" role="alert" aria-live="assertive" hidden>
-        <span>A new version is available!</span>
-        <div class="update-toast-actions">
-            <button class="update-toast-btn refresh" id="update-refresh-btn">Reload to Update</button>
-            <button class="update-toast-btn dismiss" id="update-dismiss-btn" aria-label="Dismiss update notification">✕</button>
-        </div>
+    <div
+      class="update-toast"
+      id="update-toast"
+      role="alert"
+      aria-live="assertive"
+      hidden
+    >
+      <span>A new version is available!</span>
+      <div class="update-toast-actions">
+        <button class="update-toast-btn refresh" id="update-refresh-btn">
+          Reload to Update
+        </button>
+        <button
+          class="update-toast-btn dismiss"
+          id="update-dismiss-btn"
+          aria-label="Dismiss update notification"
+        >
+          ✕
+        </button>
+      </div>
     </div>
 
     <!-- About FAB Button -->
-    <button class="glass-fab about-fab" id="about-fab-btn" title="About this app" aria-label="About this app">?</button>
+    <button
+      class="glass-fab about-fab"
+      id="about-fab-btn"
+      title="About this app"
+      aria-label="About this app"
+    >
+      ?
+    </button>
 
     <!-- About Modal Overlay -->
-    <div class="about-overlay" id="about-overlay" role="dialog" aria-modal="true" aria-labelledby="about-heading"
-        aria-hidden="true">
-        <div class="about-modal">
-            <!-- Close X -->
-            <button class="about-close-x" id="about-close-x" title="Close" aria-label="Close about dialog">
-                <svg width="16" height="16" aria-hidden="true"><use xlink:href="./assets/sprites.svg#icon-x"></use></svg>
-            </button>
+    <div
+      class="about-overlay"
+      id="about-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="about-heading"
+      aria-hidden="true"
+    >
+      <div class="about-modal">
+        <!-- Close X -->
+        <button
+          class="about-close-x"
+          id="about-close-x"
+          title="Close"
+          aria-label="Close about dialog"
+        >
+          <svg width="16" height="16" aria-hidden="true">
+            <use xlink:href="./assets/sprites.svg#icon-x"></use>
+          </svg>
+        </button>
 
-            <div class="about-modal-inner">
-                <!-- Header -->
-                <div class="about-header">
-                    <h2 id="about-heading">About Percentage &amp; Math Calculator</h2>
-                </div>
+        <div class="about-modal-inner">
+          <!-- Header -->
+          <div class="about-header">
+            <h2 id="about-heading">About Percentage &amp; Math Calculator</h2>
+          </div>
 
-                <!-- Introduction -->
-                <p class="about-intro">A comprehensive PWA that combines percentage calculations, a full
-                    standard &amp;
-                    scientific calculator with MathLive WYSIWYG input, 12 themes, and an audit tape — all
-                    running
-                    client-side with zero dependencies on a server.</p>
+          <!-- Introduction -->
+          <p class="about-intro">
+            A comprehensive PWA that combines percentage calculations, a full
+            standard &amp; scientific calculator with MathLive WYSIWYG input, 12
+            themes, and an audit tape — all running client-side with zero
+            dependencies on a server.
+          </p>
 
-                <!-- 2-Column Grid -->
-                <div class="about-grid">
-                    <!-- Tech Stack -->
-                    <div>
-                        <div class="about-section-title">
-                            <svg aria-hidden="true"><use xlink:href="./assets/sprites.svg#icon-code"></use></svg>
-                            Tech Stack
-                        </div>
-                        <div class="about-badges">
-                            <span class="about-badge">HTML5</span>
-                            <span class="about-badge">CSS3</span>
-                            <span class="about-badge">Vanilla JS</span>
-                            <span class="about-badge">MathLive</span>
-                            <span class="about-badge">Math.js</span>
-                            <span class="about-badge">PWA</span>
-                        </div>
-                    </div>
-
-                    <!-- Security / Architecture -->
-                    <div>
-                        <div class="about-section-title">
-                            <svg aria-hidden="true"><use xlink:href="./assets/sprites.svg#icon-shield"></use></svg>
-                            Security &amp; Architecture
-                        </div>
-                        <ul class="about-list">
-                            <li>npm-managed dependencies</li>
-                            <li>100% client-side, zero data sent</li>
-                            <li>Service Worker offline cache</li>
-                            <li>localStorage state persistence</li>
-                        </ul>
-                    </div>
-
-                    <!-- Features -->
-                    <div>
-                        <div class="about-section-title">
-                            <svg aria-hidden="true"><use xlink:href="./assets/sprites.svg#icon-check-circle"></use></svg>
-                            Features
-                        </div>
-                        <ul class="about-list">
-                            <li>4 percentage calc types</li>
-                            <li>Standard + Scientific modes</li>
-                            <li>Memory (M+/MR/MC/M−)</li>
-                            <li>12 themes incl. 4 animated Aurora</li>
-                            <li>Light &amp; dark mode toggle</li>
-                            <li>Audit tape with copy &amp; reuse</li>
-                            <li>Multi-row calculations</li>
-                            <li>Keyboard shortcuts (0-9, +-*/=)</li>
-                            <li>Auto font-sizing &amp; sci notation</li>
-                            <li>Responsive mobile layout</li>
-                            <li>Installable PWA with offline mode</li>
-                            <li>Session state auto-persistence</li>
-                        </ul>
-                    </div>
-
-                    <!-- Limitations -->
-                    <div>
-                        <div class="about-section-title">
-                            <svg aria-hidden="true"><use xlink:href="./assets/sprites.svg#icon-alert-circle"></use></svg>
-                            Limitations
-                        </div>
-                        <ul class="about-list about-list--warn">
-                            <li>No server, DB, or cloud sync</li>
-                            <li>IEEE 754 float precision</li>
-                            <li>No graphing or unit conversion</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- Developer Credit -->
-                <div class="about-developer">
-                    <div class="about-dev-info">
-                        <h3>Built by Danh Michael Mujar</h3>
-                        <p>Business Support Senior Specialist at WTW who believes numbers should be beautiful
-                            and tools
-                            should be transparent. Powered by curiosity, caffeine, and Generative AI.</p>
-                        <a class="about-linkedin" href="https://www.linkedin.com/in/danhmujar"
-                            target="_blank" rel="noopener noreferrer">Connect on LinkedIn <span>&rarr;</span></a>
-                        <button class="about-install-btn" id="pwa-install-btn" hidden>
-                            <svg width="16" height="16" aria-hidden="true"><use xlink:href="./assets/sprites.svg#icon-download"></use></svg>
-                            Install App
-                        </button>
-                    </div>
-                </div>
+          <!-- 2-Column Grid -->
+          <div class="about-grid">
+            <!-- Tech Stack -->
+            <div>
+              <div class="about-section-title">
+                <svg aria-hidden="true">
+                  <use xlink:href="./assets/sprites.svg#icon-code"></use>
+                </svg>
+                Tech Stack
+              </div>
+              <div class="about-badges">
+                <span class="about-badge">HTML5</span>
+                <span class="about-badge">CSS3</span>
+                <span class="about-badge">Vanilla JS</span>
+                <span class="about-badge">MathLive</span>
+                <span class="about-badge">Math.js</span>
+                <span class="about-badge">PWA</span>
+              </div>
             </div>
+
+            <!-- Security / Architecture -->
+            <div>
+              <div class="about-section-title">
+                <svg aria-hidden="true">
+                  <use xlink:href="./assets/sprites.svg#icon-shield"></use>
+                </svg>
+                Security &amp; Architecture
+              </div>
+              <ul class="about-list">
+                <li>npm-managed dependencies</li>
+                <li>100% client-side, zero data sent</li>
+                <li>Service Worker offline cache</li>
+                <li>localStorage state persistence</li>
+              </ul>
+            </div>
+
+            <!-- Features -->
+            <div>
+              <div class="about-section-title">
+                <svg aria-hidden="true">
+                  <use
+                    xlink:href="./assets/sprites.svg#icon-check-circle"
+                  ></use>
+                </svg>
+                Features
+              </div>
+              <ul class="about-list">
+                <li>4 percentage calc types</li>
+                <li>Standard + Scientific modes</li>
+                <li>Memory (M+/MR/MC/M−)</li>
+                <li>12 themes incl. 4 animated Aurora</li>
+                <li>Light &amp; dark mode toggle</li>
+                <li>Audit tape with copy &amp; reuse</li>
+                <li>Multi-row calculations</li>
+                <li>Keyboard shortcuts (0-9, +-*/=)</li>
+                <li>Auto font-sizing &amp; sci notation</li>
+                <li>Responsive mobile layout</li>
+                <li>Installable PWA with offline mode</li>
+                <li>Session state auto-persistence</li>
+              </ul>
+            </div>
+
+            <!-- Limitations -->
+            <div>
+              <div class="about-section-title">
+                <svg aria-hidden="true">
+                  <use
+                    xlink:href="./assets/sprites.svg#icon-alert-circle"
+                  ></use>
+                </svg>
+                Limitations
+              </div>
+              <ul class="about-list about-list--warn">
+                <li>No server, DB, or cloud sync</li>
+                <li>IEEE 754 float precision</li>
+                <li>No graphing or unit conversion</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Developer Credit -->
+          <div class="about-developer">
+            <div class="about-dev-info">
+              <h3>Built by Danh Michael Mujar</h3>
+              <p>
+                Business Support Senior Specialist at WTW who believes numbers
+                should be beautiful and tools should be transparent. Powered by
+                curiosity, caffeine, and Generative AI.
+              </p>
+              <a
+                class="about-linkedin"
+                href="https://www.linkedin.com/in/danhmujar"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Connect on LinkedIn <span>&rarr;</span></a
+              >
+              <button class="about-install-btn" id="pwa-install-btn" hidden>
+                <svg width="16" height="16" aria-hidden="true">
+                  <use xlink:href="./assets/sprites.svg#icon-download"></use>
+                </svg>
+                Install App
+              </button>
+            </div>
+          </div>
         </div>
+      </div>
     </div>
 
     <!-- Custom Context Menu -->
     <div id="calc-context-menu" class="calc-context-menu" hidden>
-        <button id="calc-context-paste" class="context-menu-btn">
-            <svg width="14" height="14" aria-hidden="true"><use xlink:href="./assets/sprites.svg#icon-clipboard"></use></svg>
-            Paste
-        </button>
+      <button id="calc-context-paste" class="context-menu-btn">
+        <svg width="14" height="14" aria-hidden="true">
+          <use xlink:href="./assets/sprites.svg#icon-clipboard"></use>
+        </svg>
+        Paste
+      </button>
     </div>
 
     <!-- 3-Tier Architecture External Scripts -->
     <script type="module" src="./services/app.js"></script>
     <script type="module" src="./ui/ui.js"></script>
-
-</body>
-
+  </body>
 </html>

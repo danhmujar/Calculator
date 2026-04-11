@@ -11,13 +11,13 @@ reviewed_at: 2026-04-04T00:00:00.000Z
 
 ## Design System
 
-| Property | Value |
-|----------|-------|
-| Tool | none |
-| Preset | not applicable |
-| Component library | none (Vanilla DOM/WebGL) |
-| Icon library | custom SVG |
-| Font | Plus Jakarta Sans, Roboto Mono |
+| Property          | Value                          |
+| ----------------- | ------------------------------ |
+| Tool              | none                           |
+| Preset            | not applicable                 |
+| Component library | none (Vanilla DOM/WebGL)       |
+| Icon library      | custom SVG                     |
+| Font              | Plus Jakarta Sans, Roboto Mono |
 
 ---
 
@@ -25,15 +25,15 @@ reviewed_at: 2026-04-04T00:00:00.000Z
 
 Declared values (must be multiples of 4):
 
-| Token | Value | Usage |
-|-------|-------|-------|
-| xs | 4px | Icon gaps, inline padding |
-| sm | 8px | Compact element spacing |
-| md | 16px | Default element spacing |
-| lg | 24px | Section padding |
-| xl | 32px | Layout gaps |
-| 2xl | 48px | Major section breaks |
-| 3xl | 64px | Page-level spacing |
+| Token | Value | Usage                     |
+| ----- | ----- | ------------------------- |
+| xs    | 4px   | Icon gaps, inline padding |
+| sm    | 8px   | Compact element spacing   |
+| md    | 16px  | Default element spacing   |
+| lg    | 24px  | Section padding           |
+| xl    | 32px  | Layout gaps               |
+| 2xl   | 48px  | Major section breaks      |
+| 3xl   | 64px  | Page-level spacing        |
 
 Exceptions: 44px for icon-only touch targets
 
@@ -41,24 +41,25 @@ Exceptions: 44px for icon-only touch targets
 
 ## Typography
 
-| Role | Size | Weight | Line Height |
-|------|------|--------|-------------|
-| Body | 16px | 400 | 1.5 |
-| Label | 14px | 600 | 1.2 |
-| Heading | 20px | 600 | 1.2 |
-| Display | 40px | 400 | 1.2 |
+| Role    | Size | Weight | Line Height |
+| ------- | ---- | ------ | ----------- |
+| Body    | 16px | 400    | 1.5         |
+| Label   | 14px | 600    | 1.2         |
+| Heading | 20px | 600    | 1.2         |
+| Display | 40px | 400    | 1.2         |
 
 ---
 
 ## Color & Theming
 
-| Role | Value | Usage |
-|------|-------|-------|
-| Dominant (60%) | Aurora theme backgrounds | Base surfaces, WebGL background |
-| Secondary (30%) | Glass panels | Panels, Modal backgrounds (`--panel-bg`) |
-| Accent (10%) | Dynamic theme colors | Primary actions, Focus rings, Result text |
+| Role            | Value                    | Usage                                     |
+| --------------- | ------------------------ | ----------------------------------------- |
+| Dominant (60%)  | Aurora theme backgrounds | Base surfaces, WebGL background           |
+| Secondary (30%) | Glass panels             | Panels, Modal backgrounds (`--panel-bg`)  |
+| Accent (10%)    | Dynamic theme colors     | Primary actions, Focus rings, Result text |
 
 ### Phase 4 Visual Enhancements
+
 - **D-03 (Increased Opacity):** To provide a premium "frosted" feel, opacity of all glass-morphic elements MUST be increased.
 - **D-04 (Panel Opacity):** Update `color-mix` for frosted panels and cards to 85% (`color-mix(in srgb, var(--panel-bg) 85%, transparent)`).
 - **D-05 (Variable Opacity):** Update `--glass-bg` and `--modal-glass-bg` targeted opacities in `ui/styles.css` to between 0.75 and 0.85 (e.g., `rgba(..., 0.82)`).
@@ -68,31 +69,33 @@ Exceptions: 44px for icon-only touch targets
 ## Interactions & Animation
 
 ### Theme Transitions (D-01 & D-02)
+
 - **D-01 (Smooth Transitions):** The WebGL renderer MUST NOT snap colors when a theme change is detected. It MUST interpolate between old and new theme values over **~400ms**.
 - **D-02 (Easing):** All theme-related color interpolations MUST use a **Quadratic Out** (`t * (2.0 - t)`) easing function to match existing UI animations.
 - **Implementation Note:** Implement `ThemeTransitionManager` logic in the WebGL rendering loop to manage interpolation without layout thrashing.
 
 ### Eye Tracker Refinements (D-06 & Open Questions)
+
 - **D-06 (Inertia/Smoothing):** Smooth tracking movement MUST be implemented using an Exponential Moving Average (EMA) to feel organic and less robotic.
-- **D-06 (Blink Animations):** Implement random blink animations. 
+- **D-06 (Blink Animations):** Implement random blink animations.
 - **Blink Animation Trigger (Research Recommendation):** Use JS-driven CSS variable injection (e.g., controlling `--eye-scale-y`) with `setTimeout`/`requestAnimationFrame` decoupling to maintain control and coordinate with eye tracking, OR pure CSS `@keyframes` with random animation delays for the eyelids if simpler.
 
 ---
 
 ## Copywriting Contract
 
-| Element | Copy |
-|---------|------|
-| Primary CTA | Calculate result |
-| Empty state heading | No history yet |
-| Empty state body | Your calculations will appear here. Start typing to calculate. |
-| Error state | Invalid expression. Check your syntax. |
-| Destructive confirmation | Delete row: Are you sure you want to remove this calculation? |
+| Element                  | Copy                                                           |
+| ------------------------ | -------------------------------------------------------------- |
+| Primary CTA              | Calculate result                                               |
+| Empty state heading      | No history yet                                                 |
+| Empty state body         | Your calculations will appear here. Start typing to calculate. |
+| Error state              | Invalid expression. Check your syntax.                         |
+| Destructive confirmation | Delete row: Are you sure you want to remove this calculation?  |
 
 ---
 
 ## Registry Safety
 
-| Registry | Blocks Used | Safety Gate |
-|----------|-------------|-------------|
-| shadcn official | none | not required |
+| Registry        | Blocks Used | Safety Gate  |
+| --------------- | ----------- | ------------ |
+| shadcn official | none        | not required |

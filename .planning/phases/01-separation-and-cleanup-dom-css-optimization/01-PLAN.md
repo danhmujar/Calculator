@@ -1,14 +1,16 @@
 ---
 wave: 1
 depends_on: []
-files_modified: ["index.html", "ui/styles.css"]
+files_modified: ['index.html', 'ui/styles.css']
 autonomous: true
 ---
 
 # Objective
+
 Separate the WebGL `<canvas>` into an isolated stacking context as a direct sibling to `<main>` and completely eliminate legacy CSS `backdrop-filter` compositing to prevent z-index regressions.
 
 ## Requirements Addressed
+
 - REQ-1 (Remove CSS Composition)
 - REQ-2 (Architecture Separation)
 
@@ -59,9 +61,11 @@ Separate the WebGL `<canvas>` into an isolated stacking context as a direct sibl
 </task>
 
 ## Verification
+
 - Run `npm run dev` and visually inspect the calculator. The UI must remain clickable (the canvas cannot block pointer events).
 - Inspect the DOM tree in DevTools: The `<canvas>` must be a direct sibling of `<main>`.
 - The WebGL flat background colors must be visible beneath the calculator layout.
 
 ## Must Haves
+
 - Unbroken Layout Grid: The actual calculator grid and spacing parameters must not shift or break due to the DOM extraction.

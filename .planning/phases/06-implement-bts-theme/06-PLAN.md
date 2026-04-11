@@ -1,7 +1,14 @@
 ---
 wave: 1
 depends_on: []
-files_modified: ["index.html", "ui/styles.css", "ui/uimanager.js", "ui/webgl/renderer.js", "ui/webgl/shaders.js"]
+files_modified:
+  [
+    'index.html',
+    'ui/styles.css',
+    'ui/uimanager.js',
+    'ui/webgl/renderer.js',
+    'ui/webgl/shaders.js',
+  ]
 autonomous: true
 ---
 

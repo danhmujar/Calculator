@@ -10,12 +10,14 @@ test.describe('Phase 5', () => {
   test('REQ-01: Connect About Modal to WebGL Blur Sync', async ({ page }) => {
     const aboutFabBtn = page.locator('#about-fab-btn');
     await aboutFabBtn.click();
-    
+
     const aboutOverlay = page.locator('.about-overlay.open');
     await expect(aboutOverlay).toBeVisible();
 
     const isRegistered = await page.evaluate(() => {
-        return Array.from(window.layoutManager.elements.entries()).some(([el, id]) => id === 'about-modal');
+      return Array.from(window.layoutManager.elements.entries()).some(
+        ([el, id]) => id === 'about-modal'
+      );
     });
 
     expect(isRegistered).toBe(true);
@@ -24,34 +26,37 @@ test.describe('Phase 5', () => {
   test('REQ-02: Fix Main Calculator Display Transparency', async ({ page }) => {
     // Force webgl-active class to trigger transparency CSS
     await page.evaluate(() => {
-        document.body.classList.add('webgl-active');
+      document.body.classList.add('webgl-active');
     });
 
     const bodyClasses = await page.evaluate(() => document.body.className);
     console.log('Body classes:', bodyClasses);
 
     // Wait for the background color to become semi-transparent
-    await page.waitForFunction(() => {
+    await page.waitForFunction(
+      () => {
         const el = document.querySelector('.calc-display');
         if (!el) return false;
         const color = window.getComputedStyle(el).backgroundColor;
         const parts = color.match(/[\d.]+/g);
         if (parts && parts.length === 4) {
-            const alpha = parseFloat(parts[3]);
-            return alpha >= 0.35 && alpha <= 0.65;
+          const alpha = parseFloat(parts[3]);
+          return alpha >= 0.35 && alpha <= 0.65;
         }
         return false;
-    }, { timeout: 15000 });
+      },
+      { timeout: 15000 }
+    );
 
     const backgroundColor = await page.evaluate(() => {
-        const el = document.querySelector('.calc-display');
-        return window.getComputedStyle(el).backgroundColor;
+      const el = document.querySelector('.calc-display');
+      return window.getComputedStyle(el).backgroundColor;
     });
 
     console.log('Background:', backgroundColor);
     const parts = backgroundColor.match(/[\d.]+/g);
-    const alpha = (parts && parts.length === 4) ? parseFloat(parts[3]) : 1;
-    
+    const alpha = parts && parts.length === 4 ? parseFloat(parts[3]) : 1;
+
     expect(alpha).toBeGreaterThanOrEqual(0.35);
     expect(alpha).toBeLessThanOrEqual(0.65);
   });

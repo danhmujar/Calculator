@@ -2,97 +2,119 @@
  * ShaderManager handles GLSL 3.00 ES compilation and program linking for WebGL 2.0.
  */
 export class ShaderManager {
-    /**
-     * Compiles a shader from source.
-     * @param {WebGL2RenderingContext} gl 
-     * @param {number} type gl.VERTEX_SHADER or gl.FRAGMENT_SHADER
-     * @param {string} source GLSL source code
-     * @returns {WebGLShader}
-     */
-    static compile(gl, type, source) {
-        const shader = gl.createShader(type);
-        gl.shaderSource(shader, source);
-        gl.compileShader(shader);
+  /**
+   * Compiles a shader from source.
+   * @param {WebGL2RenderingContext} gl
+   * @param {number} type gl.VERTEX_SHADER or gl.FRAGMENT_SHADER
+   * @param {string} source GLSL source code
+   * @returns {WebGLShader}
+   */
+  static compile(gl, type, source) {
+    const shader = gl.createShader(type);
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
 
-        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-            const info = gl.getShaderInfoLog(shader);
-            const typeName = type === gl.VERTEX_SHADER ? 'VERTEX' : 'FRAGMENT';
-            console.error(`Could not compile ${typeName} shader:\n${info}`);
-            
-            // Log source with line numbers for easier debugging
-            const lines = source.split('\n');
-            lines.forEach((line, i) => {
-                console.debug(`${(i + 1).toString().padStart(3, ' ')}: ${line}`);
-            });
-            
-            gl.deleteShader(shader);
-            throw new Error(`Shader compilation failed: ${info}`);
-        }
-        return shader;
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+      const info = gl.getShaderInfoLog(shader);
+      const typeName = type === gl.VERTEX_SHADER ? 'VERTEX' : 'FRAGMENT';
+      console.error(`Could not compile ${typeName} shader:\n${info}`);
+
+      // Log source with line numbers for easier debugging
+      const lines = source.split('\n');
+      lines.forEach((line, i) => {
+        console.debug(`${(i + 1).toString().padStart(3, ' ')}: ${line}`);
+      });
+
+      gl.deleteShader(shader);
+      throw new Error(`Shader compilation failed: ${info}`);
+    }
+    return shader;
+  }
+
+  /**
+   * Creates and links a shader program.
+   * @param {WebGL2RenderingContext} gl
+   * @param {string} vertSource
+   * @param {string} fragSource
+   * @returns {WebGLProgram}
+   */
+  static createProgram(gl, vertSource, fragSource) {
+    const vertexShader = this.compile(gl, gl.VERTEX_SHADER, vertSource);
+    const fragmentShader = this.compile(gl, gl.FRAGMENT_SHADER, fragSource);
+
+    const program = gl.createProgram();
+    gl.attachShader(program, vertexShader);
+    gl.attachShader(program, fragmentShader);
+    gl.linkProgram(program);
+
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+      const info = gl.getProgramInfoLog(program);
+      console.error(`Could not link shader program:\n${info}`);
+      gl.deleteProgram(program);
+      throw new Error(`Program linking failed: ${info}`);
     }
 
-    /**
-     * Creates and links a shader program.
-     * @param {WebGL2RenderingContext} gl 
-     * @param {string} vertSource 
-     * @param {string} fragSource 
-     * @returns {WebGLProgram}
-     */
-    static createProgram(gl, vertSource, fragSource) {
-        const vertexShader = this.compile(gl, gl.VERTEX_SHADER, vertSource);
-        const fragmentShader = this.compile(gl, gl.FRAGMENT_SHADER, fragSource);
+    console.log('Shader program linked successfully');
+    return program;
+  }
 
-        const program = gl.createProgram();
-        gl.attachShader(program, vertexShader);
-        gl.attachShader(program, fragmentShader);
-        gl.linkProgram(program);
+  /**
+   * Sets multiple uniforms at once.
+   * @param {WebGL2RenderingContext} gl
+   * @param {WebGLProgram} program
+   * @param {Object} uniforms Key-value pairs of uniform names and values
+   */
+  static setUniforms(gl, program, uniforms) {
+    gl.useProgram(program);
+    for (const [name, value] of Object.entries(uniforms)) {
+      const location = gl.getUniformLocation(program, name);
+      if (location === null) continue;
 
-        if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-            const info = gl.getProgramInfoLog(program);
-            console.error(`Could not link shader program:\n${info}`);
-            gl.deleteProgram(program);
-            throw new Error(`Program linking failed: ${info}`);
+      if (
+        Array.isArray(value) ||
+        value instanceof Float32Array ||
+        value instanceof Int32Array
+      ) {
+        switch (value.length) {
+          case 1:
+            gl.uniform1fv(location, value);
+            break;
+          case 2:
+            gl.uniform2fv(location, value);
+            break;
+          case 3:
+            gl.uniform3fv(location, value);
+            break;
+          case 4:
+            gl.uniform4fv(location, value);
+            break;
+          case 9:
+            gl.uniformMatrix3fv(location, false, value);
+            break;
+          case 16:
+            gl.uniformMatrix4fv(location, false, value);
+            break;
+          default:
+            gl.uniform1fv(location, value);
         }
-
-        console.log("Shader program linked successfully");
-        return program;
-    }
-
-    /**
-     * Sets multiple uniforms at once.
-     * @param {WebGL2RenderingContext} gl 
-     * @param {WebGLProgram} program 
-     * @param {Object} uniforms Key-value pairs of uniform names and values
-     */
-    static setUniforms(gl, program, uniforms) {
-        gl.useProgram(program);
-        for (const [name, value] of Object.entries(uniforms)) {
-            const location = gl.getUniformLocation(program, name);
-            if (location === null) continue;
-
-            if (Array.isArray(value) || value instanceof Float32Array || value instanceof Int32Array) {
-                switch (value.length) {
-                    case 1: gl.uniform1fv(location, value); break;
-                    case 2: gl.uniform2fv(location, value); break;
-                    case 3: gl.uniform3fv(location, value); break;
-                    case 4: gl.uniform4fv(location, value); break;
-                    case 9: gl.uniformMatrix3fv(location, false, value); break;
-                    case 16: gl.uniformMatrix4fv(location, false, value); break;
-                    default: gl.uniform1fv(location, value);
-                }
-            } else if (typeof value === 'number') {
-                // Samplers and specific integer uniforms must use uniform1i
-                const lowerName = name.toLowerCase();
-                if (lowerName === 'u_atlas' || lowerName.includes('sampler') || lowerName.includes('texture') || name === 'uBackgroundMode') {
-                    gl.uniform1i(location, value);
-                } else {
-                    gl.uniform1f(location, value);
-                }
-            } else if (typeof value === 'boolean') {
-                gl.uniform1i(location, value ? 1 : 0);
-            }
+      } else if (typeof value === 'number') {
+        // Samplers and specific integer uniforms must use uniform1i
+        const lowerName = name.toLowerCase();
+        if (
+          lowerName === 'u_atlas' ||
+          lowerName.includes('sampler') ||
+          lowerName.includes('texture') ||
+          name === 'uBackgroundMode'
+        ) {
+          gl.uniform1i(location, value);
+        } else {
+          gl.uniform1f(location, value);
         }
+      } else if (typeof value === 'boolean') {
+        gl.uniform1i(location, value ? 1 : 0);
+      }
     }
+  }
 }
 
 /**

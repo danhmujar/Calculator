@@ -15,13 +15,13 @@ created: 2026-04-05
 
 ## Design System
 
-| Property | Value |
-|----------|-------|
-| Tool | none |
-| Preset | not applicable |
-| Component library | none (Vanilla DOM + WebGL) |
-| Icon library | custom SVGs |
-| Font | var(--font-sans), var(--font-mono) |
+| Property          | Value                              |
+| ----------------- | ---------------------------------- |
+| Tool              | none                               |
+| Preset            | not applicable                     |
+| Component library | none (Vanilla DOM + WebGL)         |
+| Icon library      | custom SVGs                        |
+| Font              | var(--font-sans), var(--font-mono) |
 
 ---
 
@@ -29,15 +29,15 @@ created: 2026-04-05
 
 Declared values (must be multiples of 4):
 
-| Token | Value | Usage |
-|-------|-------|-------|
-| xs | 4px | Icon gaps, inline padding |
-| sm | 8px | Compact element spacing |
-| md | 16px | Default element spacing |
-| lg | 24px | Section padding |
-| xl | 32px | Layout gaps |
-| 2xl | 48px | Major section breaks |
-| 3xl | 64px | Page-level spacing |
+| Token | Value | Usage                     |
+| ----- | ----- | ------------------------- |
+| xs    | 4px   | Icon gaps, inline padding |
+| sm    | 8px   | Compact element spacing   |
+| md    | 16px  | Default element spacing   |
+| lg    | 24px  | Section padding           |
+| xl    | 32px  | Layout gaps               |
+| 2xl   | 48px  | Major section breaks      |
+| 3xl   | 64px  | Page-level spacing        |
 
 Exceptions: none
 
@@ -55,25 +55,25 @@ Exceptions: none
 
 ## Typography
 
-| Role | Size | Weight | Line Height |
-|------|------|--------|-------------|
-| Body | 14px | 400 | 1.5 |
-| Label | 12px | 600 | 1.2 |
-| Heading | 20px | 600 | 1.2 |
-| Display | 40px | 400 | 1.2 |
+| Role    | Size | Weight | Line Height |
+| ------- | ---- | ------ | ----------- |
+| Body    | 14px | 400    | 1.5         |
+| Label   | 12px | 600    | 1.2         |
+| Heading | 20px | 600    | 1.2         |
+| Display | 40px | 400    | 1.2         |
 
 ---
 
 ## Color
 
-| Role | Value | Usage |
-|------|-------|-------|
-| Dominant (60%) | var(--bg-color) | Background, surfaces |
-| Secondary (30%) | var(--panel-bg) | Cards, sidebar, nav |
-| Accent (10%) | var(--primary-blue) | Active keycaps, primary CTAs |
+| Role               | Value                     | Usage                                                                |
+| ------------------ | ------------------------- | -------------------------------------------------------------------- |
+| Dominant (60%)     | var(--bg-color)           | Background, surfaces                                                 |
+| Secondary (30%)    | var(--panel-bg)           | Cards, sidebar, nav                                                  |
+| Accent (10%)       | var(--primary-blue)       | Active keycaps, primary CTAs                                         |
 | Display BG (Light) | rgba(255, 255, 255, 0.45) | Transparent background for main display in Light mode (WebGL active) |
-| Display BG (Dark) | rgba(28, 30, 36, 0.45) | Transparent background for main display in Dark mode (WebGL active) |
-| Destructive | rgba(222, 53, 11, 0.15) | Destructive actions only |
+| Display BG (Dark)  | rgba(28, 30, 36, 0.45)    | Transparent background for main display in Dark mode (WebGL active)  |
+| Destructive        | rgba(222, 53, 11, 0.15)   | Destructive actions only                                             |
 
 Accent reserved for: Active keycaps, primary CTAs.
 
@@ -81,21 +81,21 @@ Accent reserved for: Active keycaps, primary CTAs.
 
 ## Copywriting Contract
 
-| Element | Copy |
-|---------|------|
-| Primary CTA | Close Modal |
-| Empty state heading | No calculation history (Global Fallback) |
-| Empty state body | Enter a number or operation to start calculating. (Global Fallback) |
-| Error state | Calculation Error - Please press AC to reset. (Global Fallback) |
-| Destructive confirmation | Are you sure you want to clear all data? (Global Fallback) |
+| Element                  | Copy                                                                |
+| ------------------------ | ------------------------------------------------------------------- |
+| Primary CTA              | Close Modal                                                         |
+| Empty state heading      | No calculation history (Global Fallback)                            |
+| Empty state body         | Enter a number or operation to start calculating. (Global Fallback) |
+| Error state              | Calculation Error - Please press AC to reset. (Global Fallback)     |
+| Destructive confirmation | Are you sure you want to clear all data? (Global Fallback)          |
 
 ---
 
 ## Registry Safety
 
-| Registry | Blocks Used | Safety Gate |
-|----------|-------------|-------------|
-| none | none | not required |
+| Registry | Blocks Used | Safety Gate  |
+| -------- | ----------- | ------------ |
+| none     | none        | not required |
 
 ---
 

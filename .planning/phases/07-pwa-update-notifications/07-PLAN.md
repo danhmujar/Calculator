@@ -6,6 +6,7 @@
 **Plans:** 3 plans
 
 Plans:
+
 - [x] 07-01-PLAN.md — Build script and version manifest setup
 - [x] 07-02-PLAN.md — Service Worker implementation for version polling
 - [x] 07-03-PLAN.md — UI toast integration and cache-busting logic

@@ -13,38 +13,47 @@ Strip dead code related to historical transitions and validate end-state against
 ## Implementation Decisions
 
 ### Parity Code Removal
+
 - **D-01:** Delete parity hacks completely (cleans up codebase as per "Artifact Purge").
 
 ### Test Suite Strictness
+
 - **D-02:** Allow minor pixel differences (WebGL vs DOM rendering often has anti-aliasing diffs).
 
 ### Regression Artifacts
+
 - **D-03:** Standard Playwright traces (less overhead, standard tool).
-</decisions>
+  </decisions>
 
 <canonical_refs>
+
 ## Canonical References
 
 **Downstream agents MUST read these before planning or implementing.**
 
 ### Tests
+
 - `tests/phase-01.spec.js` — Regression tests for Phase 1
 - `tests/phase-02.spec.js` — Regression tests for Phase 2
 - `playwright.config.js` — Playwright configuration settings
-</canonical_refs>
+  </canonical_refs>
 
 <code_context>
+
 ## Existing Code Insights
 
 ### Reusable Assets
+
 - `ui/webgl/renderer.js`: Contains the legacy parity checks (e.g., `parity-webgl-only`, `parity-split-view`).
 
 ### Established Patterns
+
 - Playwright tests are currently in the `tests/` directory and use standard traces.
 
 ### Integration Points
+
 - `ui/webgl/renderer.js` and CSS styles need to be purged of `parity-*` references.
-</code_context>
+  </code_context>
 
 <specifics>
 ## Specific Ideas
@@ -60,5 +69,5 @@ None — discussion stayed within phase scope
 
 ---
 
-*Phase: 03-verification-parity-artifact-purge*
-*Context gathered: 2026-04-04*
+_Phase: 03-verification-parity-artifact-purge_
+_Context gathered: 2026-04-04_

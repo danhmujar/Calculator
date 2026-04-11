@@ -29,6 +29,7 @@ Separated the WebGL `<canvas>` into an isolated stacking context as a direct sib
 None - plan executed effectively, but using DOM injection modifications instead of querying raw strings per standard dynamic JS patterns (no `#webgl-underlay` physically existed inside `index.html`).
 
 ## Self-Check: PASSED
+
 - `backdrop-filter` removed.
 - Z-indexes configured properly.
 - JS appends canvas efficiently.

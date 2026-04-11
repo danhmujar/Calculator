@@ -13,7 +13,7 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { 
+      use: {
         ...devices['Desktop Chrome'],
         launchOptions: {
           args: [
@@ -21,9 +21,9 @@ export default defineConfig({
             '--use-gl=angle',
             '--use-angle=d3d11',
             '--enable-gpu-rasterization',
-            '--enable-zero-copy'
-          ]
-        }
+            '--enable-zero-copy',
+          ],
+        },
       },
     },
   ],
