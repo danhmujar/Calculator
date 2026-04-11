@@ -7,7 +7,7 @@
     "vite-plugin-pwa": "^1.2.0"
   },
   "name": "calculator",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "",
   "main": "sw.js",
   "dependencies": {
