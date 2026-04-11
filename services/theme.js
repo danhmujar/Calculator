@@ -92,7 +92,8 @@ class ThemeTransitionManager {
      */
     async init() {
         try {
-            const response = await fetch('./services/themes.json');
+            const baseUrl = import.meta.env.BASE_URL || '/';
+            const response = await fetch(`${baseUrl}services/themes.json?t=${Date.now()}`);
             this.themes = await response.json();
             
             const initial = this._fetchThemeColors();
