@@ -131,17 +131,35 @@ class ThemeTransitionManager {
             }
         }
         
-        // Resolve theme data from JSON
-        let themeData = this.themes[activeTheme] || this.themes['default'];
+        // FOUNDATION: Always start with the 'default' (light) theme variables.
+        // This ensures that every CSS variable we support has a target for interpolation.
+        let themeData = { ...this.themes['default'] };
         
-        // Handle dark variants: check for "theme-name-dark" key or fallback to "dark" root
+        // MODE OVERLAY: If in dark mode, overlay the base 'dark' variables.
         if (isDark) {
-            const darkKey = `${activeTheme}-dark`;
-            if (this.themes[darkKey]) {
-                themeData = { ...themeData, ...this.themes[darkKey] };
-            } else if (activeTheme === 'default') {
-                themeData = this.themes['dark'];
+            themeData = { ...themeData, ...this.themes['dark'] };
+        }
+        
+        // THEME OVERRIDE: Merge in the specific theme variables
+        if (activeTheme !== 'default' && this.themes[activeTheme]) {
+            let specificData = { ...this.themes[activeTheme] };
+            
+            // Handle dark variants: check for "theme-name-dark" key
+            if (isDark) {
+                const darkKey = `${activeTheme}-dark`;
+                if (this.themes[darkKey]) {
+                    specificData = { ...specificData, ...this.themes[darkKey] };
+                }
             }
+            
+            // SPECIAL CASE: If the theme defines --bg-color but NOT --aurora-color-1,
+            // we MUST override the base theme's --aurora-color-1 to match the tinted background.
+            // This mirrors the CSS :root { --aurora-color-1: var(--bg-color); } fallback.
+            if (specificData['--bg-color'] && !specificData['--aurora-color-1']) {
+                specificData['--aurora-color-1'] = specificData['--bg-color'];
+            }
+            
+            themeData = { ...themeData, ...specificData };
         }
         
         const mode = this._getModeFromClass(activeTheme);
