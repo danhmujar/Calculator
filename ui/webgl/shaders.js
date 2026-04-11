@@ -304,6 +304,10 @@ layout(location = 6) in vec4 a_instUV;      // [u, v, tw, th]
 layout(location = 7) in vec2 a_transition;  // [startTime, duration]
 layout(location = 8) in float a_instType;   // 0=Rect, 1=Text
 layout(location = 9) in float a_instRadius; // corner radius
+layout(location = 10) in vec4 a_instBorderColor;
+layout(location = 11) in float a_instBorderWidth;
+layout(location = 12) in float a_instShadowBlur;
+layout(location = 13) in vec2 a_instShadowOffset;
 
 out vec2 v_texCoord;
 out vec2 v_instSize;
@@ -311,6 +315,10 @@ out vec4 v_instUV;
 out vec4 v_instColor;
 out float v_instType;
 out float v_instRadius;
+out vec4 v_instBorderColor;
+out float v_instBorderWidth;
+out float v_instShadowBlur;
+out vec2 v_instShadowOffset;
 
 float quadraticOut(float t) {
     return t * (2.0 - t);
@@ -347,6 +355,10 @@ void main() {
     v_instColor = color;
     v_instType = a_instType;
     v_instRadius = a_instRadius;
+    v_instBorderColor = a_instBorderColor;
+    v_instBorderWidth = a_instBorderWidth;
+    v_instShadowBlur = a_instShadowBlur;
+    v_instShadowOffset = a_instShadowOffset;
 }
 `;
 
@@ -366,6 +378,10 @@ in vec4 v_instUV;
 in vec4 v_instColor;
 in float v_instType;
 in float v_instRadius;
+in vec4 v_instBorderColor;
+in float v_instBorderWidth;
+in float v_instShadowBlur;
+in vec2 v_instShadowOffset;
 
 out vec4 outColor;
 
@@ -382,9 +398,43 @@ void main() {
         float r = min(v_instRadius, min(b.x, b.y));
         float d = sdRoundedBox(p, b, r);
         float edge = fwidth(d) * 0.5;
-        float alpha = 1.0 - smoothstep(-edge, edge, d);
-        if (alpha <= 0.0) discard;
-        outColor = vec4(v_instColor.rgb, v_instColor.a * alpha);
+        
+        // 1. Shadow logic
+        float shadowAlpha = 0.0;
+        if (v_instShadowBlur > 0.01) {
+            float sd = sdRoundedBox(p - v_instShadowOffset * u_dpr, b, r);
+            shadowAlpha = 1.0 - smoothstep(-v_instShadowBlur * u_dpr, v_instShadowBlur * u_dpr, sd);
+        }
+
+        // 2. Main fill logic
+        float fillAlpha = 1.0 - smoothstep(-edge, edge, d);
+        
+        // 3. Border logic
+        float borderAlpha = 0.0;
+        if (v_instBorderWidth > 0.0) {
+            // Border is drawn "inside" the SDF boundary
+            float b_d = d + v_instBorderWidth * u_dpr;
+            borderAlpha = (1.0 - smoothstep(-edge, edge, b_d)) * fillAlpha;
+        }
+
+        // 4. Composition
+        vec4 baseColor = v_instColor;
+        vec4 borderColor = v_instBorderColor;
+        
+        // Blend border over fill
+        vec4 resColor = mix(baseColor, borderColor, borderAlpha * borderColor.a);
+        
+        // Combine with fill alpha for anti-aliasing
+        resColor.a *= fillAlpha;
+
+        // Simple shadow composition (underneath)
+        if (shadowAlpha > 0.01) {
+            vec4 shadow = vec4(0.0, 0.0, 0.0, 0.3 * shadowAlpha); // Fixed soft shadow for now
+            outColor = mix(shadow, resColor, resColor.a);
+        } else {
+            if (resColor.a <= 0.0) discard;
+            outColor = resColor;
+        }
     } else {
         // Mode 1: SDF Text (Sigma/Pi Glyphs)
         vec2 uv = v_instUV.xy + v_texCoord * v_instUV.zw;

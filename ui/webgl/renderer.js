@@ -31,7 +31,7 @@ export class WebGLRenderer {
         
         // Batch configuration
         this.maxInstances = 4096; // Increased for full coverage
-        this.instanceData = new Float32Array(this.maxInstances * 24);
+        this.instanceData = new Float32Array(this.maxInstances * 32);
         this.instanceCount = 0;
         
         // Global UBO state
@@ -329,11 +329,20 @@ export class WebGLRenderer {
      * @param {number} radius - Corner radius in CSS pixels
      * @param {string} id - Optional ID for animation tracking
      */
-    pushRect(rect, color, radius, id = null) {
+    /**
+     * Queues a rounded rectangle for the next batch flush.
+     * 
+     * @param {Object} rect - Dimensions {x, y, width, height} in CSS pixels
+     * @param {number[]} color - RGBA normalized color [0.0, 1.0]
+     * @param {number} radius - Corner radius in CSS pixels
+     * @param {string} id - Optional ID for animation tracking
+     * @param {Object} options - Optional rendering parameters (borderColor, borderWidth, shadowBlur, shadowOffset)
+     */
+    pushRect(rect, color, radius, id = null, options = {}) {
         if (!this.initialized) return;
         if (this.instanceCount >= this.maxInstances) this.flush();
 
-        const offset = this.instanceCount * 24;
+        const offset = this.instanceCount * 32;
         const dpr = window.devicePixelRatio || 1;
         
         let startRect = rect, endRect = rect;
@@ -387,6 +396,20 @@ export class WebGLRenderer {
         // a_instType (loc 8) / a_instRadius (loc 9)
         this.instanceData[offset + 22] = 0.0; // Type: 0 = Rect
         this.instanceData[offset + 23] = radius * dpr;
+        
+        // New attributes (loc 10-13)
+        const borderColor = options.borderColor || [0, 0, 0, 0];
+        this.instanceData[offset + 24] = borderColor[0];
+        this.instanceData[offset + 25] = borderColor[1];
+        this.instanceData[offset + 26] = borderColor[2];
+        this.instanceData[offset + 27] = borderColor[3];
+        
+        this.instanceData[offset + 28] = (options.borderWidth || 0.0);
+        this.instanceData[offset + 29] = (options.shadowBlur || 0.0);
+        
+        const shadowOffset = options.shadowOffset || [0, 0];
+        this.instanceData[offset + 30] = shadowOffset[0];
+        this.instanceData[offset + 31] = shadowOffset[1];
 
         this.instanceCount++;
     }
@@ -409,7 +432,7 @@ export class WebGLRenderer {
         const glyph = this.atlas.getGlyph(char, font);
         if (!glyph) return;
 
-        const offset = this.instanceCount * 24;
+        const offset = this.instanceCount * 32;
         const dpr = window.devicePixelRatio || 1;
         
         // Scale factor: glyphs are generated at 48px base
@@ -474,6 +497,16 @@ export class WebGLRenderer {
         // a_instType (loc 8) / a_instRadius (loc 9)
         this.instanceData[offset + 22] = 1.0; // Type: 1 = SDF Text
         this.instanceData[offset + 23] = 0.0; // Radius (unused for text)
+        
+        // New attributes (loc 10-13) - Defaults for glyphs
+        this.instanceData[offset + 24] = 0.0;
+        this.instanceData[offset + 25] = 0.0;
+        this.instanceData[offset + 26] = 0.0;
+        this.instanceData[offset + 27] = 0.0;
+        this.instanceData[offset + 28] = 0.0;
+        this.instanceData[offset + 29] = 0.0;
+        this.instanceData[offset + 30] = 0.0;
+        this.instanceData[offset + 31] = 0.0;
 
         this.instanceCount++;
     }
@@ -497,7 +530,7 @@ export class WebGLRenderer {
         gl.bindTexture(gl.TEXTURE_2D, this.atlas.texture);
 
         // Upload instance data with orphaning
-        const view = this.instanceData.subarray(0, this.instanceCount * 24);
+        const view = this.instanceData.subarray(0, this.instanceCount * 32);
         BufferManager.updateInstanceBuffer(gl, this.batchVAO.instanceVbo, view);
 
         // Execute instanced draw
@@ -662,7 +695,18 @@ export class WebGLRenderer {
         if (document.body.classList.contains('mode-transitioning')) return;
 
         const viewportHeight = window.innerHeight;
+        const theme = themeManager.getInterpolatedTheme(performance.now());
         
+        // Helper to normalize [0-255] rgba to [0-1]
+        const normalize = (rgba) => {
+            if (!rgba || !Array.isArray(rgba)) return [0, 0, 0, 0];
+            return [rgba[0] / 255, rgba[1] / 255, rgba[2] / 255, rgba[3]];
+        };
+
+        const glassBorderColor = normalize(theme['--glass-border']);
+        const btnBorderColor = normalize(theme['--calc-btn-border']);
+        const modalBorderColor = normalize(theme['--modal-glass-border']);
+
         for (const [element, id] of layoutManager.elements.entries()) {
             const rect = layoutManager.getRect(element);
             if (rect.bottom < 0 || rect.top > viewportHeight) continue;
@@ -673,16 +717,32 @@ export class WebGLRenderer {
             const isHovered = element.matches(':hover');
 
             if (element.classList.contains('calc-card')) {
-                this.pushRect(rect, [1, 1, 1, isHovered ? 0.08 : 0.05], 8, id);
+                // Card Background + Border + Shadow
+                this.pushRect(rect, [1, 1, 1, isHovered ? 0.08 : 0.05], 8, id, {
+                    borderColor: glassBorderColor,
+                    borderWidth: 1.0,
+                    shadowBlur: isHovered ? 12.0 : 8.0,
+                    shadowOffset: [0, 4.0]
+                });
             } else if (element.classList.contains('btn') || element.classList.contains('icon-btn') || element.classList.contains('calc-btn')) {
+                // Button Background + Border
                 const isEq = element.classList.contains('eq');
                 const isOp = element.classList.contains('op');
                 const color = isEq ? this.themeColors.primary : (isOp ? this.themeColors.accent : this.themeColors.primary);
-                this.pushRect(rect, [...color, isHovered ? 0.15 : 0.1], 12, id);
+                
+                this.pushRect(rect, [...color, isHovered ? 0.15 : 0.1], 12, id, {
+                    borderColor: isHovered ? [...color, 0.5] : btnBorderColor,
+                    borderWidth: 1.0,
+                    shadowBlur: isHovered ? 6.0 : 0.0,
+                    shadowOffset: [0, 0]
+                });
             } else if (element.classList.contains('about-modal')) {
                 if (element.closest('.about-overlay.open')) {
-                    // Frosty background for the about modal
-                    this.pushRect(rect, [1.0, 1.0, 1.0, 0.25], 16, id);
+                    // Frosty background for the about modal + Border
+                    this.pushRect(rect, [1.0, 1.0, 1.0, 0.25], 16, id, {
+                        borderColor: modalBorderColor,
+                        borderWidth: 1.0
+                    });
                 }
             } else if (element.classList.contains('math-row') || element.classList.contains('calc-row-instance')) {
                 this.pushRect(rect, [...this.themeColors.primary, isHovered ? 0.1 : 0.05], 8, id);

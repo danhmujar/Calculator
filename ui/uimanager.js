@@ -124,11 +124,14 @@ export class UIManager {
         }
     }
 
-    init() {
+    async init() {
         this.displayEl = document.getElementById('main-calc-display');
         this.previewEl = document.getElementById('main-calc-prev');
         this.auditList = document.getElementById('audit-list');
         this.memoryIndicatorEl = document.getElementById('memory-indicator');
+
+        // Load theme definitions from JSON first
+        await this.themeManager.init();
 
         layoutManager.observe(this.displayEl, 'main-calc-display');
         layoutManager.observe(this.previewEl, 'main-calc-prev');
@@ -199,9 +202,11 @@ export class UIManager {
         this.setupFocusHandling();
         this.setupThemePicker();
         
-        this.themeManager.init();
         initEyeTracking();
         this.syncThemeColors();
+        
+        // Expose to window for testing/debugging
+        window.uiManager = this;
     }
 
     /**

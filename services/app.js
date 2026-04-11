@@ -26,8 +26,8 @@ class AppOrchestrator {
     }
 
     init() {
-        window.addEventListener('DOMContentLoaded', () => {
-            uiManager.init();
+        window.addEventListener('DOMContentLoaded', async () => {
+            await uiManager.init();
             pwaManager.init(uiManager.showToast.bind(uiManager));
             initEyeTracking();
 

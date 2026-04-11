@@ -112,18 +112,22 @@ export class BufferManager {
         gl.bindBuffer(gl.ARRAY_BUFFER, instanceVbo);
         
         /**
-         * Instance Interleaved Format (24 floats total):
+         * Instance Interleaved Format (32 floats total):
          * [
-         *   startRect.x, startRect.y, startRect.w, startRect.h, (4)
-         *   endRect.x, endRect.y, endRect.w, endRect.h,         (4)
-         *   startCol.r, startCol.g, startCol.b, startCol.a,     (4)
-         *   endCol.r, endCol.g, endCol.b, endCol.a,             (4)
-         *   uv.u, uv.v, uv.tw, uv.th,                           (4)
-         *   startTime, duration,                                (2)
-         *   type, radius                                        (2)
+         *   0-3:   startRect (x, y, w, h)
+         *   4-7:   endRect (x, y, w, h)
+         *   8-11:  startCol (r, g, b, a)
+         *   12-15: endCol (r, g, b, a)
+         *   16-19: uv (u, v, tw, th)
+         *   20-21: transition (startTime, duration)
+         *   22-23: type, radius
+         *   24-27: borderColor (r, g, b, a)
+         *   28:    borderWidth
+         *   29:    shadowBlur
+         *   30-31: shadowOffset (dx, dy)
          * ]
          */
-        const stride = 24 * 4; 
+        const stride = 32 * 4; 
         gl.bufferData(gl.ARRAY_BUFFER, maxInstances * stride, gl.DYNAMIC_DRAW);
 
         // Helper to setup instanced attributes
@@ -141,6 +145,12 @@ export class BufferManager {
         setupInstancedAttr(7, 2, 20); // a_transition
         setupInstancedAttr(8, 1, 22); // a_instType
         setupInstancedAttr(9, 1, 23); // a_instRadius
+        
+        // New attributes for Phase 8
+        setupInstancedAttr(10, 4, 24); // a_instBorderColor
+        setupInstancedAttr(11, 1, 28); // a_instBorderWidth
+        setupInstancedAttr(12, 1, 29); // a_instShadowBlur
+        setupInstancedAttr(13, 2, 30); // a_instShadowOffset
 
         gl.bindVertexArray(null);
         gl.bindBuffer(gl.ARRAY_BUFFER, null);
