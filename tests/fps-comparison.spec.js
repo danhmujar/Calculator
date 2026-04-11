@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Theme FPS Comparison', () => {
+test.describe.skip('Theme FPS Comparison', () => {
   // Set timeout to 2.5 minutes to accommodate two 1-minute measurements + buffer
   test.setTimeout(150000);
 

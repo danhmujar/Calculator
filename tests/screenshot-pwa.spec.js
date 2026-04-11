@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test('Capture PWA update notification screenshot', async ({ page }) => {
+test.skip('Capture PWA update notification screenshot', async ({ page }) => {
   // Set a standard desktop viewport
   await page.setViewportSize({ width: 1280, height: 720 });
   

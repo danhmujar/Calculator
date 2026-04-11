@@ -15,8 +15,6 @@
  * 1000 - mobile drawer (right-panel.open)
  * 2000 - about-overlay (modal backdrop)
  */
-
-/* Build Change for Verification - Phase 02-03 */
 :root {
     --bg-color: #f4f5f7;
     --panel-bg: #ffffff;
@@ -208,7 +206,6 @@ math-field:not(:defined) {
     background-color: var(--calc-btn-border);
     border-radius: 6px;
     border: 3px solid var(--bg-color);
-    /* Creates padding/gap effect around thumb */
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -500,20 +497,7 @@ body[class*="theme-aurora"] .calc-btn {
     border-color: rgba(155, 89, 182, 0.5) !important;
 }
 
-/* Aurora Shared Animated Background */
-body::before {
-    content: '';
-    position: absolute;
-    top: -25%;
-    left: -25%;
-    width: 150%;
-    height: 150%;
-    filter: blur(50px);
-    z-index: -1;
-    opacity: 0;
-    transition: background 0.8s var(--ease), opacity 0.8s var(--ease);
-    pointer-events: none;
-}
+
 
 /* Unified Rendering Optimizations for WebGL underlay themes */
 body.webgl-active .right-panel,
@@ -573,13 +557,6 @@ body.webgl-active .calc-card {
     background-color: color-mix(in srgb, var(--panel-bg) 85%, transparent);
 }
 
-/* Ensure mobile drawer is also transparent when WebGL is active */
-@media (max-width: 1024px) {
-    body.webgl-active .right-panel {
-        background-color: color-mix(in srgb, var(--panel-bg) 85%, transparent);
-    }
-}
-
 /* Prevent transitions during manual resizing to fix the "rubbery" drag lag */
 body.is-resizing * {
     transition: none !important;
@@ -594,7 +571,6 @@ body.is-resizing * {
     gap: 1.5rem;
     max-width: 1200px;
     margin: 0 auto;
-    /* Hardware accelerated layout properties where possible, but inclusive of layout props for cohesive mode toggle */
     will-change: transform, opacity, flex-basis;
     transition:
         opacity 0.5s var(--ease),
@@ -677,7 +653,6 @@ body.is-resizing * {
     margin-bottom: 1rem;
     position: relative;
     z-index: 50;
-    /* Ensure header sits above cards */
 }
 
 .header-brand {
@@ -883,12 +858,6 @@ input[type=number]::-webkit-outer-spin-button {
 }
 
 /* --- SVG Hover Animations --- */
-@keyframes svgSpin {
-    100% {
-        transform: rotate(180deg);
-    }
-}
-
 @keyframes svgWiggle {
 
     0%,
@@ -941,10 +910,6 @@ input[type=number]::-webkit-outer-spin-button {
     animation-delay: 0.2s;
 }
 
-.icon-btn:hover .anim-spin-hover {
-    animation: svgSpin 0.6s var(--spring);
-}
-
 .icon-btn:hover .anim-wiggle-hover {
     animation: svgWiggle 0.4s ease-in-out;
 }
@@ -976,7 +941,6 @@ input[type=number]::-webkit-outer-spin-button {
 
 .slider {
     background-color: var(--slider-day-bg);
-    /* Brighter sky blue */
     bottom: 0;
     cursor: pointer;
     left: 0;
@@ -993,7 +957,6 @@ input[type=number]::-webkit-outer-spin-button {
 /* The Sun/Moon Base Knob */
 .slider:before {
     background-color: var(--slider-knob-sun);
-    /* Base Sun color */
     bottom: 6px;
     content: "";
     height: 20px;
@@ -1014,7 +977,6 @@ input[type=number]::-webkit-outer-spin-button {
     width: 28px;
     height: 28px;
     z-index: 1;
-    /* Under the 20px slider knob */
     transition: transform .4s var(--spring), opacity .2s;
     pointer-events: none;
     opacity: 1;
@@ -1057,7 +1019,6 @@ input[type=number]::-webkit-outer-spin-button {
 /* Switch Checked State (Dark Mode) */
 input:checked+.slider {
     background-color: var(--slider-night-bg);
-    /* Deep space */
 }
 
 /* Move knob to the right and fade it out to let the crescent moon take over */
@@ -1097,8 +1058,6 @@ input:checked+.slider .slider-bg {
     padding: 1.5rem;
     border-bottom: 1px solid var(--border-color);
     background: var(--panel-bg);
-    /* Fallback */
-    background: color-mix(in srgb, var(--panel-bg) 85%, transparent);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -1235,7 +1194,6 @@ body.scientific-mode aside.right-panel {
     max-width: 100vw;
     border-left: none;
     flex: 1;
-    /* Boost opacity in Scientific mode to prevent seeing standard UI through the Aurora glass during transition */
     background-color: var(--panel-bg);
 }
 
@@ -1267,17 +1225,7 @@ body[class*="theme-aurora-sunset"].scientific-mode .right-panel {
 }
 
 /* --- Row Enter/Exit Animation States --- */
-.row-enter {
-    max-height: 0 !important;
-    opacity: 0 !important;
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
-    margin-top: 0 !important;
-    margin-bottom: -1rem !important; /* Counteracts the flex container gap */
-    border-bottom-width: 0 !important;
-    pointer-events: none;
-}
-
+.row-enter,
 .row-exit {
     max-height: 0 !important;
     opacity: 0 !important;
@@ -1291,7 +1239,6 @@ body[class*="theme-aurora-sunset"].scientific-mode .right-panel {
 
 .math-row:hover {
     background-color: var(--primary-alpha-05);
-    /* Soft dynamic highlight */
 }
 
 math-field {
@@ -1484,7 +1431,6 @@ body[class*="theme-aurora"] .audit-tape-container {
     letter-spacing: 0.05em;
     border-bottom: 1px dashed var(--border-color);
     background: var(--bg-color);
-    /* Fallback */
     background: color-mix(in srgb, var(--bg-color) 85%, transparent);
     position: sticky;
     top: 0;
@@ -1580,7 +1526,6 @@ body[class*="theme-aurora"] .audit-tape-container {
     display: inline-block;
     margin-right: 0.5rem;
     z-index: 50;
-    /* Space between palette and dark mode toggle */
 }
 
 .theme-picker {
@@ -1742,8 +1687,7 @@ body[class*="theme-aurora"] .audit-tape-container {
 
     .left-panel {
         padding-bottom: 6rem;
-        /* space for fab */
-    }
+}
 }
 
 @media (max-width: 600px) {
@@ -1781,7 +1725,6 @@ body[class*="theme-aurora"] .audit-tape-container {
         margin-right: 0.5rem;
     }
 
-    .chameleon-wrapper,
     .calculator-wrapper {
         width: 70px;
     }
@@ -1806,7 +1749,7 @@ body[class*="theme-aurora"] .audit-tape-container {
     .calc-row-instance {
         flex-direction: column;
         align-items: stretch;
-        flex-wrap: nowrap; /* Prevents wrapping horizontally into new columns during max-height transitions */
+        flex-wrap: nowrap;
     }
 
     .input-group {
@@ -2047,7 +1990,7 @@ body.dark-theme .about-modal-inner::-webkit-scrollbar-thumb {
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 10; /* Keep button above scrolling content */
+    z-index: 10;
     transition: background 0.2s, color 0.2s, transform 0.2s;
 }
 
@@ -2056,22 +1999,6 @@ body.dark-theme .about-modal-inner::-webkit-scrollbar-thumb {
     color: var(--text-primary);
     transform: scale(1.1);
 }
-
-/* --- WebGL Overlay Permanent Mode --- */
-.ghost-mode .left-panel,
-.ghost-mode .right-panel,
-.ghost-mode .header-row,
-.ghost-mode .calc-card,
-.ghost-mode .math-row,
-.ghost-mode .calc-display,
-.ghost-mode .calc-keypad,
-.ghost-mode .theme-picker,
-.ghost-mode .mobile-panel-fab,
-.ghost-mode .about-fab {
-    opacity: 0 !important;
-    pointer-events: auto !important;
-}
-
 #webgl-underlay {
     position: fixed;
     inset: 0;
@@ -2463,13 +2390,4 @@ body.dark-theme .about-badge {
 .about-install-btn[hidden] {
     display: none;
 }
-
-/* --- WEBGL UNDERLAY VISIBILITY (REQ-WGL-02) --- */
-body.webgl-active #sci-container {
-    background: rgba(255, 255, 255, 0.45) !important;
-    transition: background 0.3s ease;
-}
-
-body.webgl-active.dark-theme #sci-container {
-    background: rgba(28, 30, 36, 0.45) !important;
-}
+
