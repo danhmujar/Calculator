@@ -603,6 +603,44 @@ body.is-resizing * {
   visibility: visible;
 }
 
+/* --- LAPTOP OPTIMIZATIONS (1025px - 1440px) --- */
+@media (min-width: 1025px) and (max-width: 1440px) {
+  :root {
+    font-size: 15px; /* Proportional scale down */
+  }
+
+  .left-panel {
+    padding: 1.5rem;
+    gap: 1.25rem;
+  }
+
+  .calc-card {
+    padding: 1.25rem;
+  }
+
+  .sidebar-header,
+  .calc-display,
+  .calc-keypad {
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
+
+  .calc-current {
+    font-size: 2.2rem;
+  }
+
+  .calc-btn {
+    padding: 0.75rem;
+    font-size: 1.1rem;
+  }
+
+  .audit-header,
+  .audit-list {
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
+}
+
 .panel-resizer {
   width: 8px;
   height: 100%;
@@ -622,8 +660,8 @@ body.is-resizing * {
 }
 
 .right-panel {
-  width: var(--sidebar-width, 400px);
-  min-width: 320px;
+  width: var(--sidebar-width, min(340px, 28vw));
+  min-width: 250px;
   max-width: 50vw;
   background-color: var(--glass-bg);
   border-left: 1px solid var(--border-color);

@@ -8,7 +8,13 @@ const math = create(all, {
 math.config({ implicit: 'multiply' });
 
 // Disable high-risk functions (APP-L8)
-const unsafe: string[] = ['import', 'createUnit', 'evaluate', 'parse', 'simplify'];
+const unsafe: string[] = [
+  'import',
+  'createUnit',
+  'evaluate',
+  'parse',
+  'simplify',
+];
 
 /**
  * Secure Calculator Service
@@ -21,7 +27,10 @@ export class CalculatorService {
    * @param {Record<string, any>} scope - Optional scope for variables.
    * @returns {number | null} - The result of the evaluation or null on error.
    */
-  static evaluate(expression: string | null, scope: Record<string, any> = {}): number | null {
+  static evaluate(
+    expression: string | null,
+    scope: Record<string, any> = {}
+  ): number | null {
     if (
       !expression ||
       typeof expression !== 'string' ||
