@@ -8,6 +8,8 @@ export class PWAManager {
     this.deferredInstallPrompt = null;
     this.updateSW = null;
     this.currentVersion = null;
+    this.installPromptHandler = null;
+    this.appInstalledHandler = null;
   }
 
   init(showToastCallback) {
@@ -17,13 +19,11 @@ export class PWAManager {
     this.startVersionPolling();
 
     // Bind install button if it exists
-    const installBtn = document.getElementById('pwa-install-btn');
-    if (installBtn) {
-      installBtn.addEventListener('click', () =>
-        this.handleInstallClick(showToastCallback)
-      );
-    }
+    this.bindInstallButton(showToastCallback);
     this.updateOfflineBadge();
+
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', () => this.cleanup());
   }
 
   setupOfflineHandlers(showToastCallback) {
@@ -43,20 +43,60 @@ export class PWAManager {
     badge.hidden = navigator.onLine;
   }
 
+  bindInstallButton(showToastCallback) {
+    const installBtn = document.getElementById('pwa-install-btn');
+    if (installBtn) {
+      installBtn.addEventListener('click', () =>
+        this.handleInstallClick(showToastCallback)
+      );
+    }
+  }
+
+  updateInstallButtonVisibility() {
+    const installBtn = document.getElementById('pwa-install-btn');
+    if (!installBtn) return;
+
+    // Show button only if we have a deferred prompt and app isn't installed
+    const shouldShow = this.deferredInstallPrompt !== null;
+    installBtn.hidden = !shouldShow;
+  }
+
   setupInstallPrompt() {
-    window.addEventListener('beforeinstallprompt', (e) => {
+    // Create bound handlers for cleanup
+    this.installPromptHandler = (e) => {
       e.preventDefault();
       this.deferredInstallPrompt = e;
-      const installBtn = document.getElementById('pwa-install-btn');
-      if (installBtn) installBtn.hidden = false;
-    });
+      this.updateInstallButtonVisibility();
+    };
 
-    window.addEventListener('appinstalled', (e) => {
+    this.appInstalledHandler = () => {
       this.deferredInstallPrompt = null;
-      const installBtn = document.getElementById('pwa-install-btn');
-      if (installBtn) installBtn.hidden = true;
+      this.updateInstallButtonVisibility();
       console.log('PWA was installed');
-    });
+    };
+
+    window.addEventListener('beforeinstallprompt', this.installPromptHandler);
+    window.addEventListener('appinstalled', this.appInstalledHandler);
+  }
+
+  cleanup() {
+    // Remove event listeners to prevent memory leaks
+    if (this.installPromptHandler) {
+      window.removeEventListener(
+        'beforeinstallprompt',
+        this.installPromptHandler
+      );
+      this.installPromptHandler = null;
+    }
+
+    if (this.appInstalledHandler) {
+      window.removeEventListener('appinstalled', this.appInstalledHandler);
+      this.appInstalledHandler = null;
+    }
+
+    // Clear references
+    this.deferredInstallPrompt = null;
+    this.updateSW = null;
   }
 
   handleInstallClick(showToastCallback) {
@@ -64,15 +104,25 @@ export class PWAManager {
       showToastCallback('App is already installed or not available.');
       return;
     }
+
+    // Show the install prompt
     this.deferredInstallPrompt.prompt();
-    this.deferredInstallPrompt.userChoice.then((choiceResult) => {
-      if (choiceResult.outcome === 'accepted') {
-        showToastCallback('App installed!');
-      }
-      this.deferredInstallPrompt = null;
-      const installBtn = document.getElementById('pwa-install-btn');
-      if (installBtn) installBtn.hidden = true;
-    });
+
+    // Handle user's choice
+    this.deferredInstallPrompt.userChoice
+      .then((choiceResult) => {
+        if (choiceResult.outcome === 'accepted') {
+          showToastCallback('App installed!');
+        }
+        // Clear the deferred prompt regardless of outcome
+        this.deferredInstallPrompt = null;
+        this.updateInstallButtonVisibility();
+      })
+      .catch((error) => {
+        console.error('Install prompt error:', error);
+        this.deferredInstallPrompt = null;
+        this.updateInstallButtonVisibility();
+      });
   }
 
   async startVersionPolling() {

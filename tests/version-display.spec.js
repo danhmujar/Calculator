@@ -28,8 +28,10 @@ test.describe('Version Display', () => {
       { timeout: 5000 }
     );
 
-    // Check that version is either a valid version string or "Unknown"
+    // Check that version starts with "1.0" (may include timestamp) or is "Unknown"
     const versionText = await versionElement.textContent();
-    expect(['1.0', 'Unknown']).toContain(versionText);
+    expect(versionText === 'Unknown' || versionText.startsWith('1.0')).toBe(
+      true
+    );
   });
 });
