@@ -27,6 +27,19 @@
     <link rel="apple-touch-icon" href="./icon-192.png" />
     <link rel="manifest" href="./manifest.webmanifest" />
 
+    <!-- Early PWA Install Prompt Capture -->
+    <script>
+      window.__pwa_deferred_prompt = null;
+      window.addEventListener('beforeinstallprompt', (e) => {
+        // Prevent Chrome 67 and earlier from automatically showing the prompt
+        e.preventDefault();
+        // Stash the event so it can be triggered later.
+        window.__pwa_deferred_prompt = e;
+        // Notify the app if it's already loaded
+        window.dispatchEvent(new CustomEvent('pwa-prompt-captured'));
+      });
+    </script>
+
     <!-- Critical CSS Preload -->
     <link rel="preload" href="./ui/styles.css" as="style" />
     <link rel="stylesheet" href="./ui/styles.css" />

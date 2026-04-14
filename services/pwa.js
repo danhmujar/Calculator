@@ -158,6 +158,18 @@ export class PWAManager {
 
     window.addEventListener('beforeinstallprompt', this.installPromptHandler);
     window.addEventListener('appinstalled', this.appInstalledHandler);
+
+    // Watch for early-captured prompt or later captures
+    const checkCapturedPrompt = () => {
+      if (window.__pwa_deferred_prompt && !this.deferredInstallPrompt) {
+        console.log('PWA: retrieving early-captured prompt');
+        this.deferredInstallPrompt = window.__pwa_deferred_prompt;
+        this.updateInstallButtonVisibility();
+      }
+    };
+
+    window.addEventListener('pwa-prompt-captured', checkCapturedPrompt);
+    checkCapturedPrompt();
   }
 
   cleanup() {
