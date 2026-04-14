@@ -7,6 +7,7 @@ export class PWAManager {
   constructor() {
     this.deferredInstallPrompt = null;
     this.updateSW = null;
+    this.registration = null;
     this.currentVersion = null;
     this.installPromptHandler = null;
     this.appInstalledHandler = null;
@@ -227,6 +228,7 @@ export class PWAManager {
 
     this.deferredInstallPrompt = null;
     this.updateSW = null;
+    this.registration = null;
     this.isInitialized = false;
   }
 
@@ -296,7 +298,7 @@ export class PWAManager {
     };
     window.addEventListener('focus', this.windowFocusHandler);
 
-    setInterval(() => this.checkVersion(), 300000);
+    setInterval(() => this.checkVersion(), 60000);
   }
 
   async checkVersion() {
@@ -325,8 +327,15 @@ export class PWAManager {
         this.currentVersion = data.version;
 
         // Trigger Service Worker update check
-        if (this.updateSW) {
-          console.log('PWA: Triggering Service Worker update check...');
+        if (this.registration) {
+          console.log(
+            'PWA: Triggering Service Worker update check via registration...'
+          );
+          this.registration.update();
+        } else if (this.updateSW) {
+          console.log(
+            'PWA: Triggering Service Worker update check via updateSW...'
+          );
           this.updateSW();
         }
       }
@@ -338,6 +347,10 @@ export class PWAManager {
   registerServiceWorker(showToastCallback) {
     const self = this;
     this.updateSW = registerSW({
+      onRegistered(r) {
+        console.log('PWA: Service Worker registered');
+        self.registration = r;
+      },
       onNeedRefresh() {
         console.log('PWA: New content available, please refresh.');
         // Dispatch custom event for the UI layer to handle

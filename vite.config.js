@@ -46,7 +46,7 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,ts,css,html,svg,png,ico,woff2}'],
+        globPatterns: ['**/*.{js,ts,css,html,svg,png,ico,woff2,json}'],
         // Exclude the manual sw.js and dev-only folders from the glob patterns
         globIgnores: ['sw.js', 'tests/**', '.planning/**'],
         clientsClaim: true,
