@@ -106,6 +106,7 @@ export class PWAManager {
   isInstallable() {
     return (
       'beforeinstallprompt' in window ||
+      this.deferredInstallPrompt !== null ||
       window.navigator.standalone === true ||
       window.matchMedia('(display-mode: standalone)').matches
     );

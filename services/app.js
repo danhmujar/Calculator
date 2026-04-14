@@ -22,6 +22,7 @@ class AppOrchestrator {
 
     this.calcState = this.initCalcStateProxy();
     window.uiManager = uiManager;
+    window.pwaManager = pwaManager;
     window.app = this;
   }
 
