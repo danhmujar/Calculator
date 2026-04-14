@@ -125,13 +125,27 @@ export class PWAManager {
 
     this.buttonUpdateTimer = setTimeout(() => {
       const installBtn = document.getElementById('pwa-install-btn');
-      if (!installBtn) return;
+      if (!installBtn) {
+        console.warn(
+          'PWA: updateInstallButtonVisibility - installBtn not found in DOM!'
+        );
+        return;
+      }
 
-      const shouldShow =
-        this.isInstallable() &&
-        !this.isAppInstalled() &&
-        this.deferredInstallPrompt !== null;
+      const isInstallable = this.isInstallable();
+      const isAppInstalled = this.isAppInstalled();
+      const hasPrompt = this.deferredInstallPrompt !== null;
+
+      const shouldShow = isInstallable && !isAppInstalled && hasPrompt;
+
+      console.log(
+        `PWA Debug - isInstallable: ${isInstallable}, isAppInstalled: ${isAppInstalled}, hasPrompt: ${hasPrompt} -> shouldShow: ${shouldShow}`
+      );
+
       installBtn.hidden = !shouldShow;
+      if (shouldShow) {
+        installBtn.style.display = 'inline-flex'; // Force display just in case
+      }
     }, 100);
   }
 
