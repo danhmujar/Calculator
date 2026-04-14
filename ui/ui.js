@@ -55,6 +55,7 @@ class AboutModal {
     };
     document.addEventListener('keydown', this.escapeHandler);
     setTimeout(() => this.closeX.focus(), this.FOCUS_DELAY_MS);
+    this.displayVersion();
   }
 
   close() {
@@ -90,6 +91,23 @@ class AboutModal {
         e.preventDefault();
         first.focus();
       }
+    }
+  }
+
+  async displayVersion() {
+    const versionElement = document.getElementById('version-number');
+    if (!versionElement) return;
+
+    try {
+      const response = await fetch('./version.json?t=' + Date.now(), {
+        cache: 'no-store',
+      });
+      if (!response.ok) throw new Error('Failed to fetch version');
+      const data = await response.json();
+      versionElement.textContent = data.version;
+    } catch (error) {
+      console.error('Failed to load version:', error);
+      versionElement.textContent = 'Unknown';
     }
   }
 }

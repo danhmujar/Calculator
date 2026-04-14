@@ -1925,6 +1925,15 @@ body[class*='theme-aurora'] .audit-tape-container {
   /* Default Open Bug fix moved to 1024px media query */
 }
 
+.about-version {
+  margin-top: 1.5rem;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  padding: 0.5rem;
+  border-top: 1px solid var(--border-color);
+}
+
 /* --- 1. ENTRANCE ANIMATIONS --- */
 @keyframes fadeInUp {
   from {
