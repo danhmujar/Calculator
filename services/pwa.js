@@ -138,14 +138,7 @@ export class PWAManager {
       // If we have a prompt, it's inherently installable.
       const shouldShow = !isAppInstalled && hasPrompt;
 
-      console.log(
-        `PWA Debug - isAppInstalled: ${isAppInstalled}, hasPrompt: ${hasPrompt} -> shouldShow: ${shouldShow}`
-      );
-
       installBtn.hidden = !shouldShow;
-      if (shouldShow) {
-        installBtn.style.display = 'inline-flex'; // Force display just in case
-      }
     }, 100);
   }
 
