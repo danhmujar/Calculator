@@ -132,14 +132,14 @@ export class PWAManager {
         return;
       }
 
-      const isInstallable = this.isInstallable();
       const isAppInstalled = this.isAppInstalled();
       const hasPrompt = this.deferredInstallPrompt !== null;
 
-      const shouldShow = isInstallable && !isAppInstalled && hasPrompt;
+      // If we have a prompt, it's inherently installable.
+      const shouldShow = !isAppInstalled && hasPrompt;
 
       console.log(
-        `PWA Debug - isInstallable: ${isInstallable}, isAppInstalled: ${isAppInstalled}, hasPrompt: ${hasPrompt} -> shouldShow: ${shouldShow}`
+        `PWA Debug - isAppInstalled: ${isAppInstalled}, hasPrompt: ${hasPrompt} -> shouldShow: ${shouldShow}`
       );
 
       installBtn.hidden = !shouldShow;
