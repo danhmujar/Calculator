@@ -52,54 +52,16 @@ export class PWAManager {
     }
   }
 
-  isInstallable() {
-    // Check if the browser supports PWA installation
-    return (
-      'beforeinstallprompt' in window ||
-      window.navigator.standalone === true || // iOS Safari
-      window.matchMedia('(display-mode: standalone)').matches
-    ); // Already installed PWA
-  }
-
-  isAppInstalled() {
-    // Check if app is already running in standalone mode (installed)
-    return (
-      window.matchMedia('(display-mode: standalone)').matches ||
-      window.navigator.standalone === true
-    );
-  }
-
   updateInstallButtonVisibility() {
     const installBtn = document.getElementById('pwa-install-btn');
     if (!installBtn) return;
 
-    // Show button only if:
-    // 1. Browser supports installation
-    // 2. App is not already installed
-    // 3. We have a deferred install prompt
-    const shouldShow =
-      this.isInstallable() &&
-      !this.isAppInstalled() &&
-      this.deferredInstallPrompt !== null;
-
+    // Show button only if we have a deferred prompt and app isn't installed
+    const shouldShow = this.deferredInstallPrompt !== null;
     installBtn.hidden = !shouldShow;
   }
 
-  getInstallStatus() {
-    if (this.isAppInstalled()) return 'already-installed';
-    if (!this.isInstallable()) return 'not-supported';
-    if (!this.deferredInstallPrompt) return 'not-ready';
-    return 'ready';
-  }
-
   setupInstallPrompt() {
-    // Check if app is already installed on initialization
-    if (this.isAppInstalled()) {
-      console.log('PWA: App is already installed, hiding install button');
-      this.updateInstallButtonVisibility();
-      return;
-    }
-
     // Create bound handlers for cleanup
     this.installPromptHandler = (e) => {
       e.preventDefault();
@@ -138,45 +100,29 @@ export class PWAManager {
   }
 
   handleInstallClick(showToastCallback) {
-    const status = this.getInstallStatus();
-
-    switch (status) {
-      case 'already-installed':
-        showToastCallback('App is already installed!');
-        return;
-
-      case 'not-supported':
-        showToastCallback("Your browser doesn't support app installation.");
-        return;
-
-      case 'not-ready':
-        showToastCallback('Installation not ready. Try refreshing the page.');
-        return;
-
-      case 'ready':
-        // Show the install prompt
-        this.deferredInstallPrompt.prompt();
-
-        // Handle user's choice
-        this.deferredInstallPrompt.userChoice
-          .then((choiceResult) => {
-            if (choiceResult.outcome === 'accepted') {
-              showToastCallback('App installed successfully!');
-            } else {
-              showToastCallback('App installation cancelled.');
-            }
-            // Clear the deferred prompt regardless of outcome
-            this.deferredInstallPrompt = null;
-            this.updateInstallButtonVisibility();
-          })
-          .catch((error) => {
-            console.error('Install prompt error:', error);
-            showToastCallback('Installation failed. Please try again.');
-            this.deferredInstallPrompt = null;
-            this.updateInstallButtonVisibility();
-          });
-        return;
+    if (!this.deferredInstallPrompt) {
+      showToastCallback('App is already installed or not available.');
+      return;
     }
+
+    // Show the install prompt
+    this.deferredInstallPrompt.prompt();
+
+    // Handle user's choice
+    this.deferredInstallPrompt.userChoice
+      .then((choiceResult) => {
+        if (choiceResult.outcome === 'accepted') {
+          showToastCallback('App installed!');
+        }
+        // Clear the deferred prompt regardless of outcome
+        this.deferredInstallPrompt = null;
+        this.updateInstallButtonVisibility();
+      })
+      .catch((error) => {
+        console.error('Install prompt error:', error);
+        this.deferredInstallPrompt = null;
+        this.updateInstallButtonVisibility();
+      });
   }
 
   async startVersionPolling() {
