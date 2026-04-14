@@ -2260,6 +2260,7 @@ body.dark-theme .about-badge {
   line-height: 1.55;
   color: var(--text-secondary);
   font-style: italic;
+  text-align: center;
 }
 
 .about-linkedin {
