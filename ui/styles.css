@@ -2263,7 +2263,8 @@ body.dark-theme .about-badge {
 }
 
 .about-linkedin {
-  display: inline-flex;
+  display: flex;
+  justify-content: center;
   align-items: center;
   gap: 0.3rem;
   font-size: 0.75rem;
@@ -2513,6 +2514,12 @@ body.dark-theme .about-badge {
     background 0.2s,
     transform 0.15s,
     box-shadow 0.2s;
+}
+
+.install-app-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 0.6rem;
 }
 
 .about-install-btn:hover {
