@@ -10,31 +10,82 @@ export class PWAManager {
     this.currentVersion = null;
     this.installPromptHandler = null;
     this.appInstalledHandler = null;
+    this.isInitialized = false;
+    this.installAttempts = 0;
+    this.maxInstallAttempts = 3;
+    this.cleanupTimer = null;
+    this.buttonUpdateTimer = null;
+    this.visibilityChangeHandler = null;
+    this.windowFocusHandler = null;
+    this.onlineHandler = null;
+    this.offlineHandler = null;
+    this.beforeUnloadHandler = null;
+  }
+
+  getInstallStatus() {
+    if (this.isAppInstalled()) return 'already-installed';
+    if (!this.isInstallable()) return 'not-supported';
+    if (!this.deferredInstallPrompt) return 'not-ready';
+    return 'ready';
+  }
+
+  getToastMessage(status) {
+    switch (status) {
+      case 'already-installed':
+        return 'App is already installed!';
+      case 'not-supported':
+        return "Your browser doesn't support app installation.";
+      case 'not-ready':
+        return 'Installation not ready. Try refreshing the page.';
+      default:
+        return null;
+    }
   }
 
   init(showToastCallback) {
-    this.setupOfflineHandlers(showToastCallback);
-    this.setupInstallPrompt();
-    this.registerServiceWorker(showToastCallback);
-    this.startVersionPolling();
+    if (this.isInitialized) {
+      console.warn('PWA: Already initialized, skipping...');
+      return;
+    }
 
-    // Bind install button if it exists
-    this.bindInstallButton(showToastCallback);
-    this.updateOfflineBadge();
+    try {
+      this.setupOfflineHandlers(showToastCallback);
+      this.setupInstallPrompt();
+      this.registerServiceWorker(showToastCallback);
+      this.startVersionPolling();
 
-    // Cleanup on page unload
-    window.addEventListener('beforeunload', () => this.cleanup());
+      this.bindInstallButton(showToastCallback);
+      this.updateOfflineBadge();
+
+      this.beforeUnloadHandler = () => this.cleanup();
+      window.addEventListener('beforeunload', this.beforeUnloadHandler);
+
+      this.isInitialized = true;
+    } catch (error) {
+      console.error('PWA: Initialization failed:', error);
+      try {
+        this.cleanup();
+      } catch (cleanupError) {
+        console.error(
+          'PWA: Cleanup after failed init also failed:',
+          cleanupError
+        );
+      }
+    }
   }
 
   setupOfflineHandlers(showToastCallback) {
-    window.addEventListener('online', () => {
+    this.onlineHandler = () => {
       this.updateOfflineBadge();
       showToastCallback('Back online');
-    });
-    window.addEventListener('offline', () => {
+    };
+    this.offlineHandler = () => {
       this.updateOfflineBadge();
       showToastCallback('Working offline');
-    });
+    };
+
+    window.addEventListener('online', this.onlineHandler);
+    window.addEventListener('offline', this.offlineHandler);
   }
 
   updateOfflineBadge() {
@@ -52,13 +103,36 @@ export class PWAManager {
     }
   }
 
-  updateInstallButtonVisibility() {
-    const installBtn = document.getElementById('pwa-install-btn');
-    if (!installBtn) return;
+  isInstallable() {
+    return (
+      'beforeinstallprompt' in window ||
+      window.navigator.standalone === true ||
+      window.matchMedia('(display-mode: standalone)').matches
+    );
+  }
 
-    // Show button only if we have a deferred prompt and app isn't installed
-    const shouldShow = this.deferredInstallPrompt !== null;
-    installBtn.hidden = !shouldShow;
+  isAppInstalled() {
+    return (
+      window.matchMedia('(display-mode: standalone)').matches ||
+      window.navigator.standalone === true
+    );
+  }
+
+  updateInstallButtonVisibility() {
+    if (this.buttonUpdateTimer) {
+      clearTimeout(this.buttonUpdateTimer);
+    }
+
+    this.buttonUpdateTimer = setTimeout(() => {
+      const installBtn = document.getElementById('pwa-install-btn');
+      if (!installBtn) return;
+
+      const shouldShow =
+        this.isInstallable() &&
+        !this.isAppInstalled() &&
+        this.deferredInstallPrompt !== null;
+      installBtn.hidden = !shouldShow;
+    }, 100);
   }
 
   setupInstallPrompt() {
@@ -80,7 +154,6 @@ export class PWAManager {
   }
 
   cleanup() {
-    // Remove event listeners to prevent memory leaks
     if (this.installPromptHandler) {
       window.removeEventListener(
         'beforeinstallprompt',
@@ -94,54 +167,115 @@ export class PWAManager {
       this.appInstalledHandler = null;
     }
 
-    // Clear references
+    if (this.onlineHandler) {
+      window.removeEventListener('online', this.onlineHandler);
+      this.onlineHandler = null;
+    }
+
+    if (this.offlineHandler) {
+      window.removeEventListener('offline', this.offlineHandler);
+      this.offlineHandler = null;
+    }
+
+    if (this.visibilityChangeHandler) {
+      document.removeEventListener(
+        'visibilitychange',
+        this.visibilityChangeHandler
+      );
+      this.visibilityChangeHandler = null;
+    }
+
+    if (this.windowFocusHandler) {
+      window.removeEventListener('focus', this.windowFocusHandler);
+      this.windowFocusHandler = null;
+    }
+
+    if (this.beforeUnloadHandler) {
+      window.removeEventListener('beforeunload', this.beforeUnloadHandler);
+      this.beforeUnloadHandler = null;
+    }
+
+    if (this.cleanupTimer) {
+      clearTimeout(this.cleanupTimer);
+      this.cleanupTimer = null;
+    }
+
+    if (this.buttonUpdateTimer) {
+      clearTimeout(this.buttonUpdateTimer);
+      this.buttonUpdateTimer = null;
+    }
+
     this.deferredInstallPrompt = null;
     this.updateSW = null;
+    this.isInitialized = false;
   }
 
   handleInstallClick(showToastCallback) {
-    if (!this.deferredInstallPrompt) {
-      showToastCallback('App is already installed or not available.');
+    const status = this.getInstallStatus();
+    const toastMessage = this.getToastMessage(status);
+
+    if (toastMessage) {
+      showToastCallback(toastMessage);
       return;
     }
 
-    // Show the install prompt
     this.deferredInstallPrompt.prompt();
 
-    // Handle user's choice
     this.deferredInstallPrompt.userChoice
       .then((choiceResult) => {
+        this.installAttempts = 0;
+
         if (choiceResult.outcome === 'accepted') {
-          showToastCallback('App installed!');
+          showToastCallback('App installed successfully!');
+        } else {
+          showToastCallback('App installation cancelled.');
         }
-        // Clear the deferred prompt regardless of outcome
         this.deferredInstallPrompt = null;
         this.updateInstallButtonVisibility();
       })
       .catch((error) => {
         console.error('Install prompt error:', error);
-        this.deferredInstallPrompt = null;
-        this.updateInstallButtonVisibility();
+        this.handleInstallError(error, showToastCallback);
       });
   }
 
+  handleInstallError(error, showToastCallback) {
+    this.installAttempts++;
+
+    if (this.installAttempts >= this.maxInstallAttempts) {
+      showToastCallback('Installation failed. Please try again later.');
+      this.cleanupTimer = setTimeout(() => this.resetInstallState(), 30000);
+    } else {
+      showToastCallback(
+        `Installation failed (${this.installAttempts}/${this.maxInstallAttempts}). Retrying...`
+      );
+    }
+
+    this.deferredInstallPrompt = null;
+    this.updateInstallButtonVisibility();
+  }
+
+  resetInstallState() {
+    this.installAttempts = 0;
+    this.deferredInstallPrompt = null;
+    this.updateInstallButtonVisibility();
+  }
+
   async startVersionPolling() {
-    // Initial fetch to get current version
     await this.checkVersion();
 
-    // Check on visibility change (user comes back to tab)
-    document.addEventListener('visibilitychange', () => {
+    this.visibilityChangeHandler = () => {
       if (document.visibilityState === 'visible') {
         this.checkVersion();
       }
-    });
+    };
+    document.addEventListener('visibilitychange', this.visibilityChangeHandler);
 
-    // Check on window focus (switching back from IDE/other app)
-    window.addEventListener('focus', () => {
+    this.windowFocusHandler = () => {
       this.checkVersion();
-    });
+    };
+    window.addEventListener('focus', this.windowFocusHandler);
 
-    // Periodic check every 5 minutes (300000 ms)
     setInterval(() => this.checkVersion(), 300000);
   }
 
