@@ -10,8 +10,6 @@ const SMOOTHING = 0.12; // EMA factor
  * Uses an Exponential Moving Average (EMA) loop for smooth, organic inertia.
  */
 export function initEyeTracking() {
-  const boundsCache = new Map();
-
   // State for EMA
   const state = {
     targetX1: 0,
@@ -26,17 +24,7 @@ export function initEyeTracking() {
     mouseY: window.innerHeight / 2,
   };
 
-  const observer = new ResizeObserver((entries) => {
-    for (const entry of entries) {
-      boundsCache.set(entry.target, entry.target.getBoundingClientRect());
-    }
-  });
-
   const eyeContainers = document.querySelectorAll('.calculator-svg');
-  eyeContainers.forEach((svg) => {
-    observer.observe(svg);
-    boundsCache.set(svg, svg.getBoundingClientRect());
-  });
 
   // Update target coordinates on mouse move
   document.addEventListener('mousemove', (e) => {
@@ -46,11 +34,13 @@ export function initEyeTracking() {
 
   /**
    * Internal loop to apply EMA and update CSS variables.
+   * Uses live getBoundingClientRect() to handle dual-monitor setups,
+   * sidebar toggles, and scroll-induced position changes.
    */
   function update() {
     eyeContainers.forEach((svg) => {
-      const rect = boundsCache.get(svg);
-      if (!rect) return;
+      const rect = svg.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
 
       // Calculate scale factor relative to viewBox width (70)
       const scale = rect.width / 70;
