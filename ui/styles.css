@@ -603,44 +603,6 @@ body.is-resizing * {
   visibility: visible;
 }
 
-/* --- LAPTOP OPTIMIZATIONS (1025px - 1440px) --- */
-@media (min-width: 1025px) and (max-width: 1440px) {
-  :root {
-    font-size: 15px; /* Proportional scale down */
-  }
-
-  .left-panel {
-    padding: 1.5rem;
-    gap: 1.25rem;
-  }
-
-  .calc-card {
-    padding: 1.25rem;
-  }
-
-  .sidebar-header,
-  .calc-display,
-  .calc-keypad {
-    padding-left: 1.25rem;
-    padding-right: 1.25rem;
-  }
-
-  .calc-current {
-    font-size: 2.2rem;
-  }
-
-  .calc-btn {
-    padding: 0.75rem;
-    font-size: 1.1rem;
-  }
-
-  .audit-header,
-  .audit-list {
-    padding-left: 1.25rem;
-    padding-right: 1.25rem;
-  }
-}
-
 .panel-resizer {
   width: 8px;
   height: 100%;
@@ -681,6 +643,34 @@ body.is-resizing * {
     flex 0.5s var(--ease);
   position: relative;
   overflow: hidden;
+}
+
+/* --- ULTRA-WIDE OPTIMIZATIONS (1441px+) --- */
+@media (min-width: 1441px) {
+  :root {
+    font-size: 18px; /* Scale up for readability */
+  }
+
+  .right-panel {
+    width: var(--sidebar-width, min(420px, 25vw));
+    min-width: 320px;
+  }
+}
+
+/* --- 4K+ OPTIMIZATIONS (2560px+) --- */
+@media (min-width: 2560px) {
+  :root {
+    font-size: 20px;
+  }
+
+  .right-panel {
+    width: var(--sidebar-width, min(500px, 22vw));
+    min-width: 400px;
+  }
+
+  .left-panel {
+    max-width: 1600px;
+  }
 }
 
 /* Desktop sidebar: hidden by default, slides in on .open */
@@ -1230,6 +1220,61 @@ body.webgl-active.dark-theme #sci-container {
   background-color: transparent;
   border-bottom: 1px solid var(--border-color);
   flex: 1;
+}
+
+/* --- LAPTOP & SHORT VIEWPORT OPTIMIZATIONS --- */
+@media (max-width: 1440px), (max-height: 800px) {
+  :root {
+    font-size: 15px;
+  }
+
+  .left-panel {
+    padding: 1.5rem;
+    gap: 1.25rem;
+  }
+
+  .calc-card {
+    padding: 1.25rem;
+  }
+
+  .sidebar-header {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+
+  .calc-display {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+
+  .sidebar-header,
+  .calc-display,
+  .calc-keypad {
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
+
+  .calc-current {
+    font-size: 2rem;
+    min-height: 2.5rem;
+  }
+
+  .calc-keypad {
+    gap: 8px;
+    padding-bottom: 1rem;
+    padding-top: 0.5rem;
+  }
+
+  .calc-btn {
+    padding: 0.6rem;
+    font-size: 1rem;
+  }
+
+  .audit-header,
+  .audit-list {
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
 }
 
 .scientific-container {

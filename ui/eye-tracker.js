@@ -6,7 +6,7 @@ const EYE_FOLLOW_SPEED = 0.15;
 const SMOOTHING = 0.12; // EMA factor
 
 /**
- * Initializes eye-tracking for the chameleon character.
+ * Initializes eye-tracking for the calculator character.
  * Uses an Exponential Moving Average (EMA) loop for smooth, organic inertia.
  */
 export function initEyeTracking() {
@@ -52,6 +52,9 @@ export function initEyeTracking() {
       const rect = boundsCache.get(svg);
       if (!rect) return;
 
+      // Calculate scale factor relative to viewBox width (70)
+      const scale = rect.width / 70;
+
       // Calculate targets based on mouse position relative to eyes
       // SVG viewBox="15 5 70 90"
       const cx1 = rect.left + rect.width * (23 / 70);
@@ -68,16 +71,16 @@ export function initEyeTracking() {
       const dy2 = state.mouseY - cy2;
       const angle2 = Math.atan2(dy2, dx2);
 
-      // Calculate max displacement
+      // Calculate max displacement scaled to eye size
       const dist1 = Math.min(
-        EYE_RADIUS_PUPIL_1,
+        EYE_RADIUS_PUPIL_1 * scale,
         Math.hypot(dx1, dy1) * EYE_FOLLOW_SPEED
       );
       state.targetX1 = Math.cos(angle1) * dist1;
       state.targetY1 = Math.sin(angle1) * dist1;
 
       const dist2 = Math.min(
-        EYE_RADIUS_PUPIL_2,
+        EYE_RADIUS_PUPIL_2 * scale,
         Math.hypot(dx2, dy2) * EYE_FOLLOW_SPEED
       );
       state.targetX2 = Math.cos(angle2) * dist2;
