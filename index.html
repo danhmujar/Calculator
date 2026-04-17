@@ -58,365 +58,377 @@
     <div class="layout-container">
       <!-- Left Panel: Percentage Suite -->
       <main class="left-panel">
-        <header class="header-row">
-          <div class="header-brand">
-            <div class="calculator-wrapper">
-              <svg
-                aria-hidden="true"
-                class="calculator-svg"
-                viewBox="15 5 70 90"
-                overflow="visible"
-              >
-                <rect
-                  width="60"
-                  height="80"
-                  x="20"
-                  y="10"
-                  fill="var(--primary-blue)"
-                  class="calculator-body"
-                  rx="8"
-                  ry="8"
-                />
-                <rect
-                  width="50"
-                  height="25"
-                  x="25"
-                  y="15"
-                  fill="#f8fafc"
-                  rx="4"
-                  ry="4"
-                />
-                <g class="eye">
-                  <circle
-                    cx="38"
-                    cy="27"
-                    r="7"
-                    fill="#fff"
-                    stroke="#334155"
-                    stroke-width="2"
-                  />
-                  <circle
-                    cx="38"
-                    cy="27"
-                    r="3"
-                    fill="#334155"
-                    class="pupil pupil-1"
-                    id="pupil1"
-                  />
-                </g>
-                <g class="eye">
-                  <circle
-                    cx="62"
-                    cy="27"
-                    r="7"
-                    fill="#fff"
-                    stroke="#334155"
-                    stroke-width="2"
-                  />
-                  <circle
-                    cx="62"
-                    cy="27"
-                    r="3"
-                    fill="#334155"
-                    class="pupil pupil-2"
-                    id="pupil2"
-                  />
-                </g>
-                <g fill="#fff" opacity=".8">
-                  <rect width="8" height="8" x="28" y="48" rx="2" />
-                  <rect width="8" height="8" x="42" y="48" rx="2" />
-                  <rect width="8" height="8" x="56" y="48" rx="2" />
-                  <rect width="8" height="8" x="70" y="48" rx="2" />
-                  <rect width="8" height="8" x="28" y="62" rx="2" />
-                  <rect width="8" height="8" x="42" y="62" rx="2" />
-                  <rect width="8" height="8" x="56" y="62" rx="2" />
-                  <rect width="8" height="8" x="70" y="62" rx="2" />
-                  <rect width="22" height="8" x="28" y="76" rx="2" />
-                  <rect width="8" height="8" x="56" y="76" rx="2" />
+        <div class="left-panel-content">
+          <header class="header-row">
+            <div class="header-brand">
+              <div class="calculator-wrapper">
+                <svg
+                  aria-hidden="true"
+                  class="calculator-svg"
+                  viewBox="15 5 70 90"
+                  overflow="visible"
+                >
                   <rect
-                    width="8"
-                    height="8"
-                    x="70"
-                    y="76"
-                    fill="#fcd34d"
-                    opacity="1"
-                    rx="2"
+                    width="60"
+                    height="80"
+                    x="20"
+                    y="10"
+                    fill="var(--primary-blue)"
+                    class="calculator-body"
+                    rx="8"
+                    ry="8"
                   />
-                </g>
-              </svg>
-            </div>
-            <div>
-              <h1>Percentage & Math Calculator</h1>
-              <p class="header-subtext">
-                Instant percentage tools and an interactive calculator.
-              </p>
-            </div>
-          </div>
-          <div class="header-controls">
-            <div class="theme-dropdown" id="theme-dropdown-container">
-              <button
-                class="icon-btn palette-btn-inner"
-                id="palette-toggle-btn"
-                title="Choose Color Theme"
-              >
-                <svg aria-hidden="true" class="anim-bounce-hover">
-                  <use xlink:href="./assets/sprites.svg#icon-palette"></use>
+                  <rect
+                    width="50"
+                    height="25"
+                    x="25"
+                    y="15"
+                    fill="#f8fafc"
+                    rx="4"
+                    ry="4"
+                  />
+                  <g class="eye">
+                    <circle
+                      cx="38"
+                      cy="27"
+                      r="7"
+                      fill="#fff"
+                      stroke="#334155"
+                      stroke-width="2"
+                    />
+                    <circle
+                      cx="38"
+                      cy="27"
+                      r="3"
+                      fill="#334155"
+                      class="pupil pupil-1"
+                      id="pupil1"
+                    />
+                  </g>
+                  <g class="eye">
+                    <circle
+                      cx="62"
+                      cy="27"
+                      r="7"
+                      fill="#fff"
+                      stroke="#334155"
+                      stroke-width="2"
+                    />
+                    <circle
+                      cx="62"
+                      cy="27"
+                      r="3"
+                      fill="#334155"
+                      class="pupil pupil-2"
+                      id="pupil2"
+                    />
+                  </g>
+                  <g fill="#fff" opacity=".8">
+                    <rect width="8" height="8" x="28" y="48" rx="2" />
+                    <rect width="8" height="8" x="42" y="48" rx="2" />
+                    <rect width="8" height="8" x="56" y="48" rx="2" />
+                    <rect width="8" height="8" x="70" y="48" rx="2" />
+                    <rect width="8" height="8" x="28" y="62" rx="2" />
+                    <rect width="8" height="8" x="42" y="62" rx="2" />
+                    <rect width="8" height="8" x="56" y="62" rx="2" />
+                    <rect width="8" height="8" x="70" y="62" rx="2" />
+                    <rect width="22" height="8" x="28" y="76" rx="2" />
+                    <rect width="8" height="8" x="56" y="76" rx="2" />
+                    <rect
+                      width="8"
+                      height="8"
+                      x="70"
+                      y="76"
+                      fill="#fcd34d"
+                      opacity="1"
+                      rx="2"
+                    />
+                  </g>
                 </svg>
-              </button>
-
-              <!-- 2026 Color Palette Picker -->
-              <div
-                class="theme-picker"
-                role="radiogroup"
-                aria-label="Color theme"
-              >
-                <!-- Masculine / General -->
-                <button
-                  class="theme-swatch active"
-                  style="background-color: #0052cc"
-                  data-theme=""
-                  title="Financial Blue (Default)"
-                  role="radio"
-                  aria-checked="true"
-                  aria-label="Financial Blue (Default)"
-                ></button>
-                <button
-                  class="theme-swatch"
-                  style="background-color: #0a7a7a"
-                  data-theme="theme-teal"
-                  title="Transformative Teal"
-                  role="radio"
-                  aria-checked="false"
-                  aria-label="Transformative Teal"
-                ></button>
-                <button
-                  class="theme-swatch"
-                  style="background-color: #c15c3d"
-                  data-theme="theme-terracotta"
-                  title="Deep Terracotta"
-                  role="radio"
-                  aria-checked="false"
-                  aria-label="Deep Terracotta"
-                ></button>
-                <button
-                  class="theme-swatch"
-                  style="background-color: #3e7153"
-                  data-theme="theme-forest"
-                  title="Forest Green"
-                  role="radio"
-                  aria-checked="false"
-                  aria-label="Forest Green"
-                ></button>
-                <button
-                  class="theme-swatch"
-                  style="background-color: #475569"
-                  data-theme="theme-slate"
-                  title="Slate Graphite"
-                  role="radio"
-                  aria-checked="false"
-                  aria-label="Slate Graphite"
-                ></button>
-
-                <!-- Feminine -->
-                <button
-                  class="theme-swatch"
-                  style="background-color: #b86b77"
-                  data-theme="theme-rosewood"
-                  title="Dusty Rosewood"
-                  role="radio"
-                  aria-checked="false"
-                  aria-label="Dusty Rosewood"
-                ></button>
-                <button
-                  class="theme-swatch"
-                  style="background-color: #8cba92"
-                  data-theme="theme-pistachio"
-                  title="Pale Pistachio"
-                  role="radio"
-                  aria-checked="false"
-                  aria-label="Pale Pistachio"
-                ></button>
-                <button
-                  class="theme-swatch"
-                  style="background-color: #7c3aed"
-                  data-theme="theme-purple"
-                  title="Royal Purple"
-                  role="radio"
-                  aria-checked="false"
-                  aria-label="Royal Purple"
-                ></button>
-
-                <!-- Animated Aurora Themes -->
-                <button
-                  class="theme-swatch"
-                  style="background: conic-gradient(#020617, #0ea5e9, #8b5cf6)"
-                  data-theme="theme-aurora-ocean"
-                  title="Oceanic Aurora (Masculine)"
-                  role="radio"
-                  aria-checked="false"
-                  aria-label="Oceanic Aurora"
-                ></button>
-                <button
-                  class="theme-swatch"
-                  style="background: conic-gradient(#052e16, #22c55e, #06b6d4)"
-                  data-theme="theme-aurora-cyber"
-                  title="Cyber Neon (Masculine)"
-                  role="radio"
-                  aria-checked="false"
-                  aria-label="Cyber Neon"
-                ></button>
-                <button
-                  class="theme-swatch"
-                  style="background: conic-gradient(#d946ef, #4b1d52, #0d2847)"
-                  data-theme="theme-aurora"
-                  title="Cosmic Aurora (Feminine)"
-                  role="radio"
-                  aria-checked="false"
-                  aria-label="Cosmic Aurora"
-                ></button>
-                <button
-                  class="theme-swatch"
-                  style="background: conic-gradient(#fb923c, #7c2d12, #831843)"
-                  data-theme="theme-aurora-sunset"
-                  title="Sunset Aurora (Feminine)"
-                  role="radio"
-                  aria-checked="false"
-                  aria-label="Sunset Aurora"
-                ></button>
-
-                <!-- BTS Theme -->
-                <button
-                  class="theme-swatch theme-swatch--bts"
-                  data-theme="theme-bts"
-                  title="Borahae Purple (BTS)"
-                  role="radio"
-                  aria-checked="false"
-                  aria-label="Borahae Purple BTS Theme"
-                ></button>
+              </div>
+              <div>
+                <h1>Percentage & Math Calculator</h1>
+                <p class="header-subtext">
+                  Instant percentage tools and an interactive calculator.
+                </p>
               </div>
             </div>
-
-            <div class="theme-switch-wrapper">
-              <label class="theme-switch" for="checkbox">
-                <input
-                  type="checkbox"
-                  id="checkbox"
-                  aria-label="Toggle dark mode"
-                />
-                <div class="slider">
-                  <div class="slider-bg">
-                    <div class="slider-bg-day">
-                      <!-- Piling Clouds leaning right, avoiding sun on the left -->
-                      <svg
-                        width="68"
-                        height="34"
-                        aria-hidden="true"
-                        style="position: absolute; right: -2px; top: 0"
-                      >
-                        <use
-                          xlink:href="./assets/sprites.svg#icon-clouds"
-                        ></use>
-                      </svg>
-                    </div>
-                    <div class="slider-bg-night">
-                      <!-- Detailed Stars -->
-                      <svg
-                        width="68"
-                        height="34"
-                        aria-hidden="true"
-                        style="position: absolute; left: 0; top: 0"
-                      >
-                        <use xlink:href="./assets/sprites.svg#icon-stars"></use>
-                      </svg>
-                    </div>
-                  </div>
-
-                  <!-- Decorative Elements ON the Knob -->
-                  <svg aria-hidden="true" class="sun-details">
-                    <use xlink:href="./assets/sprites.svg#icon-sun"></use>
+            <div class="header-controls">
+              <div class="theme-dropdown" id="theme-dropdown-container">
+                <button
+                  class="icon-btn palette-btn-inner"
+                  id="palette-toggle-btn"
+                  title="Choose Color Theme"
+                >
+                  <svg aria-hidden="true" class="anim-bounce-hover">
+                    <use xlink:href="./assets/sprites.svg#icon-palette"></use>
                   </svg>
-                  <svg aria-hidden="true" class="moon-details">
-                    <use xlink:href="./assets/sprites.svg#icon-moon"></use>
-                  </svg>
+                </button>
+
+                <!-- 2026 Color Palette Picker -->
+                <div
+                  class="theme-picker"
+                  role="radiogroup"
+                  aria-label="Color theme"
+                >
+                  <!-- Masculine / General -->
+                  <button
+                    class="theme-swatch active"
+                    style="background-color: #0052cc"
+                    data-theme=""
+                    title="Financial Blue (Default)"
+                    role="radio"
+                    aria-checked="true"
+                    aria-label="Financial Blue (Default)"
+                  ></button>
+                  <button
+                    class="theme-swatch"
+                    style="background-color: #0a7a7a"
+                    data-theme="theme-teal"
+                    title="Transformative Teal"
+                    role="radio"
+                    aria-checked="false"
+                    aria-label="Transformative Teal"
+                  ></button>
+                  <button
+                    class="theme-swatch"
+                    style="background-color: #c15c3d"
+                    data-theme="theme-terracotta"
+                    title="Deep Terracotta"
+                    role="radio"
+                    aria-checked="false"
+                    aria-label="Deep Terracotta"
+                  ></button>
+                  <button
+                    class="theme-swatch"
+                    style="background-color: #3e7153"
+                    data-theme="theme-forest"
+                    title="Forest Green"
+                    role="radio"
+                    aria-checked="false"
+                    aria-label="Forest Green"
+                  ></button>
+                  <button
+                    class="theme-swatch"
+                    style="background-color: #475569"
+                    data-theme="theme-slate"
+                    title="Slate Graphite"
+                    role="radio"
+                    aria-checked="false"
+                    aria-label="Slate Graphite"
+                  ></button>
+
+                  <!-- Feminine -->
+                  <button
+                    class="theme-swatch"
+                    style="background-color: #b86b77"
+                    data-theme="theme-rosewood"
+                    title="Dusty Rosewood"
+                    role="radio"
+                    aria-checked="false"
+                    aria-label="Dusty Rosewood"
+                  ></button>
+                  <button
+                    class="theme-swatch"
+                    style="background-color: #8cba92"
+                    data-theme="theme-pistachio"
+                    title="Pale Pistachio"
+                    role="radio"
+                    aria-checked="false"
+                    aria-label="Pale Pistachio"
+                  ></button>
+                  <button
+                    class="theme-swatch"
+                    style="background-color: #7c3aed"
+                    data-theme="theme-purple"
+                    title="Royal Purple"
+                    role="radio"
+                    aria-checked="false"
+                    aria-label="Royal Purple"
+                  ></button>
+
+                  <!-- Animated Aurora Themes -->
+                  <button
+                    class="theme-swatch"
+                    style="
+                      background: conic-gradient(#020617, #0ea5e9, #8b5cf6);
+                    "
+                    data-theme="theme-aurora-ocean"
+                    title="Oceanic Aurora (Masculine)"
+                    role="radio"
+                    aria-checked="false"
+                    aria-label="Oceanic Aurora"
+                  ></button>
+                  <button
+                    class="theme-swatch"
+                    style="
+                      background: conic-gradient(#052e16, #22c55e, #06b6d4);
+                    "
+                    data-theme="theme-aurora-cyber"
+                    title="Cyber Neon (Masculine)"
+                    role="radio"
+                    aria-checked="false"
+                    aria-label="Cyber Neon"
+                  ></button>
+                  <button
+                    class="theme-swatch"
+                    style="
+                      background: conic-gradient(#d946ef, #4b1d52, #0d2847);
+                    "
+                    data-theme="theme-aurora"
+                    title="Cosmic Aurora (Feminine)"
+                    role="radio"
+                    aria-checked="false"
+                    aria-label="Cosmic Aurora"
+                  ></button>
+                  <button
+                    class="theme-swatch"
+                    style="
+                      background: conic-gradient(#fb923c, #7c2d12, #831843);
+                    "
+                    data-theme="theme-aurora-sunset"
+                    title="Sunset Aurora (Feminine)"
+                    role="radio"
+                    aria-checked="false"
+                    aria-label="Sunset Aurora"
+                  ></button>
+
+                  <!-- BTS Theme -->
+                  <button
+                    class="theme-swatch theme-swatch--bts"
+                    data-theme="theme-bts"
+                    title="Borahae Purple (BTS)"
+                    role="radio"
+                    aria-checked="false"
+                    aria-label="Borahae Purple BTS Theme"
+                  ></button>
                 </div>
-              </label>
+              </div>
+
+              <div class="theme-switch-wrapper">
+                <label class="theme-switch" for="checkbox">
+                  <input
+                    type="checkbox"
+                    id="checkbox"
+                    aria-label="Toggle dark mode"
+                  />
+                  <div class="slider">
+                    <div class="slider-bg">
+                      <div class="slider-bg-day">
+                        <!-- Piling Clouds leaning right, avoiding sun on the left -->
+                        <svg
+                          width="68"
+                          height="34"
+                          aria-hidden="true"
+                          style="position: absolute; right: -2px; top: 0"
+                        >
+                          <use
+                            xlink:href="./assets/sprites.svg#icon-clouds"
+                          ></use>
+                        </svg>
+                      </div>
+                      <div class="slider-bg-night">
+                        <!-- Detailed Stars -->
+                        <svg
+                          width="68"
+                          height="34"
+                          aria-hidden="true"
+                          style="position: absolute; left: 0; top: 0"
+                        >
+                          <use
+                            xlink:href="./assets/sprites.svg#icon-stars"
+                          ></use>
+                        </svg>
+                      </div>
+                    </div>
+
+                    <!-- Decorative Elements ON the Knob -->
+                    <svg aria-hidden="true" class="sun-details">
+                      <use xlink:href="./assets/sprites.svg#icon-sun"></use>
+                    </svg>
+                    <svg aria-hidden="true" class="moon-details">
+                      <use xlink:href="./assets/sprites.svg#icon-moon"></use>
+                    </svg>
+                  </div>
+                </label>
+              </div>
             </div>
-          </div>
-        </header>
+          </header>
 
-        <!-- Card 1: X is what % of Y -->
-        <section class="calc-card" data-type="type1">
-          <div class="card-header-wrapper">
-            <h2>X is what % of Y</h2>
-            <button
-              class="add-row-btn"
-              data-add-row="type1"
-              aria-label="Add row to X is what % of Y"
-            >
-              <svg width="14" height="14" aria-hidden="true">
-                <use xlink:href="./assets/sprites.svg#icon-plus"></use>
-              </svg>
-              Add Row
-            </button>
-          </div>
-          <div class="calc-rows-container">
-            <!-- Template injected by JS -->
-          </div>
-        </section>
+          <!-- Card 1: X is what % of Y -->
+          <section class="calc-card" data-type="type1">
+            <div class="card-header-wrapper">
+              <h2>X is what % of Y</h2>
+              <button
+                class="add-row-btn"
+                data-add-row="type1"
+                aria-label="Add row to X is what % of Y"
+              >
+                <svg width="14" height="14" aria-hidden="true">
+                  <use xlink:href="./assets/sprites.svg#icon-plus"></use>
+                </svg>
+                Add Row
+              </button>
+            </div>
+            <div class="calc-rows-container">
+              <!-- Template injected by JS -->
+            </div>
+          </section>
 
-        <!-- Card 2: What is X% of Y -->
-        <section class="calc-card" data-type="type2">
-          <div class="card-header-wrapper">
-            <h2>What is X% of Y</h2>
-            <button
-              class="add-row-btn"
-              data-add-row="type2"
-              aria-label="Add row to What is X% of Y"
-            >
-              <svg width="14" height="14" aria-hidden="true">
-                <use xlink:href="./assets/sprites.svg#icon-plus"></use>
-              </svg>
-              Add Row
-            </button>
-          </div>
-          <div class="calc-rows-container"></div>
-        </section>
+          <!-- Card 2: What is X% of Y -->
+          <section class="calc-card" data-type="type2">
+            <div class="card-header-wrapper">
+              <h2>What is X% of Y</h2>
+              <button
+                class="add-row-btn"
+                data-add-row="type2"
+                aria-label="Add row to What is X% of Y"
+              >
+                <svg width="14" height="14" aria-hidden="true">
+                  <use xlink:href="./assets/sprites.svg#icon-plus"></use>
+                </svg>
+                Add Row
+              </button>
+            </div>
+            <div class="calc-rows-container"></div>
+          </section>
 
-        <!-- Card 3: Percentage change from X to Y -->
-        <section class="calc-card" data-type="type3">
-          <div class="card-header-wrapper">
-            <h2>Percentage change from X to Y</h2>
-            <button
-              class="add-row-btn"
-              data-add-row="type3"
-              aria-label="Add row to Percentage change from X to Y"
-            >
-              <svg width="14" height="14" aria-hidden="true">
-                <use xlink:href="./assets/sprites.svg#icon-plus"></use>
-              </svg>
-              Add Row
-            </button>
-          </div>
-          <div class="calc-rows-container"></div>
-        </section>
+          <!-- Card 3: Percentage change from X to Y -->
+          <section class="calc-card" data-type="type3">
+            <div class="card-header-wrapper">
+              <h2>Percentage change from X to Y</h2>
+              <button
+                class="add-row-btn"
+                data-add-row="type3"
+                aria-label="Add row to Percentage change from X to Y"
+              >
+                <svg width="14" height="14" aria-hidden="true">
+                  <use xlink:href="./assets/sprites.svg#icon-plus"></use>
+                </svg>
+                Add Row
+              </button>
+            </div>
+            <div class="calc-rows-container"></div>
+          </section>
 
-        <!-- Card 4: X is P% of what? -->
-        <section class="calc-card" data-type="type4">
-          <div class="card-header-wrapper">
-            <h2>X is P% of what?</h2>
-            <button
-              class="add-row-btn"
-              data-add-row="type4"
-              aria-label="Add row to X is P% of what?"
-            >
-              <svg width="14" height="14" aria-hidden="true">
-                <use xlink:href="./assets/sprites.svg#icon-plus"></use>
-              </svg>
-              Add Row
-            </button>
-          </div>
-          <div class="calc-rows-container"></div>
-        </section>
+          <!-- Card 4: X is P% of what? -->
+          <section class="calc-card" data-type="type4">
+            <div class="card-header-wrapper">
+              <h2>X is P% of what?</h2>
+              <button
+                class="add-row-btn"
+                data-add-row="type4"
+                aria-label="Add row to X is P% of what?"
+              >
+                <svg width="14" height="14" aria-hidden="true">
+                  <use xlink:href="./assets/sprites.svg#icon-plus"></use>
+                </svg>
+                Add Row
+              </button>
+            </div>
+            <div class="calc-rows-container"></div>
+          </section>
+        </div>
       </main>
 
       <aside class="right-panel" id="sidebar">
