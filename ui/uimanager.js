@@ -1,7 +1,7 @@
-import { store } from '../services/store.js';
-import { layoutManager } from '../services/layout.js';
+import { store } from '../services/core/store.js';
+import { layoutManager } from '../services/core/layout.js';
 import { renderer } from './renderer.js';
-import { CalculatorService } from '../services/calculator.ts';
+import { CalculatorService } from '../services/math/calculator.ts';
 import { WebGLContext } from './webgl/context.js';
 import { WebGLRenderer } from './webgl/renderer.js';
 import { TypographyManager } from './webgl/typography.js';

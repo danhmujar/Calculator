@@ -1,4 +1,4 @@
-import { CalculatorService } from '../services/calculator.ts';
+import { CalculatorService } from '../services/math/calculator.ts';
 import { renderer } from './renderer.js';
 
 export class DisplayManager {

@@ -14,7 +14,7 @@ test('diagnose PWA installation state', async ({ page }) => {
     const app = window.app;
     // We need to find where pwaManager is stored.
     // It's imported in app.js but not necessarily attached to window.app.
-    // However, services/app.js:3 says: import { pwaManager } from './pwa.js';
+    // However, services/core/app.js says: import { pwaManager } from '../pwa.js';
     // And pwa.js exports it as 'pwaManager'.
 
     // Let's check for standard PWA indicators

@@ -1,5 +1,5 @@
-import { store } from '../services/store.js';
-import { layoutManager } from '../services/layout.js';
+import { store } from '../services/core/store.js';
+import { layoutManager } from '../services/core/layout.js';
 
 export class RowManager {
   constructor({

@@ -1,4 +1,4 @@
-import { uiManager } from '../ui/uimanager.js';
+import { uiManager } from '../../ui/uimanager.js';
 
 /**
  * EventManager - Centralized Event Delegation & Binding

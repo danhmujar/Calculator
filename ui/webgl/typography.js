@@ -1,4 +1,4 @@
-import { layoutManager } from '../../services/layout.js';
+import { layoutManager } from '../../services/core/layout.js';
 
 /**
  * TypographyManager - Bridges MathLive's DOM layout with the WebGL rendering layer.

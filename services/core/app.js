@@ -1,8 +1,8 @@
 import { store } from './store.js';
-import { uiManager } from '../ui/uimanager.js';
-import { pwaManager } from './pwa.js';
-import { CalculatorService } from './calculator.ts';
-import { initEyeTracking } from '../ui/eye-tracker.js';
+import { uiManager } from '../../ui/uimanager.js';
+import { pwaManager } from '../pwa.js';
+import { CalculatorService } from '../math/calculator.ts';
+import { initEyeTracking } from '../../ui/eye-tracker.js';
 import { EventManager } from './events.js';
 
 /**

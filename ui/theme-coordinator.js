@@ -1,4 +1,4 @@
-import { store } from '../services/store.js';
+import { store } from '../services/core/store.js';
 import { renderer } from './renderer.js';
 
 export class ThemeCoordinator {

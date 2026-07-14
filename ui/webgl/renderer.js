@@ -7,7 +7,7 @@ import {
 } from './shaders.js';
 import { BufferManager } from './buffers.js';
 import { TextureAtlas } from './atlas.js';
-import { layoutManager } from '../../services/layout.js';
+import { layoutManager } from '../../services/core/layout.js';
 import { themeManager } from '../../services/theme.js';
 
 /**
