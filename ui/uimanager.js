@@ -7,15 +7,18 @@ import { WebGLRenderer } from './webgl/renderer.js';
 import { TypographyManager } from './webgl/typography.js';
 import { themeManager } from '../services/theme.js';
 import { initEyeTracking } from './eye-tracker.js';
+import { DisplayManager } from './display-manager.js';
+import { AuditTrail } from './audit-trail.js';
+import { ThemeCoordinator } from './theme-coordinator.js';
+import { RowManager } from './row-manager.js';
+import { ToastManager } from './toast-manager.js';
 
 /**
  * UIManager - Coordinates DOM layout, theme management, and UI transitions.
  */
 export class UIManager {
   constructor() {
-    this.TOAST_DURATION_MS = 2000;
     this.MATH_EXPR_LIMIT = 1000;
-    this.toastTimeout = null;
     this.lastDisplayText = '';
     this.lastContainerWidth = 0;
 
@@ -27,113 +30,38 @@ export class UIManager {
       }
     });
 
-    this.VALID_THEMES = [
-      'theme-teal',
-      'theme-terracotta',
-      'theme-forest',
-      'theme-slate',
-      'theme-rosewood',
-      'theme-pistachio',
-      'theme-purple',
-      'theme-aurora',
-      'theme-aurora-ocean',
-      'theme-aurora-cyber',
-      'theme-aurora-sunset',
-      'theme-bts',
-      '', // Default theme
-    ];
-
-    this.VALID_CARD_TYPES = ['type1', 'type2', 'type3', 'type4'];
-
-    this.ROW_BUILDERS = {
-      type1: (parent) => {
-        const group = document.createElement('div');
-        group.className = 'input-group';
-        const x = this.createRowInput('val-x', 'X', 'First value');
-        const span = document.createElement('span');
-        span.textContent = 'is what % of';
-        const y = this.createRowInput('val-y', 'Y', 'Second value');
-        group.append(x, ' ', span, ' ', y);
-        parent.appendChild(group);
-      },
-      type2: (parent) => {
-        const group = document.createElement('div');
-        group.className = 'input-group';
-        const span1 = document.createElement('span');
-        span1.textContent = 'What is';
-        const x = this.createRowInput('val-x', 'X %', 'Percentage');
-        const span2 = document.createElement('span');
-        span2.textContent = '% of';
-        const y = this.createRowInput('val-y', 'Y', 'Value');
-        group.append(span1, ' ', x, ' ', span2, ' ', y);
-        parent.appendChild(group);
-      },
-      type3: (parent) => {
-        const group = document.createElement('div');
-        group.className = 'input-group';
-        const span1 = document.createElement('span');
-        span1.textContent = 'Change from';
-        const x = this.createRowInput('val-x', 'X', 'Original value');
-        const span2 = document.createElement('span');
-        span2.textContent = 'to';
-        const y = this.createRowInput('val-y', 'Y', 'New value');
-        group.append(span1, ' ', x, ' ', span2, ' ', y);
-        parent.appendChild(group);
-      },
-      type4: (parent) => {
-        const group = document.createElement('div');
-        group.className = 'input-group';
-        const x = this.createRowInput('val-x', 'X', 'Partial value');
-        const span1 = document.createElement('span');
-        span1.textContent = 'is';
-        const y = this.createRowInput('val-y', 'P %', 'Percentage');
-        const span2 = document.createElement('span');
-        span2.textContent = '% of what?';
-        group.append(x, ' ', span1, ' ', y, ' ', span2);
-        parent.appendChild(group);
-      },
-    };
-
-    this.proFormatter = new Intl.NumberFormat('en-US', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 4,
+    this.displayManager = new DisplayManager({ store, themeManager });
+    this.toastManager = new ToastManager();
+    this.themeCoordinator = new ThemeCoordinator({ themeManager });
+    this.rowManager = new RowManager({
+      displayManager: this.displayManager,
+      createCopySvg: (size) => this.createCopySvg(size),
+      copyResult: (id, val, isMath) => this.copyResult(id, val, isMath),
+      showToast: (msg) => this.toastManager.showToast(msg),
+      webglRenderer: null,
+      addScientificRow: (val) => this.addScientificRow(val),
+    });
+    this.auditTrail = new AuditTrail({
+      proFormatter: this.displayManager.proFormatter,
+      createCopySvg: (size) => this.createCopySvg(size),
+      showToast: (msg) => this.toastManager.showToast(msg),
     });
   }
 
   getThemeUniforms() {
-    return this.themeManager.getInterpolatedTheme(performance.now());
+    return this.themeCoordinator.getThemeUniforms();
   }
 
   syncThemeColors() {
-    this.themeManager.updateTargetTheme();
-    if (this.webglRenderer) {
-      renderer.schedule(() => this.webglRenderer.render());
-    }
+    this.themeCoordinator.syncThemeColors();
   }
 
   createRowInput(name, placeholder, ariaLabel) {
-    const input = document.createElement('input');
-    input.type = 'number';
-    input.name = name;
-    input.className = name;
-    input.placeholder = placeholder;
-    input.step = 'any';
-    input.autocomplete = 'off';
-    input.setAttribute('aria-label', ariaLabel);
-    return input;
+    return this.rowManager.createRowInput(name, placeholder, ariaLabel);
   }
 
   formatOperator(op) {
-    switch (op) {
-      case '*':
-        return '×';
-      case '/':
-        return '÷';
-      case '-':
-        return '−';
-      default:
-        return op;
-    }
+    return this.displayManager.formatOperator(op);
   }
 
   async init() {
@@ -142,7 +70,9 @@ export class UIManager {
     this.auditList = document.getElementById('audit-list');
     this.memoryIndicatorEl = document.getElementById('memory-indicator');
 
-    // Load theme definitions from JSON first
+    this.displayManager.setDisplayElements(this.displayEl, this.previewEl);
+    this.auditTrail.setAuditList(this.auditList);
+
     await this.themeManager.init();
 
     layoutManager.observe(this.displayEl, 'main-calc-display');
@@ -177,11 +107,12 @@ export class UIManager {
     this.webgl = new WebGLContext();
     this.webgl.canvas.setAttribute('aria-hidden', 'true');
     this.webglRenderer = new WebGLRenderer(this.webgl, this.typography);
+    this.displayManager.webglRenderer = this.webglRenderer;
+    this.rowManager.webglRenderer = this.webglRenderer;
     if (this.webgl.canvas) {
       document.body.prepend(this.webgl.canvas);
       document.body.classList.add('webgl-active');
 
-      // Enforce Underlay Pattern (REQ-WGL-03)
       Object.assign(this.webgl.canvas.style, {
         display: 'block',
         position: 'fixed',
@@ -207,7 +138,6 @@ export class UIManager {
         );
       }
 
-      // Sync WebGL with window scroll
       window.addEventListener(
         'scroll',
         () => {
@@ -223,66 +153,30 @@ export class UIManager {
     this.setupKeyboardShortcuts();
     this.setupPasteSupport();
     this.setupFocusHandling();
-    this.setupThemePicker();
+    this.themeCoordinator.setupThemePicker({
+      setThemeColor: (btn, theme) =>
+        this.themeCoordinator.setThemeColor(btn, theme),
+      togglePaletteDropdown: (e) =>
+        this.themeCoordinator.togglePaletteDropdown(e),
+      toggleTheme: () => this.themeCoordinator.toggleTheme(),
+    });
 
     initEyeTracking();
-    this.syncThemeColors();
+    this.themeCoordinator.syncThemeColors();
 
-    // Expose to window for testing/debugging
     window.uiManager = this;
   }
 
-  /**
-   * Maps theme names to background modes for WebGL.
-   * Mode 0: Solid color
-   * Mode 1: Aurora (animated)
-   * Mode 2: BTS (image + bubbles)
-   */
   getBackgroundMode(theme) {
-    if (!theme) return 0;
-    if (theme === 'theme-bts') return 2;
-    if (theme.includes('theme-aurora')) return 1;
-    return 0; // All other themes are solid
+    return this.themeCoordinator.getBackgroundMode(theme);
   }
 
-  setupThemePicker() {
-    const picker = document.querySelector('.theme-picker');
-    if (picker) {
-      picker.addEventListener('click', (e) => {
-        const swatch = e.target.closest('.theme-swatch');
-        if (!swatch) return;
-        this.setThemeColor(swatch, swatch.getAttribute('data-theme'));
-      });
-    }
-
-    const paletteBtn = document.getElementById('palette-toggle-btn');
-    if (paletteBtn) {
-      paletteBtn.addEventListener('click', (e) => {
-        this.togglePaletteDropdown(e);
-      });
-    }
-
-    const themeCheckbox = document.getElementById('checkbox');
-    if (themeCheckbox) {
-      themeCheckbox.addEventListener('change', () => this.toggleTheme());
-    }
-
-    document.addEventListener('click', (event) => {
-      const dropdown = document.getElementById('theme-dropdown-container');
-      if (
-        dropdown &&
-        dropdown.classList.contains('active') &&
-        !dropdown.contains(event.target)
-      ) {
-        dropdown.classList.remove('active');
-      }
-    });
+  setupThemePicker(callbacks) {
+    this.themeCoordinator.setupThemePicker(callbacks);
   }
 
   togglePaletteDropdown(e) {
-    e.stopPropagation();
-    const dropdown = document.getElementById('theme-dropdown-container');
-    if (dropdown) dropdown.classList.toggle('active');
+    this.themeCoordinator.togglePaletteDropdown(e);
   }
 
   setupFocusHandling() {
@@ -337,24 +231,27 @@ export class UIManager {
           }
         });
     }
-    this.restorePercentageCards(state);
-    this.restoreScientificRows(state);
+    this.rowManager.restorePercentageCards(state);
+    this.rowManager.restoreScientificRows(state);
   }
 
   restoreThemeAndMode(state) {
     if (state.darkMode && !document.body.classList.contains('dark-theme'))
-      this.toggleTheme();
+      this.themeCoordinator.toggleTheme();
     if (!state.darkMode && document.body.classList.contains('dark-theme'))
-      this.toggleTheme();
+      this.themeCoordinator.toggleTheme();
 
     const checkbox = document.getElementById('checkbox');
     if (checkbox) checkbox.checked = state.darkMode;
 
-    if (state.theme && this.VALID_THEMES.includes(state.theme)) {
+    if (
+      state.theme &&
+      this.themeCoordinator.VALID_THEMES.includes(state.theme)
+    ) {
       const btn = document.querySelector(
         '.theme-swatch[data-theme="' + state.theme + '"]'
       );
-      if (btn) this.setThemeColor(btn, state.theme);
+      if (btn) this.themeCoordinator.setThemeColor(btn, state.theme);
     }
 
     if (state.mode === 'scientific') {
@@ -366,45 +263,11 @@ export class UIManager {
   }
 
   restorePercentageCards(state) {
-    this.VALID_CARD_TYPES.forEach((type) => {
-      const card = document.querySelector(`.calc-card[data-type="${type}"]`);
-      if (card) {
-        const container = card.querySelector('.calc-rows-container');
-        if (!container) return;
-
-        container.replaceChildren();
-        const rows = (state.cards && state.cards[type]) || [];
-        if (rows.length === 0) {
-          container.appendChild(this.createRow(type));
-        } else {
-          rows.forEach((rowData) => {
-            const newRow = this.createRow(type);
-            const x = newRow.querySelector('.val-x');
-            const y = newRow.querySelector('.val-y');
-            if (x && y) {
-              x.value = rowData.x || '';
-              y.value = rowData.y || '';
-              container.appendChild(newRow);
-              x.dispatchEvent(new Event('input'));
-            }
-          });
-        }
-      }
-    });
+    this.rowManager.restorePercentageCards(state);
   }
 
   restoreScientificRows(state) {
-    if (state.sciRows && state.sciRows.length > 0) {
-      this._pendingSciRows = state.sciRows;
-      if (window.customElements.get('math-field')) {
-        const sciWrapper = document.querySelector('.sci-rows-wrapper');
-        if (sciWrapper) {
-          sciWrapper.replaceChildren();
-          this._pendingSciRows.forEach((val) => this.addScientificRow(val));
-          this._pendingSciRows = null;
-        }
-      }
-    }
+    this.rowManager.restoreScientificRows(state);
   }
 
   setupEntranceAnimations() {
@@ -522,187 +385,27 @@ export class UIManager {
   setupPasteSupport() {}
 
   calculateRowResult(type, x, y) {
-    const result = CalculatorService.calculatePercentage(type, x, y);
-    if (result === null)
-      return type === 'type1' || type === 'type3' ? '0.00%' : '0.00';
-    if (result === 'Error') return 'Error';
-    if (type === 'type1') return this.proFormatter.format(result) + '%';
-    if (type === 'type3')
-      return (result > 0 ? '+' : '') + this.proFormatter.format(result) + '%';
-    return this.proFormatter.format(result);
+    return this.displayManager.calculateRowResult(type, x, y);
   }
 
   createRow(type) {
-    const container = document.createElement('div');
-    container.className = 'calc-row-instance';
-    const uniqueId = 'res-' + crypto.randomUUID().slice(0, 8);
-    layoutManager.observe(container, `row-${uniqueId}`);
-    const templateContainer = document.createElement('div');
-    templateContainer.className = 'row-template-content';
-    if (this.ROW_BUILDERS[type]) this.ROW_BUILDERS[type](templateContainer);
-    container.appendChild(templateContainer);
-    const resultGroup = document.createElement('div');
-    resultGroup.className = 'result-group';
-    const resultLabel = document.createElement('span');
-    resultLabel.textContent = 'Result:';
-    resultGroup.appendChild(resultLabel);
-    const resultValue = document.createElement('span');
-    resultValue.className = 'result-value';
-    resultValue.id = uniqueId;
-    resultValue.setAttribute('aria-live', 'polite');
-    resultValue.textContent =
-      type === 'type1' || type === 'type3' ? '0.00%' : '0.00';
-    resultGroup.appendChild(resultValue);
-    const copyBtn = document.createElement('button');
-    copyBtn.className = 'icon-btn copy-row-btn';
-    copyBtn.title = 'Copy result';
-    copyBtn.appendChild(this.createCopySvg(18));
-    resultGroup.appendChild(copyBtn);
-    const deleteBtn = document.createElement('button');
-    deleteBtn.className = 'icon-btn delete-row-btn';
-    deleteBtn.title = 'Delete Row';
-    const deleteSvg = document.createElementNS(
-      'http://www.w3.org/2000/svg',
-      'svg'
-    );
-    deleteSvg.setAttribute('width', '18');
-    deleteSvg.setAttribute('height', '18');
-    const useEl = document.createElementNS('http://www.w3.org/2000/svg', 'use');
-    useEl.setAttributeNS(
-      'http://www.w3.org/1999/xlink',
-      'xlink:href',
-      './assets/sprites.svg#icon-delete'
-    );
-    deleteSvg.appendChild(useEl);
-    deleteBtn.appendChild(deleteSvg);
-    resultGroup.appendChild(deleteBtn);
-    container.appendChild(resultGroup);
-    copyBtn.addEventListener('click', () => this.copyResult(uniqueId));
-    deleteBtn.addEventListener('click', () => this.deleteRow(deleteBtn));
-    const xInput = container.querySelector('.val-x');
-    const yInput = container.querySelector('.val-y');
-    const updater = () => {
-      const xVal = parseFloat(xInput.value);
-      const yVal = parseFloat(yInput.value);
-      const newResult = this.calculateRowResult(
-        type,
-        isNaN(xVal) ? null : xVal,
-        isNaN(yVal) ? null : yVal
-      );
-
-      if (resultValue.textContent !== newResult) {
-        resultValue.textContent = newResult;
-        resultValue.classList.remove('result-updated');
-        void resultValue.offsetWidth; // Force reflow
-        resultValue.classList.add('result-updated');
-      }
-    };
-    xInput.addEventListener('input', updater);
-    yInput.addEventListener('input', updater);
-    return container;
+    return this.rowManager.createRow(type);
   }
 
   addRow(btnEl, type) {
-    const container = btnEl
-      .closest('.calc-card')
-      .querySelector('.calc-rows-container');
-    const newRow = this.createRow(type);
-    newRow.classList.add('row-enter');
-    container.appendChild(newRow);
-    void newRow.offsetWidth;
-    requestAnimationFrame(() => {
-      newRow.style.maxHeight = newRow.scrollHeight + 'px';
-      newRow.classList.remove('row-enter');
-
-      let cleanedUp = false;
-      const cleanup = () => {
-        if (cleanedUp) return;
-        cleanedUp = true;
-        newRow.style.maxHeight = '';
-        if (this.webglRenderer) this.webglRenderer.render();
-      };
-
-      newRow.addEventListener(
-        'transitionend',
-        (e) => {
-          if (e.propertyName === 'max-height') cleanup();
-        },
-        { once: true }
-      );
-
-      // Safety fallback in case transitionend is interrupted (e.g. window resize)
-      setTimeout(cleanup, 500);
-    });
+    this.rowManager.addRow(btnEl, type);
   }
 
   deleteRow(btnEl) {
-    const rowInstance = btnEl.closest('.calc-row-instance');
-    if (!rowInstance) return;
-
-    // Use offsetHeight for precise height capture (including padding/borders)
-    const initialHeight = rowInstance.offsetHeight;
-    rowInstance.style.maxHeight = initialHeight + 'px';
-
-    // Force reflow to lock the current height before animating to 0
-    void rowInstance.offsetHeight;
-
-    requestAnimationFrame(() => {
-      rowInstance.classList.add('row-exit');
-      const cleanup = () => {
-        layoutManager.unobserve(rowInstance);
-        rowInstance.remove();
-        if (this.webglRenderer) this.webglRenderer.render();
-      };
-
-      rowInstance.addEventListener(
-        'transitionend',
-        (e) => {
-          if (e.propertyName === 'max-height') cleanup();
-        },
-        { once: true }
-      );
-
-      // Safety fallback if transition fails
-      setTimeout(cleanup, 500);
-    });
+    this.rowManager.deleteRow(btnEl);
   }
 
-  showToast(msg = 'Copied to clipboard!') {
-    const toast = document.getElementById('toast');
-    if (!toast) return;
-    clearTimeout(this.toastTimeout);
-    toast.textContent = msg;
-    toast.classList.add('show');
-    this.toastTimeout = setTimeout(
-      () => toast.classList.remove('show'),
-      this.TOAST_DURATION_MS
-    );
+  showToast(msg) {
+    this.toastManager.showToast(msg);
   }
 
-  /**
-   * Shows the PWA update notification toast and wires up its actions.
-   */
   showUpdateToast(onRefresh) {
-    const toast = document.getElementById('update-toast');
-    if (!toast) return;
-
-    toast.hidden = false;
-
-    const refreshBtn = document.getElementById('update-refresh-btn');
-    if (refreshBtn) {
-      refreshBtn.onclick = () => {
-        if (typeof onRefresh === 'function') {
-          onRefresh();
-        }
-      };
-    }
-
-    const dismissBtn = document.getElementById('update-dismiss-btn');
-    if (dismissBtn) {
-      dismissBtn.onclick = () => {
-        toast.hidden = true;
-      };
-    }
+    this.toastManager.showUpdateToast(onRefresh);
   }
 
   createCopySvg(size = 14) {
@@ -776,82 +479,11 @@ export class UIManager {
   }
 
   toggleTheme() {
-    const body = document.body;
-    const isAurora = Array.from(body.classList).some((c) =>
-      c.startsWith('theme-aurora')
-    );
-    const isBTS = body.classList.contains('theme-bts');
-    if ((isAurora || isBTS) && body.classList.contains('dark-theme')) {
-      body.classList.remove(
-        'theme-aurora',
-        'theme-aurora-ocean',
-        'theme-aurora-cyber',
-        'theme-aurora-sunset',
-        'theme-bts'
-      );
-      const picker = document.querySelector('.theme-picker');
-      if (picker) {
-        picker
-          .querySelectorAll('.theme-swatch')
-          .forEach((btn) => btn.classList.remove('active'));
-        const defaultSwatch = picker.querySelector(
-          '.theme-swatch[data-theme=""]'
-        );
-        if (defaultSwatch) defaultSwatch.classList.add('active');
-      }
-      // CRITICAL FIX: Update the persistent store so it doesn't revert on reload!
-      store.state.persistent.theme = '';
-    }
-    body.classList.toggle('dark-theme');
-    const isDark = body.classList.contains('dark-theme');
-    store.state.persistent.darkMode = isDark;
-
-    const checkbox = document.getElementById('checkbox');
-    if (checkbox) checkbox.checked = body.classList.contains('dark-theme');
-    this.syncThemeColors();
+    this.themeCoordinator.toggleTheme();
   }
 
   setThemeColor(btnEl, themeClass) {
-    if (themeClass && !this.VALID_THEMES.includes(themeClass)) return;
-    const picker = document.querySelector('.theme-picker');
-    if (picker) {
-      picker.querySelectorAll('.theme-swatch').forEach((btn) => {
-        btn.classList.remove('active');
-        btn.setAttribute('aria-checked', 'false');
-      });
-    }
-    btnEl.classList.add('active');
-    btnEl.setAttribute('aria-checked', 'true');
-    document.body.classList.remove(
-      'theme-teal',
-      'theme-terracotta',
-      'theme-forest',
-      'theme-slate',
-      'theme-rosewood',
-      'theme-pistachio',
-      'theme-purple',
-      'theme-aurora',
-      'theme-aurora-ocean',
-      'theme-aurora-cyber',
-      'theme-aurora-sunset',
-      'theme-bts'
-    );
-    if (themeClass) {
-      document.body.classList.add(themeClass);
-      store.state.persistent.theme = themeClass;
-
-      if (themeClass.startsWith('theme-aurora') || themeClass === 'theme-bts') {
-        document.body.classList.add('dark-theme');
-        store.state.persistent.darkMode = true;
-        const checkbox = document.getElementById('checkbox');
-        if (checkbox) checkbox.checked = true;
-      }
-    } else {
-      store.state.persistent.theme = '';
-    }
-    const dropdown = document.getElementById('theme-dropdown-container');
-    if (dropdown) dropdown.classList.remove('active');
-    this.syncThemeColors();
+    this.themeCoordinator.setThemeColor(btnEl, themeClass);
   }
 
   updateMemoryIndicator(memoryValue) {
@@ -860,23 +492,7 @@ export class UIManager {
   }
 
   updateDisplay(calcState, formatOperator) {
-    renderer.schedule(() => {
-      if (!this.displayEl || !this.previewEl) return;
-      let hasDot = calcState.currentValue.endsWith('.');
-      let targetVal = parseFloat(calcState.currentValue);
-      if (isNaN(targetVal)) targetVal = 0;
-      let formatted = this.proFormatter.format(targetVal);
-      if (hasDot) formatted += '.';
-      if (formatted.length > 15 && targetVal > 0)
-        formatted = targetVal.toExponential(4);
-      this.displayEl.textContent = formatted;
-      if (calcState.previousValue !== null && calcState.operator) {
-        this.previewEl.textContent = `${this.proFormatter.format(calcState.previousValue)} ${formatOperator(calcState.operator)}`;
-      } else {
-        this.previewEl.textContent = '';
-      }
-      if (this.webglRenderer) this.webglRenderer.render();
-    });
+    this.displayManager.updateDisplay(calcState, formatOperator);
   }
 
   addAuditEntry(
@@ -888,62 +504,27 @@ export class UIManager {
     useAuditValueCallback,
     expr = null
   ) {
-    let equation =
-      expr ||
-      this.proFormatter.format(a) +
-        ' ' +
-        formatOperator(op) +
-        ' ' +
-        this.proFormatter.format(b);
-    const resultFormat = this.proFormatter.format(res);
-    const li = document.createElement('li');
-    li.className = 'audit-item';
-    const eqDiv = document.createElement('div');
-    eqDiv.className = 'audit-equation';
-    eqDiv.textContent = equation + ' =';
-    const resultRow = document.createElement('div');
-    resultRow.className = 'audit-result-row';
-    const actionsDiv = this.createAuditActions(
+    this.auditTrail.addAuditEntry(
+      a,
+      b,
+      op,
+      res,
+      formatOperator,
+      useAuditValueCallback,
+      expr
+    );
+  }
+
+  createAuditActions(res, resultFormat, useAuditValueCallback) {
+    return this.auditTrail.createAuditActions(
       res,
       resultFormat,
       useAuditValueCallback
     );
-    const resDiv = document.createElement('div');
-    resDiv.className = 'audit-result';
-    resDiv.textContent = resultFormat;
-    resultRow.appendChild(actionsDiv);
-    resultRow.appendChild(resDiv);
-    li.appendChild(eqDiv);
-    li.appendChild(resultRow);
-    if (this.auditList) this.auditList.prepend(li);
-  }
-
-  createAuditActions(res, resultFormat, useAuditValueCallback) {
-    const actionsDiv = document.createElement('div');
-    actionsDiv.className = 'audit-actions';
-    const useBtn = document.createElement('button');
-    useBtn.className = 'btn-use';
-    useBtn.textContent = 'Use';
-    useBtn.addEventListener('click', () => useAuditValueCallback(res));
-    const copyBtn = document.createElement('button');
-    copyBtn.className = 'icon-btn';
-    copyBtn.title = 'Copy';
-    copyBtn.appendChild(this.createCopySvg(14));
-    copyBtn.addEventListener('click', () => {
-      const rawValue = resultFormat.replace(/[%,]/g, '');
-      if (rawValue)
-        navigator.clipboard
-          .writeText(rawValue)
-          .then(() => this.showToast('Copied to clipboard!'))
-          .catch(() => this.showToast('Copy failed'));
-    });
-    actionsDiv.appendChild(useBtn);
-    actionsDiv.appendChild(copyBtn);
-    return actionsDiv;
   }
 
   clearAuditTape() {
-    if (this.auditList) this.auditList.textContent = '';
+    this.auditTrail.clearAuditTape();
   }
 
   setCalcMode(mode) {
@@ -952,7 +533,12 @@ export class UIManager {
     const btnSci = document.getElementById('btn-mode-sci');
     const sciContainer = document.getElementById('sci-container');
     if (mode === 'scientific') {
-      this.activateScientificMode(sidebar, btnStd, btnSci, sciContainer);
+      this.rowManager.activateScientificMode(
+        sidebar,
+        btnStd,
+        btnSci,
+        sciContainer
+      );
     } else {
       const leftPanel = document.querySelector('.left-panel');
       if (leftPanel) leftPanel.style.overflow = 'hidden';
@@ -1010,71 +596,13 @@ export class UIManager {
     }
   }
 
-  async activateScientificMode(sidebar, btnStd, btnSci, sciContainer) {
-    const leftPanel = document.querySelector('.left-panel');
-    if (leftPanel) leftPanel.style.overflow = 'hidden';
-    if (!window.customElements.get('math-field')) {
-      this.showToast('Loading Scientific Engine...');
-      try {
-        const ml = await import('mathlive');
-        if (ml && ml.MathfieldElement)
-          ml.MathfieldElement.fontsDirectory = '/Calculator/fonts/';
-        await customElements.whenDefined('math-field');
-      } catch (err) {
-        this.showToast('Error loading scientific engine');
-        return;
-      }
-    }
-    requestAnimationFrame(() => {
-      document.body.classList.add('mode-transitioning');
-      document.body.classList.add('scientific-mode');
-      store.state.persistent.mode = 'scientific';
-      if (sidebar) sidebar.classList.add('scientific-active');
-      if (btnStd) {
-        btnStd.classList.remove('active');
-        btnStd.setAttribute('aria-checked', 'false');
-      }
-      if (btnSci) {
-        btnSci.classList.add('active');
-        btnSci.setAttribute('aria-checked', 'true');
-      }
-      if (sciContainer) sciContainer.classList.add('active');
-      const wrapper = document.querySelector('.sci-rows-wrapper');
-      if (wrapper) {
-        if (this._pendingSciRows) {
-          wrapper.replaceChildren();
-          this._pendingSciRows.forEach((val) => this.addScientificRow(val));
-          this._pendingSciRows = null;
-        } else if (wrapper.children.length === 0) {
-          this.addScientificRow();
-        }
-      }
-    });
-    if (sidebar) {
-      let finalized = false;
-      const cleanup = (e) => {
-        if (e.propertyName === 'transform' || e.propertyName === 'width') {
-          if (!finalized) {
-            finalized = true;
-            sidebar.removeEventListener('transitionend', cleanup);
-            document.body.classList.remove('mode-transitioning');
-            layoutManager.refreshAll();
-            if (this.webglRenderer) {
-              this.webglRenderer.layoutHistory.clear();
-              this.webglRenderer.render();
-            }
-          }
-        }
-      };
-      sidebar.addEventListener('transitionend', cleanup);
-      setTimeout(() => {
-        if (!finalized) {
-          finalized = true;
-          document.body.classList.remove('mode-transitioning');
-          layoutManager.refreshAll();
-        }
-      }, 600);
-    }
+  activateScientificMode(sidebar, btnStd, btnSci, sciContainer) {
+    this.rowManager.activateScientificMode(
+      sidebar,
+      btnStd,
+      btnSci,
+      sciContainer
+    );
   }
 
   addScientificRow(initialValue = '') {
@@ -1214,7 +742,7 @@ export class UIManager {
       const calculated = CalculatorService.evaluate(expr);
       resEl.textContent =
         calculated !== null
-          ? '= ' + this.proFormatter.format(calculated)
+          ? '= ' + this.displayManager.proFormatter.format(calculated)
           : '= ';
       if (this.webglRenderer) this.webglRenderer.render();
     });
