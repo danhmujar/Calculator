@@ -221,6 +221,21 @@ class ChangelogModal {
       });
       contentEl.appendChild(improvementsList);
     }
+
+    if (data.fixes && data.fixes.length > 0) {
+      const fixesTitle = document.createElement('h3');
+      fixesTitle.className = 'changelog-section-title';
+      fixesTitle.textContent = 'Fixes';
+      contentEl.appendChild(fixesTitle);
+
+      const fixesList = document.createElement('ul');
+      data.fixes.forEach((item) => {
+        const li = document.createElement('li');
+        li.textContent = item;
+        fixesList.appendChild(li);
+      });
+      contentEl.appendChild(fixesList);
+    }
   }
 
   open() {

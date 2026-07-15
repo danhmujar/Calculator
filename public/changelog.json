@@ -10,5 +10,6 @@
     "Implemented Dependency Injection (DI) in UI managers to eliminate cyclic imports",
     "Extracted display and row managers for improved modularity",
     "Optimized service worker and manifest caching"
-  ]
+  ],
+  "fixes": ["Fixed PWA update button to trigger instant automatic page reloads"]
 }
