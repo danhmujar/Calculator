@@ -6,6 +6,8 @@
     "Added hover-to-copy button on the main display"
   ],
   "improvements": [
+    "Decomposed UIManager god node into specialized modules (Clipboard, DOM, Interaction, MathField, and StateRestorer controllers)",
+    "Implemented Dependency Injection (DI) in UI managers to eliminate cyclic imports",
     "Extracted display and row managers for improved modularity",
     "Optimized service worker and manifest caching"
   ]

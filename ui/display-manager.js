@@ -12,11 +12,18 @@ export class DisplayManager {
     });
     this.displayEl = null;
     this.previewEl = null;
+    this.memoryIndicatorEl = null;
   }
 
-  setDisplayElements(displayEl, previewEl) {
+  setDisplayElements(displayEl, previewEl, memoryIndicatorEl) {
     this.displayEl = displayEl;
     this.previewEl = previewEl;
+    this.memoryIndicatorEl = memoryIndicatorEl;
+  }
+
+  updateMemoryIndicator(memoryValue) {
+    if (this.memoryIndicatorEl)
+      this.memoryIndicatorEl.hidden = memoryValue === 0;
   }
 
   formatOperator(op) {
