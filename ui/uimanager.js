@@ -73,6 +73,14 @@ export class UIManager {
     this.displayManager.setDisplayElements(this.displayEl, this.previewEl);
     this.auditTrail.setAuditList(this.auditList);
 
+    const copyBtn = document.getElementById('display-copy-btn');
+    if (copyBtn) {
+      copyBtn.appendChild(this.createCopySvg(14));
+      copyBtn.addEventListener('click', () => {
+        this.copyResult('main-display-value');
+      });
+    }
+
     await this.themeManager.init();
 
     layoutManager.observe(this.displayEl, 'main-calc-display');
@@ -623,8 +631,86 @@ export class UIManager {
         { once: true }
       );
     }
+    const nameWrapper = document.createElement('div');
+    nameWrapper.className = 'row-name-wrapper';
+
+    const nameDisplay = document.createElement('span');
+    nameDisplay.className = 'row-name-display is-placeholder';
+    nameDisplay.setAttribute('role', 'button');
+    nameDisplay.setAttribute('tabindex', '0');
+    nameDisplay.setAttribute('aria-label', 'Edit row name');
+    nameDisplay.textContent = 'Name this row...';
+
+    const nameInput = document.createElement('input');
+    nameInput.type = 'text';
+    nameInput.className = 'row-name-input';
+    nameInput.maxLength = 30;
+    nameInput.placeholder = 'Name this row...';
+    nameInput.setAttribute('aria-label', 'Row name');
+    nameInput.hidden = true;
+
+    nameWrapper.appendChild(nameDisplay);
+    nameWrapper.appendChild(nameInput);
+
+    const enterEditMode = () => {
+      nameWrapper.classList.add('editing');
+      nameDisplay.hidden = true;
+      nameInput.hidden = false;
+      const currentName =
+        nameDisplay.textContent === 'Name this row...'
+          ? ''
+          : nameDisplay.textContent;
+      nameInput.value = currentName;
+      nameInput.focus();
+    };
+
+    const exitEditMode = (save) => {
+      nameWrapper.classList.remove('editing');
+      if (save) {
+        const value = nameInput.value.trim();
+        if (value) {
+          nameDisplay.textContent = value;
+          nameDisplay.classList.remove('is-placeholder');
+        } else {
+          nameDisplay.textContent = 'Name this row...';
+          nameDisplay.classList.add('is-placeholder');
+        }
+      }
+      nameInput.hidden = true;
+      nameDisplay.hidden = false;
+    };
+
+    nameDisplay.addEventListener('click', enterEditMode);
+    nameDisplay.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        enterEditMode();
+      }
+    });
+
+    nameInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        nameInput.blur();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        exitEditMode(false);
+      }
+    });
+
+    nameInput.addEventListener('blur', () => {
+      if (!nameInput.hidden) {
+        exitEditMode(true);
+      }
+    });
+
+    const inputWrapper = document.createElement('div');
+    inputWrapper.className = 'math-input-wrapper';
+    inputWrapper.appendChild(nameWrapper);
+    inputWrapper.appendChild(mf);
+
     const actionsDiv = this.createMathActions(uniqueId, row);
-    row.appendChild(mf);
+    row.appendChild(inputWrapper);
     row.appendChild(actionsDiv);
     row.classList.add('row-enter');
     wrapper.appendChild(row);

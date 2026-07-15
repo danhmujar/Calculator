@@ -66,7 +66,9 @@ export class DisplayManager {
       if (formatted.length > 15 && targetVal > 0) {
         formatted = targetVal.toExponential(4);
       }
-      this.displayEl.textContent = formatted;
+      const valueEl =
+        this.displayEl.querySelector('.display-value') || this.displayEl;
+      valueEl.textContent = formatted;
       if (calcState.previousValue !== null && calcState.operator) {
         this.previewEl.textContent = `${this.proFormatter.format(calcState.previousValue)} ${formatOperatorFn(calcState.operator)}`;
       } else {

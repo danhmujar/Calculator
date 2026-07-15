@@ -113,6 +113,180 @@ class AboutModal {
 }
 
 /**
+ * ChangelogModal - Manages the "Changelog" dialog shown once on update.
+ */
+class ChangelogModal {
+  constructor() {
+    this.FOCUS_DELAY_MS = 50;
+    this.overlay = document.getElementById('changelog-overlay');
+    if (!this.overlay) return;
+
+    this.modal = this.overlay.querySelector('.about-modal');
+    this.closeX = document.getElementById('changelog-close-x');
+    this.okBtn = document.getElementById('changelog-ok-btn');
+    this.previouslyFocused = null;
+    this.currentVersion = null;
+
+    this.init();
+  }
+
+  init() {
+    if (!this.modal || !this.closeX || !this.okBtn) return;
+
+    this.closeX.addEventListener('click', () => this.close());
+    this.okBtn.addEventListener('click', () => this.close());
+    this.overlay.addEventListener('click', (e) => {
+      if (e.target === this.overlay) this.close();
+    });
+
+    this.modal.addEventListener('keydown', (e) => this.handleTab(e));
+
+    this.checkChangelog();
+  }
+
+  getFocusableElements() {
+    return this.modal.querySelectorAll(
+      'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    );
+  }
+
+  async checkChangelog() {
+    try {
+      const response = await fetch('./changelog.json?t=' + Date.now(), {
+        cache: 'no-store',
+      });
+      if (!response.ok) throw new Error('Failed to fetch changelog');
+      const data = await response.json();
+      this.currentVersion = data.version;
+
+      const lastSeen = localStorage.getItem('lastSeenChangelogVersion');
+      const hasExistingState =
+        localStorage.getItem('interactiveCalcState') !== null;
+
+      if (lastSeen === null) {
+        if (hasExistingState) {
+          // Returning user updating from 1.0! Show them the changelog.
+          this.renderChangelog(data);
+          this.open();
+        } else {
+          // Brand new visitor! Silently initialize.
+          localStorage.setItem('lastSeenChangelogVersion', data.version);
+        }
+      } else if (data.version !== lastSeen) {
+        this.renderChangelog(data);
+        this.open();
+      }
+    } catch (error) {
+      console.error('Failed to load changelog:', error);
+    }
+  }
+
+  renderChangelog(data) {
+    const headingEl = document.getElementById('changelog-heading');
+    if (headingEl) {
+      headingEl.textContent = "What's New in v" + data.version;
+    }
+
+    const contentEl = document.getElementById('changelog-content');
+    if (!contentEl) return;
+
+    contentEl.textContent = '';
+
+    if (data.features && data.features.length > 0) {
+      const featuresTitle = document.createElement('h3');
+      featuresTitle.className = 'changelog-section-title';
+      featuresTitle.textContent = 'Features';
+      contentEl.appendChild(featuresTitle);
+
+      const featuresList = document.createElement('ul');
+      data.features.forEach((item) => {
+        const li = document.createElement('li');
+        li.textContent = item;
+        featuresList.appendChild(li);
+      });
+      contentEl.appendChild(featuresList);
+    }
+
+    if (data.improvements && data.improvements.length > 0) {
+      const improvementsTitle = document.createElement('h3');
+      improvementsTitle.className = 'changelog-section-title';
+      improvementsTitle.textContent = 'Improvements';
+      contentEl.appendChild(improvementsTitle);
+
+      const improvementsList = document.createElement('ul');
+      data.improvements.forEach((item) => {
+        const li = document.createElement('li');
+        li.textContent = item;
+        improvementsList.appendChild(li);
+      });
+      contentEl.appendChild(improvementsList);
+    }
+  }
+
+  open() {
+    this.previouslyFocused = document.activeElement;
+    this.overlay.classList.add('open');
+    this.overlay.setAttribute('aria-hidden', 'false');
+    this.modal.setAttribute('aria-labelledby', 'changelog-heading');
+    document.body.style.overflow = 'hidden';
+
+    document
+      .querySelectorAll('.layout-container, .mobile-panel-fab, .about-fab')
+      .forEach((el) => {
+        el.setAttribute('inert', '');
+      });
+
+    this.escapeHandler = (e) => {
+      if (e.key === 'Escape' && this.overlay.classList.contains('open')) {
+        this.close();
+      }
+    };
+    document.addEventListener('keydown', this.escapeHandler);
+    setTimeout(() => this.closeX.focus(), this.FOCUS_DELAY_MS);
+  }
+
+  close() {
+    this.overlay.classList.remove('open');
+    this.overlay.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+
+    document
+      .querySelectorAll('.layout-container, .mobile-panel-fab, .about-fab')
+      .forEach((el) => {
+        el.removeAttribute('inert');
+      });
+
+    document.removeEventListener('keydown', this.escapeHandler);
+    if (this.previouslyFocused && this.previouslyFocused.focus) {
+      this.previouslyFocused.focus();
+    }
+
+    if (this.currentVersion) {
+      localStorage.setItem('lastSeenChangelogVersion', this.currentVersion);
+    }
+  }
+
+  handleTab(e) {
+    if (e.key !== 'Tab') return;
+    const focusable = this.getFocusableElements();
+    if (focusable.length === 0) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (e.shiftKey) {
+      if (document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      }
+    } else {
+      if (document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+  }
+}
+
+/**
  * SidebarResizer - Handles draggable resizing of the sidebar.
  */
 class SidebarResizer {
@@ -180,4 +354,5 @@ class SidebarResizer {
 window.addEventListener('DOMContentLoaded', () => {
   new AboutModal();
   new SidebarResizer();
+  new ChangelogModal();
 });

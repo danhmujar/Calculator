@@ -1,0 +1,12 @@
+{
+  "version": "1.1.0",
+  "date": "2026-07-15",
+  "features": [
+    "Added inline row naming for scientific rows",
+    "Added hover-to-copy button on the main display"
+  ],
+  "improvements": [
+    "Extracted display and row managers for improved modularity",
+    "Optimized service worker and manifest caching"
+  ]
+}
