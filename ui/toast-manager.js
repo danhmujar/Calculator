@@ -2,6 +2,8 @@ export class ToastManager {
   constructor() {
     this.TOAST_DURATION_MS = 2000;
     this.toastTimeout = null;
+    this.refreshHandler = null;
+    this.dismissHandler = null;
   }
 
   showToast(msg = 'Copied to clipboard!') {
@@ -24,18 +26,26 @@ export class ToastManager {
 
     const refreshBtn = document.getElementById('update-refresh-btn');
     if (refreshBtn) {
-      refreshBtn.onclick = () => {
+      if (this.refreshHandler) {
+        refreshBtn.removeEventListener('click', this.refreshHandler);
+      }
+      this.refreshHandler = () => {
         if (typeof onRefresh === 'function') {
           onRefresh();
         }
       };
+      refreshBtn.addEventListener('click', this.refreshHandler);
     }
 
     const dismissBtn = document.getElementById('update-dismiss-btn');
     if (dismissBtn) {
-      dismissBtn.onclick = () => {
+      if (this.dismissHandler) {
+        dismissBtn.removeEventListener('click', this.dismissHandler);
+      }
+      this.dismissHandler = () => {
         toast.hidden = true;
       };
+      dismissBtn.addEventListener('click', this.dismissHandler);
     }
   }
 }

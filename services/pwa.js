@@ -21,6 +21,7 @@ export class PWAManager {
     this.onlineHandler = null;
     this.offlineHandler = null;
     this.beforeUnloadHandler = null;
+    this.refreshing = false;
   }
 
   getInstallStatus() {
@@ -346,6 +347,15 @@ export class PWAManager {
 
   registerServiceWorker(showToastCallback) {
     const self = this;
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (self.refreshing) return;
+        self.refreshing = true;
+        window.location.reload();
+      });
+    }
+
     this.updateSW = registerSW({
       onRegistered(r) {
         console.log('PWA: Service Worker registered');
