@@ -99,9 +99,7 @@ class AboutModal {
     if (!versionElement) return;
 
     try {
-      const response = await fetch('./version.json?t=' + Date.now(), {
-        cache: 'no-store',
-      });
+      const response = await fetch('./version.json');
       if (!response.ok) throw new Error('Failed to fetch version');
       const data = await response.json();
       versionElement.textContent = data.version;
@@ -152,9 +150,7 @@ class ChangelogModal {
 
   async checkChangelog() {
     try {
-      const response = await fetch('./changelog.json?t=' + Date.now(), {
-        cache: 'no-store',
-      });
+      const response = await fetch('./changelog.json');
       if (!response.ok) throw new Error('Failed to fetch changelog');
       const data = await response.json();
       this.currentVersion = data.version;
