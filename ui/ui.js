@@ -150,10 +150,11 @@ class ChangelogModal {
 
   async checkChangelog() {
     try {
-      const response = await fetch('./changelog.json');
+      const response = await fetch('./changelog.json', { cache: 'no-store' });
       if (!response.ok) throw new Error('Failed to fetch changelog');
       const data = await response.json();
-      this.currentVersion = data.version;
+      const latestChangelog = Array.isArray(data) ? data[0] : data;
+      this.currentVersion = latestChangelog.version;
 
       const lastSeen = localStorage.getItem('lastSeenChangelogVersion');
       const hasExistingState =
@@ -161,14 +162,15 @@ class ChangelogModal {
 
       if (lastSeen === null) {
         if (hasExistingState) {
-          // Returning user updating from 1.0! Show them the changelog.
           this.renderChangelog(data);
           this.open();
         } else {
-          // Brand new visitor! Silently initialize.
-          localStorage.setItem('lastSeenChangelogVersion', data.version);
+          localStorage.setItem(
+            'lastSeenChangelogVersion',
+            latestChangelog.version
+          );
         }
-      } else if (data.version !== lastSeen) {
+      } else if (latestChangelog.version !== lastSeen) {
         this.renderChangelog(data);
         this.open();
       }
@@ -178,9 +180,11 @@ class ChangelogModal {
   }
 
   renderChangelog(data) {
+    const entries = Array.isArray(data) ? data : [data];
+
     const headingEl = document.getElementById('changelog-heading');
     if (headingEl) {
-      headingEl.textContent = "What's New in v" + data.version;
+      headingEl.textContent = "What's New in v" + entries[0].version;
     }
 
     const contentEl = document.getElementById('changelog-content');
@@ -188,50 +192,64 @@ class ChangelogModal {
 
     contentEl.textContent = '';
 
-    if (data.features && data.features.length > 0) {
-      const featuresTitle = document.createElement('h3');
-      featuresTitle.className = 'changelog-section-title';
-      featuresTitle.textContent = 'Features';
-      contentEl.appendChild(featuresTitle);
+    entries.forEach((entry, index) => {
+      if (index > 0) {
+        const divider = document.createElement('hr');
+        divider.className = 'changelog-divider';
+        contentEl.appendChild(divider);
+      }
 
-      const featuresList = document.createElement('ul');
-      data.features.forEach((item) => {
-        const li = document.createElement('li');
-        li.textContent = item;
-        featuresList.appendChild(li);
-      });
-      contentEl.appendChild(featuresList);
-    }
+      const versionHeader = document.createElement('h3');
+      versionHeader.className = 'changelog-version-header';
+      versionHeader.textContent =
+        'v' + entry.version + (entry.date ? ' (' + entry.date + ')' : '');
+      contentEl.appendChild(versionHeader);
 
-    if (data.improvements && data.improvements.length > 0) {
-      const improvementsTitle = document.createElement('h3');
-      improvementsTitle.className = 'changelog-section-title';
-      improvementsTitle.textContent = 'Improvements';
-      contentEl.appendChild(improvementsTitle);
+      if (entry.features && entry.features.length > 0) {
+        const featuresTitle = document.createElement('h3');
+        featuresTitle.className = 'changelog-section-title';
+        featuresTitle.textContent = 'Features';
+        contentEl.appendChild(featuresTitle);
 
-      const improvementsList = document.createElement('ul');
-      data.improvements.forEach((item) => {
-        const li = document.createElement('li');
-        li.textContent = item;
-        improvementsList.appendChild(li);
-      });
-      contentEl.appendChild(improvementsList);
-    }
+        const featuresList = document.createElement('ul');
+        entry.features.forEach((item) => {
+          const li = document.createElement('li');
+          li.textContent = item;
+          featuresList.appendChild(li);
+        });
+        contentEl.appendChild(featuresList);
+      }
 
-    if (data.fixes && data.fixes.length > 0) {
-      const fixesTitle = document.createElement('h3');
-      fixesTitle.className = 'changelog-section-title';
-      fixesTitle.textContent = 'Fixes';
-      contentEl.appendChild(fixesTitle);
+      if (entry.improvements && entry.improvements.length > 0) {
+        const improvementsTitle = document.createElement('h3');
+        improvementsTitle.className = 'changelog-section-title';
+        improvementsTitle.textContent = 'Improvements';
+        contentEl.appendChild(improvementsTitle);
 
-      const fixesList = document.createElement('ul');
-      data.fixes.forEach((item) => {
-        const li = document.createElement('li');
-        li.textContent = item;
-        fixesList.appendChild(li);
-      });
-      contentEl.appendChild(fixesList);
-    }
+        const improvementsList = document.createElement('ul');
+        entry.improvements.forEach((item) => {
+          const li = document.createElement('li');
+          li.textContent = item;
+          improvementsList.appendChild(li);
+        });
+        contentEl.appendChild(improvementsList);
+      }
+
+      if (entry.fixes && entry.fixes.length > 0) {
+        const fixesTitle = document.createElement('h3');
+        fixesTitle.className = 'changelog-section-title';
+        fixesTitle.textContent = 'Fixes';
+        contentEl.appendChild(fixesTitle);
+
+        const fixesList = document.createElement('ul');
+        entry.fixes.forEach((item) => {
+          const li = document.createElement('li');
+          li.textContent = item;
+          fixesList.appendChild(li);
+        });
+        contentEl.appendChild(fixesList);
+      }
+    });
   }
 
   open() {
