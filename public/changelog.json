@@ -1,34 +1,15 @@
-[
-  {
-    "version": "1.3.0",
-    "date": "2026-07-20",
-    "features": [
-      "Added Formatted Number Filter on Paste to strip formatted spaces and thousands-separator commas when pasting numbers into scientific row math fields, while preserving function parameters.",
-      "Added Copy Row Expression as Excel-Compatible Formula via Microsoft Excel green copy buttons, complete with '=' prefixing, capitalized function names, and constant substitutions (pi -> PI(), e -> EXP(1)) with beautiful hover animations."
-    ],
-    "improvements": [
-      "Decomposed monolithic UIManager god node into five modular, specialized sub-managers (ClipboardManager, DOMInitializer, InteractionController, MathFieldController, and StateRestorer) to prevent cyclic imports and increase testability."
-    ],
-    "fixes": [
-      "Fixed changelog local state checking and matching triggers by bypassing cache on updates.",
-      "Implemented native controllerchange triggers in services/pwa.js to force page reloads on background update activation."
-    ]
-  },
-  {
-    "version": "1.1.0",
-    "date": "2026-07-15",
-    "features": [
-      "Added inline row naming for scientific rows",
-      "Added hover-to-copy button on the main display"
-    ],
-    "improvements": [
-      "Decomposed UIManager god node into specialized modules (Clipboard, DOM, Interaction, MathField, and StateRestorer controllers)",
-      "Implemented Dependency Injection (DI) in UI managers to eliminate cyclic imports",
-      "Extracted display and row managers for improved modularity",
-      "Optimized service worker and manifest caching"
-    ],
-    "fixes": [
-      "Fixed PWA update button to trigger instant automatic page reloads"
-    ]
-  }
-]
+{
+  "version": "1.3.0",
+  "date": "2026-07-20",
+  "features": [
+    "Added Formatted Number Filter on Paste to strip formatted spaces and thousands-separator commas when pasting numbers into scientific row math fields, while preserving function parameters.",
+    "Added Copy Row Expression as Excel-Compatible Formula via Microsoft Excel green copy buttons, complete with '=' prefixing, capitalized function names, and constant substitutions (pi -> PI(), e -> EXP(1)) with beautiful hover animations."
+  ],
+  "improvements": [
+    "Decomposed monolithic UIManager god node into five modular, specialized sub-managers (ClipboardManager, DOMInitializer, InteractionController, MathFieldController, and StateRestorer) to prevent cyclic imports and increase testability."
+  ],
+  "fixes": [
+    "Fixed changelog local state checking and matching triggers by bypassing cache on updates.",
+    "Implemented native controllerchange triggers in services/pwa.js to force page reloads on background update activation."
+  ]
+}
