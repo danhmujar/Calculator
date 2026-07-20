@@ -39,4 +39,52 @@ export class ClipboardManager {
         .catch(() => this.showToast('Copy failed'));
     }
   }
+
+  copyExcelFormula(mf) {
+    if (!mf) return;
+    const expr = mf.getValue('ascii-math');
+    if (!expr || expr.trim() === '') {
+      this.showToast('Formula is empty!');
+      return;
+    }
+
+    const excelFormula = this.translateToExcelFormula(expr);
+    navigator.clipboard
+      .writeText(excelFormula)
+      .then(() => this.showToast('Excel formula copied!'))
+      .catch(() => this.showToast('Copy failed'));
+  }
+
+  translateToExcelFormula(expr) {
+    if (!expr) return '';
+    let excel = expr.trim();
+
+    // 1. Function Uppercasing
+    const standardFunctions = [
+      'sin',
+      'cos',
+      'tan',
+      'asin',
+      'acos',
+      'atan',
+      'sqrt',
+      'log',
+      'ln',
+      'abs',
+    ];
+    standardFunctions.forEach((fn) => {
+      const regex = new RegExp(`\\b${fn}\\(`, 'gi');
+      excel = excel.replace(regex, `${fn.toUpperCase()}(`);
+    });
+
+    // 2. Constants Mapping
+    excel = excel.replace(/\bpi\b/gi, 'PI()');
+    excel = excel.replace(/\be\b/gi, 'EXP(1)');
+
+    // 3. Formula Equation Prefix
+    if (!excel.startsWith('=')) {
+      excel = '=' + excel;
+    }
+    return excel;
+  }
 }
